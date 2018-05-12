@@ -54,7 +54,7 @@ public class DropboxSync : MonoBehaviour {
 			var root = SimpleJson.DeserializeObject(respStr) as JsonObject;
 			var entries = root["entries"] as JsonArray;
 
-			var item = DBXItem.FromJsonObject(entries[0] as JsonObject);
+			var item = DBXFolder.FromDropboxJsonObject(entries[0] as JsonObject);
 
 			Debug.Log(JsonUtility.ToJson(item, prettyPrint:true));
 			
