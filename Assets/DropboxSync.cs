@@ -43,15 +43,15 @@ public class DropboxSync : MonoBehaviour {
 			client.Headers.Set("Authorization", "Bearer "+accessToken);
 			client.Headers.Set("Content-Type", "application/json");				
 
-			var par = new DropboxListFolderParams{path="/"};
+			var par = new DropboxListFolderParams{path=""};
 
 			// var postData =	new System.Collections.Specialized.NameValueCollection(){
 			// 	{ "path", "/" }				
 			// };
 
-			var resp = client.UploadData(url, "POST", Encoding.Default.GetBytes(JsonUtility.ToJson(par)));
-
-			Debug.Log(resp);
+			var respBytes = client.UploadData(url, "POST", Encoding.Default.GetBytes(JsonUtility.ToJson(par)));
+			var respStr = Encoding.UTF8.GetString(respBytes);
+			Debug.Log(respStr);
 				
 			
 		}
