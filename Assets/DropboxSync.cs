@@ -9,22 +9,31 @@ using UnityEngine;
 [Serializable]
 public class DropboxListFolderParams {
 	public string path;
-	public bool recursive = false;
+	public bool recursive = true;
 	public bool include_media_info = false;
 	public bool include_deleted = false;
 	public bool include_has_explicit_shared_members = false;
 	public bool include_mounted_folders = false;
 }
 
+public class DropboxGetMetadataParams {
+	public string path;	
+	public bool include_media_info = false;
+	public bool include_deleted = false;
+	public bool include_has_explicit_shared_members = false;	
+}
+
 
 
 public class DropboxSync : MonoBehaviour {
 
-	string accessToken = "sVawC-LSz14AAAAAAAAILN_nDwbybSkfaYkjXqJcoapoMI9NrFvh9iZoGb8jtkBq";
+	string accessToken = "2TNf3BjlBqAAAAAAAAAADBc1iIKdoEMOI2uig6oNFWtqijlveLRlDHAVDwrhbndr";
 
 	// Use this for initialization
 	void Start () {
-		TestDropbox();
+		//TestListFolder();
+
+		TestGetMetadata();
 	}
 	
 	// Update is called once per frame
@@ -34,10 +43,7 @@ public class DropboxSync : MonoBehaviour {
 
 	// METHODS
 
-	void TestDropbox(){
-		
-		
-
+	void TestListFolder(){
 		using (var client = new WebClient()){
 			
 			var url = "https://api.dropboxapi.com/2/files/list_folder";
@@ -45,7 +51,7 @@ public class DropboxSync : MonoBehaviour {
 			client.Headers.Set("Content-Type", "application/json");				
 
 			var par = new DropboxListFolderParams{path=""};
-			par.recursive = true;
+		
 
 			var respBytes = client.UploadData(url, "POST", Encoding.Default.GetBytes(JsonUtility.ToJson(par)));
 			var respStr = Encoding.UTF8.GetString(respBytes);
@@ -59,6 +65,22 @@ public class DropboxSync : MonoBehaviour {
 
 			Debug.Log(JsonUtility.ToJson(item, prettyPrint:true));
 			
+		}
+	}
+
+	void TestGetMetadata(){
+		using (var client = new WebClient()){
+			var url = "https://api.dropboxapi.com/2/files/get_metadata";
+			client.Headers.Set("Authorization", "Bearer "+accessToken);
+			client.Headers.Set("Content-Type", "application/json");				
+
+			var par = new DropboxGetMetadataParams{path="/folder with spaces"};
+		
+
+			var respBytes = client.UploadData(url, "POST", Encoding.Default.GetBytes(JsonUtility.ToJson(par)));
+			var respStr = Encoding.UTF8.GetString(respBytes);
+			
+			Debug.Log(respStr);
 		}
 	}
 
