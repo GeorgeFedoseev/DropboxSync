@@ -45,6 +45,7 @@ public class DropboxSync : MonoBehaviour {
 			client.Headers.Set("Content-Type", "application/json");				
 
 			var par = new DropboxListFolderParams{path=""};
+			par.recursive = true;
 
 			var respBytes = client.UploadData(url, "POST", Encoding.Default.GetBytes(JsonUtility.ToJson(par)));
 			var respStr = Encoding.UTF8.GetString(respBytes);

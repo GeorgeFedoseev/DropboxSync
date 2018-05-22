@@ -1,5 +1,6 @@
 using System;
 
+[Serializable]
 public class DBXFile : DBXItem {
 
     public string clientModified;

@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
 
-public class DBXFolder : DBXItem {    
+[Serializable]
+public class DBXFolder : DBXItem {
+
+    public List<DBXItem> items;    
 
     public DBXFolder() {
         type = DBXItemType.Folder;
-
     }
 
     public static DBXFolder FromDropboxJsonObject(JsonObject obj){
