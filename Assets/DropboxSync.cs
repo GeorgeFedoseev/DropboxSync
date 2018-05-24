@@ -77,7 +77,7 @@ public class DropboxSync : MonoBehaviour {
 		// 	Debug.LogError("Got error: "+errorStr);
 		// });
 		
-		GetFolder("/folder with spaces", onResult: (res) => {
+		GetFolder("/", onResult: (res) => {
 			if(res.error){
 				Debug.LogError(res.errorDescription);
 			}
@@ -93,29 +93,73 @@ public class DropboxSync : MonoBehaviour {
 
 	// METHODS
 
-	static string NormalizeFolderPath(string strPath){		
+	static string NormalizePath(string strPath){	
+		strPath = strPath.Trim();	
 		var components = strPath.Split(new char[] {'/'}, StringSplitOptions.RemoveEmptyEntries);
 		return ("/"+string.Join("/", components)).ToLower();
 	}
 
+	static bool IsPathImmediateChildOfFolder(string folderPath, string candidatePath){
+		if(folderPath == candidatePath){
+			return false;
+		}
+		if (candidatePath.IndexOf(folderPath) != 0){
+			return false;
+		}
+		// consider /rootfolder and /rootfolder/file.jpg or /rootfolder/otherfolder
+		// replacing gives: /file.jpg /otherfolder
+		// so count of slashes should be 1 or 0 (for root folder /)
+		return candidatePath.Replace(folderPath, "").Count(c => c == '/') <= 1;
+		
+	}
+
 	void GetFolder(string path, Action<DropboxRequestResult<DBXFolder>> onResult){
-		path = NormalizeFolderPath(path);
+		path = NormalizePath(path);
 
 		GetFolderItemsFlatRecursive(path, onResult: (items) => {
-			var rootFolder = items.Where(x => x.path == path).First();			
+			DBXFolder rootFolder = null;
+			if(path == "/"){
+				rootFolder = new DBXFolder{id="", path="/", name="", items = new List<DBXItem>()};			
+			}else{
+				rootFolder = items.Where(x => x.path == path).First() as DBXFolder;			
+			}
+			
 			Debug.Log("Got root folder "+rootFolder.path);
 
 			// squash flat results
-			
+			rootFolder = BuildStructureFromPool(rootFolder, items);
 
-
+			Debug.Log("Root folder immediate children count: "+rootFolder.items.Count);
 
 		}, onError: (errorStr) => {
 			onResult(DropboxRequestResult<DBXFolder>.Error(errorStr));
 		});
 	}
 
+	DBXFolder BuildStructureFromPool(DBXFolder rootFolder, List<DBXItem> pool){		
+		foreach(var poolItem in pool){
+			// if item is immediate child of rootFolder
+			if(IsPathImmediateChildOfFolder(rootFolder.path, poolItem.path)){
+				// add poolItem to folder children
+				if(poolItem.type == DBXItemType.Folder){
+					//Debug.Log("Build structure recursive");
+					rootFolder.items.Add(BuildStructureFromPool(poolItem as DBXFolder, pool));	
+				}else{
+					rootFolder.items.Add(poolItem);	
+				}				
+				//Debug.Log("Added child "+poolItem.path);			
+			}
+		}
+
+		return rootFolder;
+	}
+
 	void GetFolderItemsFlatRecursive(string folderPath, Action<List<DBXItem>> onResult, Action<string> onError, string requestCursor = null, List<DBXItem> currentResults = null){
+		folderPath = NormalizePath(folderPath);
+
+		if(folderPath == "/"){
+			folderPath = ""; // dropbox error fix
+		}
 
 		string url;
 		DropboxRequestParams prms;
