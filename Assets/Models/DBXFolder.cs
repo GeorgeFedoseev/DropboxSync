@@ -15,7 +15,8 @@ public class DBXFolder : DBXItem {
        return new DBXFolder() {
            id = obj["id"] as string,
            name = obj["name"] as string,           
-           path = obj["path_lower"] as string
+           path = obj["path_lower"] as string,
+           items = new List<DBXItem>()
        };
     }
 }
