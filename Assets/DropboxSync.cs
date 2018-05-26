@@ -9,7 +9,7 @@ using UnityEngine;
 
 using DropboxSync.Model;
 using DropboxSync.Utils;
-
+using UnityEngine.UI;
 
 namespace DropboxSync {
 
@@ -69,6 +69,9 @@ namespace DropboxSync {
 					Debug.LogError("Error downloading file: "+result.errorDescription);
 				}else{
 					Debug.Log("Got Texture2D: "+result.data.width+"x"+result.data.height);
+					var rawImage = FindObjectOfType<RawImage>();
+					rawImage.texture = result.data;
+					rawImage.GetComponent<AspectRatioFitter>().aspectRatio = (float)result.data.width/result.data.height;
 				}
 			}, onProgress: (progress) => {
 				Debug.Log(string.Format("download progress: {0}%", progress*100));
