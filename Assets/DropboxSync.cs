@@ -46,7 +46,11 @@ namespace DropboxSync {
 				}else{
 					Debug.LogError(res.errorDescription);
 				}
-			}, recursive:true);
+			}, recursive:true, onProgress:(progress) => {
+				if(progress > 0){
+					Debug.Log("progress: "+progress.ToString());
+				}				
+			});
 
 			//TestGetMetadata();
 		}
@@ -58,11 +62,7 @@ namespace DropboxSync {
 
 		// METHODS
 
-		
-
-		
-
-		public void GetFolder(string path, Action<DropboxRequestResult<DBXFolder>> onResult){
+		public void GetFolder(string path, Action<DropboxRequestResult<DBXFolder>> onResult, Action<float> onProgress = null){
 			path = DropboxSyncUtils.NormalizePath(path);
 
 			_GetFolderItemsFlat(path, onResult: (items) => {
@@ -74,20 +74,23 @@ namespace DropboxSync {
 				}else{
 					rootFolder = items.Where(x => x.path == path).First() as DBXFolder;			
 				}
-
 				// squash flat results
 				rootFolder = BuildStructureFromPool(rootFolder, items);
 
 				onResult(new DropboxRequestResult<DBXFolder>(rootFolder));
-			}, onError: (errorStr) => {
+			},
+			onProgress:onProgress,
+			onError: (errorStr) => {
 				onResult(DropboxRequestResult<DBXFolder>.Error(errorStr));
 			}, recursive: true);
 		}
 
-		public void GetFolderItems(string path, Action<DropboxRequestResult<List<DBXItem>>> onResult, bool recursive = false){
+		public void GetFolderItems(string path, Action<DropboxRequestResult<List<DBXItem>>> onResult, bool recursive = false, Action<float> onProgress = null){
 			_GetFolderItemsFlat(path, onResult: (items) => {		
 				onResult(new DropboxRequestResult<List<DBXItem>>(items));
-			}, onError: (errorStr) => {
+			},
+			onProgress:onProgress,
+			onError: (errorStr) => {
 				onResult(DropboxRequestResult<List<DBXItem>>.Error(errorStr));
 			}, recursive: recursive);
 		}
@@ -110,7 +113,7 @@ namespace DropboxSync {
 			return rootFolder;
 		}
 
-		void _GetFolderItemsFlat(string folderPath, Action<List<DBXItem>> onResult, Action<string> onError, bool recursive = false, string requestCursor = null, List<DBXItem> currentResults = null){
+		void _GetFolderItemsFlat(string folderPath, Action<List<DBXItem>> onResult, Action<float> onProgress, Action<string> onError, bool recursive = false, string requestCursor = null, List<DBXItem> currentResults = null){
 			folderPath = DropboxSyncUtils.NormalizePath(folderPath);
 
 			if(folderPath == "/"){
@@ -132,7 +135,7 @@ namespace DropboxSync {
 
 			
 			MakeDropboxRequest(url, prms, onResponse: (jsonStr) => {
-				Debug.Log("Got reponse: "+jsonStr);
+				Log("Got reponse: "+jsonStr);
 
 				JsonObject root = null;
 				try {
@@ -154,12 +157,12 @@ namespace DropboxSync {
 					}
 				}
 
-				Debug.Log("Current results: "+currentResults.Count);
-				Debug.Log("Has more: "+root["has_more"].ToString());
+				//Log("Current results: "+currentResults.Count);
+				//Log("Has more: "+root["has_more"].ToString());
 
 				if((bool)root["has_more"]){
 					// recursion
-					_GetFolderItemsFlat(folderPath, onResult, onError, recursive: recursive,
+					_GetFolderItemsFlat(folderPath, onResult, onProgress, onError, recursive: recursive,
 					requestCursor:root["cursor"].ToString(), 
 					currentResults: currentResults);
 				}else{
@@ -168,24 +171,47 @@ namespace DropboxSync {
 				}
 				
 
-			}, onWebError: (webErrorStr) => {
-				//Debug.LogError("Got web err: "+webErrorStr);
+			}, onProgress: onProgress,
+			 onWebError: (webErrorStr) => {
+				//LogError("Got web err: "+webErrorStr);
 				onError(webErrorStr);
 			});
 		}
 
-		void MakeDropboxRequest<T>(string url, T parametersObject, Action<string> onResponse, Action<string> onWebError){
-			MakeDropboxRequest(url, JsonUtility.ToJson(parametersObject), onResponse, onWebError);
+		void MakeDropboxRequest<T>(string url, T parametersObject, Action<string> onResponse, Action<float> onProgress, Action<string> onWebError){
+			MakeDropboxRequest(url, JsonUtility.ToJson(parametersObject), onResponse, onProgress, onWebError);
 		}
 
-		void MakeDropboxRequest(string url, string jsonParameters, Action<string> onResponse, Action<string> onWebError){
+		void MakeDropboxRequest(string url, string jsonParameters, Action<string> onResponse, Action<float> onProgress, Action<string> onWebError){
 			try {
 				using (var client = new WebClient()){				
 					client.Headers.Set("Authorization", "Bearer "+DBXAccessToken);
 					client.Headers.Set("Content-Type", "application/json");
-					var respBytes = client.UploadData(url, "POST", Encoding.Default.GetBytes(jsonParameters));
-					var respStr = Encoding.UTF8.GetString(respBytes);	
-					onResponse(respStr);			
+					
+					client.DownloadProgressChanged += (s, e) => {
+						if(onProgress != null){
+							//Log(string.Format("Downloaded {0} bytes out of {1}", e.BytesReceived, e.TotalBytesToReceive));
+							if(e.TotalBytesToReceive != -1){
+								// if download size in known from server
+								onProgress((float)e.BytesReceived/e.TotalBytesToReceive);	
+							}else{
+								// return progress is going but unknown
+								onProgress(-1);
+							}
+						}						
+					};
+
+					client.UploadDataCompleted += (s, e) => {
+						if(e.Error != null){
+							onWebError(e.Error.Message);
+						}else{
+							var respStr = Encoding.UTF8.GetString(e.Result);
+							onResponse(respStr);
+						}
+					};
+
+					var uri = new Uri(url);
+					client.UploadDataAsync(uri, "POST", Encoding.Default.GetBytes(jsonParameters));										
 				}
 			} catch (WebException ex){
 				onWebError(ex.Message);
@@ -205,14 +231,14 @@ namespace DropboxSync {
 				var respBytes = client.UploadData(url, "POST", Encoding.Default.GetBytes(JsonUtility.ToJson(par)));
 				var respStr = Encoding.UTF8.GetString(respBytes);
 				
-				Debug.Log(respStr);
+				Log(respStr);
 
 				var root = SimpleJson.DeserializeObject(respStr) as JsonObject;
 				var entries = root["entries"] as JsonArray;
 
 				var item = DBXFolder.FromDropboxJsonObject(entries[0] as JsonObject);
 
-				Debug.Log(JsonUtility.ToJson(item, prettyPrint:true));
+				Log(JsonUtility.ToJson(item, prettyPrint:true));
 				
 			}
 		}
@@ -229,8 +255,20 @@ namespace DropboxSync {
 				var respBytes = client.UploadData(url, "POST", Encoding.Default.GetBytes(JsonUtility.ToJson(par)));
 				var respStr = Encoding.UTF8.GetString(respBytes);
 				
-				Debug.Log(respStr);
+				Log(respStr);
 			}
+		}
+
+		void Log(string message){
+			Debug.Log("[DropboxSync] "+message);
+		}
+
+		void LogWarning(string message){
+			Debug.LogWarning("[DropboxSync] "+message);
+		}
+
+		void LogError(string message){
+			Debug.LogError("[DropboxSync] "+message);
 		}
 
 
