@@ -84,6 +84,8 @@ namespace DropboxSync {
 				Debug.Log(string.Format("download progress: {0}%", progress*100));
 			});
 
+			
+
 			// GetFile<Texture2D>("/Meydanprojectsmap_scaled.jpg", onResult: (result) => {
 			// 	if(result.error){
 			// 		Debug.LogError("Error downloading file: "+result.errorDescription);
