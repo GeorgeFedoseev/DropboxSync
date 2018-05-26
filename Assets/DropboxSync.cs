@@ -141,7 +141,7 @@ namespace DropboxSync {
 		public void GetFile(string path, Action<DropboxRequestResult<byte[]>> onResult, Action<float> onProgress = null){
 			var prms = new DropboxDownloadFileRequestParams(path);
 			MakeDropboxDownloadRequest("https://content.dropboxapi.com/2/files/download", prms,
-			onResponse: (data) => {
+			onResponse: (fileMetadata, data) => {
 				onResult(new DropboxRequestResult<byte[]>(data));
 			},
 			onProgress: onProgress,
@@ -306,11 +306,11 @@ namespace DropboxSync {
 			}
 		}
 
-		void MakeDropboxDownloadRequest<T>(string url, T parametersObject, Action<byte[]> onResponse, Action<float> onProgress, Action<string> onWebError) where T : DropboxRequestParams{
+		void MakeDropboxDownloadRequest<T>(string url, T parametersObject, Action<JsonObject, byte[]> onResponse, Action<float> onProgress, Action<string> onWebError) where T : DropboxRequestParams{
 			MakeDropboxDownloadRequest(url, JsonUtility.ToJson(parametersObject), onResponse, onProgress, onWebError);
 		}
 
-		void MakeDropboxDownloadRequest(string url, string jsonParameters, Action<byte[]> onResponse, Action<float> onProgress, Action<string> onWebError){
+		void MakeDropboxDownloadRequest(string url, string jsonParameters, Action<JsonObject, byte[]> onResponse, Action<float> onProgress, Action<string> onWebError){
 			try {
 				using (var client = new WebClient()){				
 					client.Headers.Set("Authorization", "Bearer "+DBXAccessToken);					
@@ -337,8 +337,10 @@ namespace DropboxSync {
 							onWebError("Download was cancelled.");
 						}else{
 							//var respStr = Encoding.UTF8.GetString(e.Result);
-							
-							onResponse(e.Result);
+							var metadataJsonStr = client.ResponseHeaders["Dropbox-API-Result"].ToString();
+							Log(metadataJsonStr);
+							var fileMetadata = SimpleJson.DeserializeObject(metadataJsonStr) as JsonObject;
+							onResponse(fileMetadata, e.Result);
 						}
 					};
 
