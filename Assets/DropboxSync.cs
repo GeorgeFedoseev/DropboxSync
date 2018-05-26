@@ -54,11 +54,21 @@ namespace DropboxSync {
 
 			//TestGetMetadata();
 
-			GetFile<string>("/speech_data/voxforge-ru-dataset/_panic_-20110505-quq/LICENSE", onResult: (result) => {
+			// GetFile<string>("/speech_data/voxforge-ru-dataset/_panic_-20110505-quq/LICENSE", onResult: (result) => {
+			// 	if(result.error){
+			// 		Debug.LogError("Error downloading file: "+result.errorDescription);
+			// 	}else{
+			// 		Debug.Log("Got string: "+result.data);
+			// 	}
+			// }, onProgress: (progress) => {
+			// 	Debug.Log(string.Format("download progress: {0}%", progress*100));
+			// });
+
+			GetFile<Texture2D>("/Meydanprojectsmap_scaled.jpg", onResult: (result) => {
 				if(result.error){
 					Debug.LogError("Error downloading file: "+result.errorDescription);
 				}else{
-					Debug.Log("Got string: "+result.data);
+					Debug.Log("Got Texture2D: "+result.data.width+"x"+result.data.height);
 				}
 			}, onProgress: (progress) => {
 				Debug.Log(string.Format("download progress: {0}%", progress*100));
@@ -83,7 +93,14 @@ namespace DropboxSync {
 						onResult(new DropboxRequestResult<T>(detectedEncoding.GetString(res.data) as T));
 					}					
 				};				
-			}else{
+			}
+			else if(typeof(T) == typeof(Texture2D)){
+				// IMAGE DATA
+				onResultMiddle = (res) => {					
+					onResult(new DropboxRequestResult<T>(DropboxSyncUtils.LoadImageToTexture2D(res.data) as T));
+				};	
+			}
+			else{
 				onResult(DropboxRequestResult<T>.Error(string.Format("Dont have a mapping byte[] -> {0}. Type {0} is not supported.", typeof(T).ToString())));
 				return;
 			}

@@ -2,6 +2,7 @@
 
 using System;
 using System.Linq;
+using UnityEngine;
 
 namespace DropboxSync.Utils {
 
@@ -24,6 +25,19 @@ namespace DropboxSync.Utils {
 			// so count of slashes should be 1 or 0 (for root folder /)
 			return candidatePath.Replace(folderPath, "").Count(c => c == '/') <= 1;			
 		}
+
+        public static Texture2D LoadImageToTexture2D(byte[] data) {
+            Texture2D tex = null;
+            tex = new Texture2D(2, 2);                     
+            
+            tex.LoadImage(data); //..this will auto-resize the texture dimensions.
+            //tex.filterMode = FilterMode.Trilinear; 	
+            //tex.wrapMode = TextureWrapMode.Clamp;
+            //tex.anisoLevel = 9;
+
+            return tex;
+        }
+
     }
 
 
