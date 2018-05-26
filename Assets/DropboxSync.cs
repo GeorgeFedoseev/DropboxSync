@@ -7,274 +7,235 @@ using System.Net.Security;
 using System.Text;
 using UnityEngine;
 
-[Serializable]
-public class DropboxRequestParams {
-
-}
-
-[Serializable]
-public class DropboxListFolderParams : DropboxRequestParams {
-	public string path;
-	public bool recursive = true;
-	public bool include_media_info = false;
-	public bool include_deleted = false;
-	public bool include_has_explicit_shared_members = false;
-	public bool include_mounted_folders = false;
-}
-
-public class DropboxCursorParams : DropboxRequestParams {
-	public string cursor;
-
-	public DropboxCursorParams(string cur) {
-		cursor = cur;
-	}
-}
+using DropboxSync.Model;
+using DropboxSync.Utils;
 
 
-[Serializable]
-public class DropboxGetMetadataParams : DropboxRequestParams {
-	public string path;	
-	public bool include_media_info = false;
-	public bool include_deleted = false;
-	public bool include_has_explicit_shared_members = false;	
-}
+namespace DropboxSync {
 
-public class DropboxRequestResult<T> {
-	public T res;
-	public bool error = false;
-	public string errorDescription = null;
+	public class DropboxSync : MonoBehaviour {
 
-	public DropboxRequestResult(T res){
-        this.res = res;
-    }
+		string DBXAccessToken = "2TNf3BjlBqAAAAAAAAAADBc1iIKdoEMOI2uig6oNFWtqijlveLRlDHAVDwrhbndr";
 
-	public static DropboxRequestResult<T> Error(string errorDescription){
-		var inst = new DropboxRequestResult<T>(default(T));
-		inst.error = true;
-		inst.errorDescription = errorDescription;
-		return inst;
-	}
-}
+		// Use this for initialization
+		void Start () {
 
+			// try {
+			// 	TestListFolder();	
+			// } catch (Exception ex){
+			// 	Debug.LogError(ex.ToString());
+			// }
 
-
-public class DropboxSync : MonoBehaviour {
-
-	string DBXAccessToken = "2TNf3BjlBqAAAAAAAAAADBc1iIKdoEMOI2uig6oNFWtqijlveLRlDHAVDwrhbndr";
-
-	// Use this for initialization
-	void Start () {
-
-		// try {
-		// 	TestListFolder();	
-		// } catch (Exception ex){
-		// 	Debug.LogError(ex.ToString());
-		// }
-
-		// GetFolderItemsFlatRecursive("/folder with spaces", onResult: (items) => {
-		// 	Debug.Log("Got results: "+items.Count);
-		// }, onError: (errorStr) => {
-		// 	Debug.LogError("Got error: "+errorStr);
-		// });
-		
-		GetFolder("/", onResult: (res) => {
-			if(res.error){
-				Debug.LogError(res.errorDescription);
-			}
-		});
-
-		//TestGetMetadata();
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
-
-	// METHODS
-
-	static string NormalizePath(string strPath){	
-		strPath = strPath.Trim();	
-		var components = strPath.Split(new char[] {'/'}, StringSplitOptions.RemoveEmptyEntries);
-		return ("/"+string.Join("/", components)).ToLower();
-	}
-
-	static bool IsPathImmediateChildOfFolder(string folderPath, string candidatePath){
-		if(folderPath == candidatePath){
-			return false;
-		}
-		if (candidatePath.IndexOf(folderPath) != 0){
-			return false;
-		}
-		// consider /rootfolder and /rootfolder/file.jpg or /rootfolder/otherfolder
-		// replacing gives: /file.jpg /otherfolder
-		// so count of slashes should be 1 or 0 (for root folder /)
-		return candidatePath.Replace(folderPath, "").Count(c => c == '/') <= 1;
-		
-	}
-
-	void GetFolder(string path, Action<DropboxRequestResult<DBXFolder>> onResult){
-		path = NormalizePath(path);
-
-		GetFolderItemsFlatRecursive(path, onResult: (items) => {
-			DBXFolder rootFolder = null;
-			if(path == "/"){
-				rootFolder = new DBXFolder{id="", path="/", name="", items = new List<DBXItem>()};			
-			}else{
-				rootFolder = items.Where(x => x.path == path).First() as DBXFolder;			
-			}
+			// GetFolderItemsFlatRecursive("/folder with spaces", onResult: (items) => {
+			// 	Debug.Log("Got results: "+items.Count);
+			// }, onError: (errorStr) => {
+			// 	Debug.LogError("Got error: "+errorStr);
+			// });
 			
-			Debug.Log("Got root folder "+rootFolder.path);
+			// GetFolder("/", onResult: (res) => {
+			// 	if(!res.error){
+					
+			// 	}else{
+			// 		Debug.LogError(res.errorDescription);
+			// 	}
+			// });
 
-			// squash flat results
-			rootFolder = BuildStructureFromPool(rootFolder, items);
-
-			Debug.Log("Root folder immediate children count: "+rootFolder.items.Count);
-
-		}, onError: (errorStr) => {
-			onResult(DropboxRequestResult<DBXFolder>.Error(errorStr));
-		});
-	}
-
-	DBXFolder BuildStructureFromPool(DBXFolder rootFolder, List<DBXItem> pool){		
-		foreach(var poolItem in pool){
-			// if item is immediate child of rootFolder
-			if(IsPathImmediateChildOfFolder(rootFolder.path, poolItem.path)){
-				// add poolItem to folder children
-				if(poolItem.type == DBXItemType.Folder){
-					//Debug.Log("Build structure recursive");
-					rootFolder.items.Add(BuildStructureFromPool(poolItem as DBXFolder, pool));	
+			GetFolderItems("/", (res) => {
+				if(!res.error){
+					Debug.Log("Total files on dropbox: "+res.data.Where(x => x.type == DBXItemType.File).Count().ToString()); 
 				}else{
-					rootFolder.items.Add(poolItem);	
-				}				
-				//Debug.Log("Added child "+poolItem.path);			
-			}
+					Debug.LogError(res.errorDescription);
+				}
+			}, recursive:true);
+
+			//TestGetMetadata();
+		}
+		
+		// Update is called once per frame
+		void Update () {
+			
 		}
 
-		return rootFolder;
-	}
-
-	void GetFolderItemsFlatRecursive(string folderPath, Action<List<DBXItem>> onResult, Action<string> onError, string requestCursor = null, List<DBXItem> currentResults = null){
-		folderPath = NormalizePath(folderPath);
-
-		if(folderPath == "/"){
-			folderPath = ""; // dropbox error fix
-		}
-
-		string url;
-		DropboxRequestParams prms;
-		if(requestCursor == null){
-			// first request
-			currentResults = new List<DBXItem>();
-			url = "https://api.dropboxapi.com/2/files/list_folder";
-			prms = new DropboxListFolderParams{path=folderPath, recursive=true};
-		}else{
-			// have cursor to continue list
-			url = "https://api.dropboxapi.com/2/files/list_folder/continue";
-			prms = new DropboxCursorParams(requestCursor);
-		}
+		// METHODS
 
 		
-		MakeDropboxRequest(url, prms, onResponse: (jsonStr) => {
-			Debug.Log("Got reponse: "+jsonStr);
 
-			JsonObject root = null;
-			try {
-				root = SimpleJson.DeserializeObject(jsonStr) as JsonObject;
-			}catch(Exception ex){
-				onError(ex.Message);
-				return;
-			}
+		
 
-			var entries = root["entries"] as JsonArray;
-			foreach(JsonObject entry in entries){
-				if(entry[".tag"].ToString() == "file"){
-					currentResults.Add(DBXFile.FromDropboxJsonObject(entry));
-				}else if(entry[".tag"].ToString() == "folder"){
-					currentResults.Add(DBXFolder.FromDropboxJsonObject(entry));
+		public void GetFolder(string path, Action<DropboxRequestResult<DBXFolder>> onResult){
+			path = DropboxSyncUtils.NormalizePath(path);
+
+			_GetFolderItemsFlat(path, onResult: (items) => {
+				DBXFolder rootFolder = null;
+
+				// get root folder
+				if(path == "/"){
+					rootFolder = new DBXFolder{id="", path="/", name="", items = new List<DBXItem>()};			
 				}else{
-					onError("Unknown entry tag "+entry[".tag".ToString()]);
-					return;
+					rootFolder = items.Where(x => x.path == path).First() as DBXFolder;			
+				}
+
+				// squash flat results
+				rootFolder = BuildStructureFromPool(rootFolder, items);
+
+				onResult(new DropboxRequestResult<DBXFolder>(rootFolder));
+			}, onError: (errorStr) => {
+				onResult(DropboxRequestResult<DBXFolder>.Error(errorStr));
+			}, recursive: true);
+		}
+
+		public void GetFolderItems(string path, Action<DropboxRequestResult<List<DBXItem>>> onResult, bool recursive = false){
+			_GetFolderItemsFlat(path, onResult: (items) => {		
+				onResult(new DropboxRequestResult<List<DBXItem>>(items));
+			}, onError: (errorStr) => {
+				onResult(DropboxRequestResult<List<DBXItem>>.Error(errorStr));
+			}, recursive: recursive);
+		}
+
+		DBXFolder BuildStructureFromPool(DBXFolder rootFolder, List<DBXItem> pool){		
+			foreach(var poolItem in pool){
+				// if item is immediate child of rootFolder
+				if(DropboxSyncUtils.IsPathImmediateChildOfFolder(rootFolder.path, poolItem.path)){
+					// add poolItem to folder children
+					if(poolItem.type == DBXItemType.Folder){
+						//Debug.Log("Build structure recursive");
+						rootFolder.items.Add(BuildStructureFromPool(poolItem as DBXFolder, pool));	
+					}else{
+						rootFolder.items.Add(poolItem);	
+					}				
+					//Debug.Log("Added child "+poolItem.path);			
 				}
 			}
 
-			Debug.Log("Current results: "+currentResults.Count);
+			return rootFolder;
+		}
 
-			if((bool)root["has_more"]){
-				// recursion
-				GetFolderItemsFlatRecursive(folderPath, onResult, onError, root["cursor"].ToString(), currentResults);
+		void _GetFolderItemsFlat(string folderPath, Action<List<DBXItem>> onResult, Action<string> onError, bool recursive = false, string requestCursor = null, List<DBXItem> currentResults = null){
+			folderPath = DropboxSyncUtils.NormalizePath(folderPath);
+
+			if(folderPath == "/"){
+				folderPath = ""; // dropbox error fix
+			}
+
+			string url;
+			DropboxRequestParams prms;
+			if(requestCursor == null){
+				// first request
+				currentResults = new List<DBXItem>();
+				url = "https://api.dropboxapi.com/2/files/list_folder";
+				prms = new DropboxListFolderParams{path=folderPath, recursive=recursive};
 			}else{
-				// done
-				onResult(currentResults);
+				// have cursor to continue list
+				url = "https://api.dropboxapi.com/2/files/list_folder/continue";
+				prms = new DropboxCursorParams(requestCursor);
 			}
+
 			
+			MakeDropboxRequest(url, prms, onResponse: (jsonStr) => {
+				Debug.Log("Got reponse: "+jsonStr);
 
-		}, onWebError: (webErrorStr) => {
-			//Debug.LogError("Got web err: "+webErrorStr);
-			onError(webErrorStr);
-		});
-	}
+				JsonObject root = null;
+				try {
+					root = SimpleJson.DeserializeObject(jsonStr) as JsonObject;
+				}catch(Exception ex){
+					onError(ex.Message);
+					return;
+				}
 
-	void MakeDropboxRequest<T>(string url, T parametersObject, Action<string> onResponse, Action<string> onWebError){
-		MakeDropboxRequest(url, JsonUtility.ToJson(parametersObject), onResponse, onWebError);
-	}
+				var entries = root["entries"] as JsonArray;
+				foreach(JsonObject entry in entries){
+					if(entry[".tag"].ToString() == "file"){
+						currentResults.Add(DBXFile.FromDropboxJsonObject(entry));
+					}else if(entry[".tag"].ToString() == "folder"){
+						currentResults.Add(DBXFolder.FromDropboxJsonObject(entry));
+					}else{
+						onError("Unknown entry tag "+entry[".tag".ToString()]);
+						return;
+					}
+				}
 
-	void MakeDropboxRequest(string url, string jsonParameters, Action<string> onResponse, Action<string> onWebError){
-		try {
-			using (var client = new WebClient()){				
+				Debug.Log("Current results: "+currentResults.Count);
+				Debug.Log("Has more: "+root["has_more"].ToString());
+
+				if((bool)root["has_more"]){
+					// recursion
+					_GetFolderItemsFlat(folderPath, onResult, onError, recursive: recursive,
+					requestCursor:root["cursor"].ToString(), 
+					currentResults: currentResults);
+				}else{
+					// done
+					onResult(currentResults);
+				}
+				
+
+			}, onWebError: (webErrorStr) => {
+				//Debug.LogError("Got web err: "+webErrorStr);
+				onError(webErrorStr);
+			});
+		}
+
+		void MakeDropboxRequest<T>(string url, T parametersObject, Action<string> onResponse, Action<string> onWebError){
+			MakeDropboxRequest(url, JsonUtility.ToJson(parametersObject), onResponse, onWebError);
+		}
+
+		void MakeDropboxRequest(string url, string jsonParameters, Action<string> onResponse, Action<string> onWebError){
+			try {
+				using (var client = new WebClient()){				
+					client.Headers.Set("Authorization", "Bearer "+DBXAccessToken);
+					client.Headers.Set("Content-Type", "application/json");
+					var respBytes = client.UploadData(url, "POST", Encoding.Default.GetBytes(jsonParameters));
+					var respStr = Encoding.UTF8.GetString(respBytes);	
+					onResponse(respStr);			
+				}
+			} catch (WebException ex){
+				onWebError(ex.Message);
+			}
+		}
+
+		void TestListFolder(){
+			using (var client = new WebClient()){
+				
+				var url = "https://api.dropboxapi.com/2/files/list_folder";
 				client.Headers.Set("Authorization", "Bearer "+DBXAccessToken);
-				client.Headers.Set("Content-Type", "application/json");
-				var respBytes = client.UploadData(url, "POST", Encoding.Default.GetBytes(jsonParameters));
-				var respStr = Encoding.UTF8.GetString(respBytes);	
-				onResponse(respStr);			
+				client.Headers.Set("Content-Type", "application/json");				
+
+				var par = new DropboxListFolderParams{path="/asdsa"};
+			
+
+				var respBytes = client.UploadData(url, "POST", Encoding.Default.GetBytes(JsonUtility.ToJson(par)));
+				var respStr = Encoding.UTF8.GetString(respBytes);
+				
+				Debug.Log(respStr);
+
+				var root = SimpleJson.DeserializeObject(respStr) as JsonObject;
+				var entries = root["entries"] as JsonArray;
+
+				var item = DBXFolder.FromDropboxJsonObject(entries[0] as JsonObject);
+
+				Debug.Log(JsonUtility.ToJson(item, prettyPrint:true));
+				
 			}
-		} catch (WebException ex){
-			onWebError(ex.Message);
 		}
+
+		void TestGetMetadata(){
+			using (var client = new WebClient()){
+				var url = "https://api.dropboxapi.com/2/files/get_metadata";
+				client.Headers.Set("Authorization", "Bearer "+DBXAccessToken);
+				client.Headers.Set("Content-Type", "application/json");				
+
+				var par = new DropboxGetMetadataParams{path="/folder with spaces"};
+			
+
+				var respBytes = client.UploadData(url, "POST", Encoding.Default.GetBytes(JsonUtility.ToJson(par)));
+				var respStr = Encoding.UTF8.GetString(respBytes);
+				
+				Debug.Log(respStr);
+			}
+		}
+
+
+
+		// EVENTS
 	}
 
-	void TestListFolder(){
-		using (var client = new WebClient()){
-			
-			var url = "https://api.dropboxapi.com/2/files/list_folder";
-			client.Headers.Set("Authorization", "Bearer "+DBXAccessToken);
-			client.Headers.Set("Content-Type", "application/json");				
-
-			var par = new DropboxListFolderParams{path="/asdsa"};
-		
-
-			var respBytes = client.UploadData(url, "POST", Encoding.Default.GetBytes(JsonUtility.ToJson(par)));
-			var respStr = Encoding.UTF8.GetString(respBytes);
-			
-			Debug.Log(respStr);
-
-			var root = SimpleJson.DeserializeObject(respStr) as JsonObject;
-			var entries = root["entries"] as JsonArray;
-
-			var item = DBXFolder.FromDropboxJsonObject(entries[0] as JsonObject);
-
-			Debug.Log(JsonUtility.ToJson(item, prettyPrint:true));
-			
-		}
-	}
-
-	void TestGetMetadata(){
-		using (var client = new WebClient()){
-			var url = "https://api.dropboxapi.com/2/files/get_metadata";
-			client.Headers.Set("Authorization", "Bearer "+DBXAccessToken);
-			client.Headers.Set("Content-Type", "application/json");				
-
-			var par = new DropboxGetMetadataParams{path="/folder with spaces"};
-		
-
-			var respBytes = client.UploadData(url, "POST", Encoding.Default.GetBytes(JsonUtility.ToJson(par)));
-			var respStr = Encoding.UTF8.GetString(respBytes);
-			
-			Debug.Log(respStr);
-		}
-	}
-
-
-
-	// EVENTS
 }

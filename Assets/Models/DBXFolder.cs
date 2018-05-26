@@ -1,22 +1,25 @@
 using System;
 using System.Collections.Generic;
 
-[Serializable]
-public class DBXFolder : DBXItem {
+namespace DropboxSync.Model {
 
-    public List<DBXItem> items;    
+    [Serializable]
+    public class DBXFolder : DBXItem {
 
-    public DBXFolder() {
-        type = DBXItemType.Folder;
-    }
+        public List<DBXItem> items;    
 
-    public static DBXFolder FromDropboxJsonObject(JsonObject obj){
-        
-       return new DBXFolder() {
-           id = obj["id"] as string,
-           name = obj["name"] as string,           
-           path = obj["path_lower"] as string,
-           items = new List<DBXItem>()
-       };
+        public DBXFolder() {
+            type = DBXItemType.Folder;
+        }
+
+        public static DBXFolder FromDropboxJsonObject(JsonObject obj){
+            
+        return new DBXFolder() {
+            id = obj["id"] as string,
+            name = obj["name"] as string,           
+            path = obj["path_lower"] as string,
+            items = new List<DBXItem>()
+        };
+        }
     }
 }
