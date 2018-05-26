@@ -54,11 +54,11 @@ namespace DropboxSync {
 
 			//TestGetMetadata();
 
-			GetFile("/speech_data/voxforge-ru-dataset/_panic_-20110505-quq/LICENSE", onResult: (result) => {
+			GetFile<Texture2D>("/speech_data/voxforge-ru-dataset/_panic_-20110505-quq/LICENSE", onResult: (result) => {
 				if(result.error){
 					Debug.LogError("Error downloading file: "+result.errorDescription);
 				}else{
-					Debug.Log("Downloaded file of size "+result.data.Length.ToString());
+					//Debug.Log("Downloaded file of size "+result.data.Length.ToString());
 				}
 			}, onProgress: (progress) => {
 				Debug.Log(string.Format("download progress: {0}%", progress*100));
@@ -71,6 +71,19 @@ namespace DropboxSync {
 		}
 
 		// METHODS
+
+		public void GetFile<T>(string path, Action<DropboxRequestResult<T>> onResult, Action<float> onProgress = null){
+			Action<DropboxRequestResult<byte[]>> onResultMiddle = null;
+
+			if(typeof(T) == typeof(string)){
+				Log("Its string");
+			}else{
+				onResult(DropboxRequestResult<T>.Error(string.Format("Dont have a mapping byte[] -> {0}. Type {0} is not supported.", typeof(T).ToString())));
+				return;
+			}
+
+			GetFile(path, onResultMiddle, onProgress);
+		}
 
 		public void GetFile(string path, Action<DropboxRequestResult<byte[]>> onResult, Action<float> onProgress = null){
 			var prms = new DropboxDownloadFileRequestParams(path);
