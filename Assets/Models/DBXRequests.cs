@@ -10,7 +10,7 @@ namespace DropboxSync.Model {
 	}
 
 	[Serializable]
-	public class DropboxListFolderParams : DropboxRequestParams {
+	public class DropboxListFolderRequestParams : DropboxRequestParams {
 		public string path;
 		public bool recursive = true;
 		public bool include_media_info = false;
@@ -19,13 +19,15 @@ namespace DropboxSync.Model {
 		public bool include_mounted_folders = false;
 	}
 
-	public class DropboxCursorParams : DropboxRequestParams {
+	[Serializable]
+	public class DropboxContinueWithCursorRequestParams : DropboxRequestParams {
 		public string cursor;
 
-		public DropboxCursorParams(string cur) {
+		public DropboxContinueWithCursorRequestParams(string cur) {
 			cursor = cur;
 		}
 	}
+
 
 
 	[Serializable]
@@ -35,6 +37,17 @@ namespace DropboxSync.Model {
 		public bool include_deleted = false;
 		public bool include_has_explicit_shared_members = false;	
 	}
+
+
+	[Serializable]
+	public class DropboxDownloadFileRequestParams : DropboxRequestParams {
+		public string path;
+
+		public DropboxDownloadFileRequestParams(string _path){
+			path = _path;
+		}
+	}
+
 
 	public class DropboxRequestResult<T> {
 		public T data;

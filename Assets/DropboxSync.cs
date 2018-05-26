@@ -40,19 +40,29 @@ namespace DropboxSync {
 			// 	}
 			// });
 
-			GetFolderItems("/", (res) => {
-				if(!res.error){
-					Debug.Log("Total files on dropbox: "+res.data.Where(x => x.type == DBXItemType.File).Count().ToString()); 
-				}else{
-					Debug.LogError(res.errorDescription);
-				}
-			}, recursive:true, onProgress:(progress) => {
-				if(progress > 0){
-					Debug.Log("progress: "+progress.ToString());
-				}				
-			});
+			// GetFolderItems("/", (res) => {
+			// 	if(!res.error){
+			// 		Debug.Log("Total files on dropbox: "+res.data.Where(x => x.type == DBXItemType.File).Count().ToString()); 
+			// 	}else{
+			// 		Debug.LogError(res.errorDescription);
+			// 	}
+			// }, recursive:true, onProgress:(progress) => {
+			// 	if(progress > 0){
+			// 		Debug.Log("progress: "+progress.ToString());
+			// 	}				
+			// });
 
 			//TestGetMetadata();
+
+			GetFile("/speech_data/voxforge-ru-dataset/_panic_-20110505-quq/LICENSE", onResult: (result) => {
+				if(result.error){
+					Debug.LogError("Error downloading file: "+result.errorDescription);
+				}else{
+					Debug.Log("Downloaded file of size "+result.data.Length.ToString());
+				}
+			}, onProgress: (progress) => {
+				Debug.Log(string.Format("download progress: {0}%", progress*100));
+			});
 		}
 		
 		// Update is called once per frame
@@ -61,6 +71,18 @@ namespace DropboxSync {
 		}
 
 		// METHODS
+
+		public void GetFile(string path, Action<DropboxRequestResult<byte[]>> onResult, Action<float> onProgress = null){
+			var prms = new DropboxDownloadFileRequestParams(path);
+			MakeDropboxDownloadRequest("https://content.dropboxapi.com/2/files/download", prms,
+			onResponse: (data) => {
+				onResult(new DropboxRequestResult<byte[]>(data));
+			},
+			onProgress: onProgress,
+			onWebError: (webErrorStr) => {
+				onResult(DropboxRequestResult<byte[]>.Error(webErrorStr));
+			});
+		}
 
 		public void GetFolder(string path, Action<DropboxRequestResult<DBXFolder>> onResult, Action<float> onProgress = null){
 			path = DropboxSyncUtils.NormalizePath(path);
@@ -126,11 +148,11 @@ namespace DropboxSync {
 				// first request
 				currentResults = new List<DBXItem>();
 				url = "https://api.dropboxapi.com/2/files/list_folder";
-				prms = new DropboxListFolderParams{path=folderPath, recursive=recursive};
+				prms = new DropboxListFolderRequestParams{path=folderPath, recursive=recursive};
 			}else{
 				// have cursor to continue list
 				url = "https://api.dropboxapi.com/2/files/list_folder/continue";
-				prms = new DropboxCursorParams(requestCursor);
+				prms = new DropboxContinueWithCursorRequestParams(requestCursor);
 			}
 
 			
@@ -178,9 +200,9 @@ namespace DropboxSync {
 			});
 		}
 
-		void MakeDropboxRequest<T>(string url, T parametersObject, Action<string> onResponse, Action<float> onProgress, Action<string> onWebError){
+		void MakeDropboxRequest<T>(string url, T parametersObject, Action<string> onResponse, Action<float> onProgress, Action<string> onWebError) where T : DropboxRequestParams{
 			MakeDropboxRequest(url, JsonUtility.ToJson(parametersObject), onResponse, onProgress, onWebError);
-		}
+		}	
 
 		void MakeDropboxRequest(string url, string jsonParameters, Action<string> onResponse, Action<float> onProgress, Action<string> onWebError){
 			try {
@@ -218,30 +240,74 @@ namespace DropboxSync {
 			}
 		}
 
-		void TestListFolder(){
-			using (var client = new WebClient()){
-				
-				var url = "https://api.dropboxapi.com/2/files/list_folder";
-				client.Headers.Set("Authorization", "Bearer "+DBXAccessToken);
-				client.Headers.Set("Content-Type", "application/json");				
+		void MakeDropboxDownloadRequest<T>(string url, T parametersObject, Action<byte[]> onResponse, Action<float> onProgress, Action<string> onWebError) where T : DropboxRequestParams{
+			MakeDropboxDownloadRequest(url, JsonUtility.ToJson(parametersObject), onResponse, onProgress, onWebError);
+		}
 
-				var par = new DropboxListFolderParams{path="/asdsa"};
+		void MakeDropboxDownloadRequest(string url, string jsonParameters, Action<byte[]> onResponse, Action<float> onProgress, Action<string> onWebError){
+			try {
+				using (var client = new WebClient()){				
+					client.Headers.Set("Authorization", "Bearer "+DBXAccessToken);					
+					client.Headers.Set("Dropbox-API-Arg", jsonParameters);
+					
+					client.DownloadProgressChanged += (s, e) => {
+						
+						if(onProgress != null){
+							//Log(string.Format("Downloaded {0} bytes out of {1} ({2}%)", e.BytesReceived, e.TotalBytesToReceive, e.ProgressPercentage));
+							if(e.TotalBytesToReceive != -1){
+								// if download size in known from server
+								onProgress((float)e.BytesReceived/e.TotalBytesToReceive);	
+							}else{
+								// return progress is going but unknown
+								onProgress(-1);
+							}
+						}						
+					};
+
+					client.DownloadDataCompleted += (s, e) => {
+						if(e.Error != null){
+							onWebError(e.Error.Message);
+						}else if(e.Cancelled){
+							onWebError("Download was cancelled.");
+						}else{
+							//var respStr = Encoding.UTF8.GetString(e.Result);
+							
+							onResponse(e.Result);
+						}
+					};
+
+					var uri = new Uri(url);
+					client.DownloadDataAsync(uri);
+				}
+			} catch (WebException ex){
+				onWebError(ex.Message);
+			}
+		} 
+
+		// void TestListFolder(){
+		// 	using (var client = new WebClient()){
+				
+		// 		var url = "https://api.dropboxapi.com/2/files/list_folder";
+		// 		client.Headers.Set("Authorization", "Bearer "+DBXAccessToken);
+		// 		client.Headers.Set("Content-Type", "application/json");				
+
+		// 		var par = new DropboxListFolderRequestParams{path="/asdsa"};
 			
 
-				var respBytes = client.UploadData(url, "POST", Encoding.Default.GetBytes(JsonUtility.ToJson(par)));
-				var respStr = Encoding.UTF8.GetString(respBytes);
+		// 		var respBytes = client.UploadData(url, "POST", Encoding.Default.GetBytes(JsonUtility.ToJson(par)));
+		// 		var respStr = Encoding.UTF8.GetString(respBytes);
 				
-				Log(respStr);
+		// 		Log(respStr);
 
-				var root = SimpleJson.DeserializeObject(respStr) as JsonObject;
-				var entries = root["entries"] as JsonArray;
+		// 		var root = SimpleJson.DeserializeObject(respStr) as JsonObject;
+		// 		var entries = root["entries"] as JsonArray;
 
-				var item = DBXFolder.FromDropboxJsonObject(entries[0] as JsonObject);
+		// 		var item = DBXFolder.FromDropboxJsonObject(entries[0] as JsonObject);
 
-				Log(JsonUtility.ToJson(item, prettyPrint:true));
+		// 		Log(JsonUtility.ToJson(item, prettyPrint:true));
 				
-			}
-		}
+		// 	}
+		// }
 
 		void TestGetMetadata(){
 			using (var client = new WebClient()){
