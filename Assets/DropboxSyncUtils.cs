@@ -38,6 +38,13 @@ namespace DropboxSync.Utils {
             return tex;
         }
 
+        public static string GetAudtoDetectedEncodingStringFromBytes(byte[] bytes){
+            using (var reader = new System.IO.StreamReader(new System.IO.MemoryStream(bytes), true)){
+                var detectedEncoding = reader.CurrentEncoding;
+                return detectedEncoding.GetString(bytes);
+            }	
+        }
+
     }
 
 

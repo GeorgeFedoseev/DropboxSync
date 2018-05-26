@@ -64,18 +64,38 @@ namespace DropboxSync {
 			// 	Debug.Log(string.Format("download progress: {0}%", progress*100));
 			// });
 
-			GetFile<Texture2D>("/Meydanprojectsmap_scaled.jpg", onResult: (result) => {
+			// GetFile<JsonObject>("/folder with spaces/second level depth folder/dbx_list_recursive_example.json", onResult: (result) => {
+			// 	if(result.error){
+			// 		Debug.LogError("Error downloading file: "+result.errorDescription);
+			// 	}else{
+			// 		Debug.Log("Got json cursor: "+result.data["cursor"].ToString());
+			// 	}
+			// }, onProgress: (progress) => {
+			// 	Debug.Log(string.Format("download progress: {0}%", progress*100));
+			// });
+
+			GetFile<JsonArray>("/folder with spaces/second level depth folder/json_array_example.json", onResult: (result) => {
 				if(result.error){
 					Debug.LogError("Error downloading file: "+result.errorDescription);
 				}else{
-					Debug.Log("Got Texture2D: "+result.data.width+"x"+result.data.height);
-					var rawImage = FindObjectOfType<RawImage>();
-					rawImage.texture = result.data;
-					rawImage.GetComponent<AspectRatioFitter>().aspectRatio = (float)result.data.width/result.data.height;
+					Debug.Log("Got json array: "+string.Join(", ", result.data.Select(x => x as string)));
 				}
 			}, onProgress: (progress) => {
 				Debug.Log(string.Format("download progress: {0}%", progress*100));
 			});
+
+			// GetFile<Texture2D>("/Meydanprojectsmap_scaled.jpg", onResult: (result) => {
+			// 	if(result.error){
+			// 		Debug.LogError("Error downloading file: "+result.errorDescription);
+			// 	}else{
+			// 		Debug.Log("Got Texture2D: "+result.data.width+"x"+result.data.height);
+			// 		var rawImage = FindObjectOfType<RawImage>();
+			// 		rawImage.texture = result.data;
+			// 		rawImage.GetComponent<AspectRatioFitter>().aspectRatio = (float)result.data.width/result.data.height;
+			// 	}
+			// }, onProgress: (progress) => {
+			// 	Debug.Log(string.Format("download progress: {0}%", progress*100));
+			// });
 		}
 		
 		// Update is called once per frame
@@ -90,12 +110,17 @@ namespace DropboxSync {
 
 			if(typeof(T) == typeof(string)){
 				// TEXT DATA
-				onResultMiddle = (res) => {
-					using (var reader = new System.IO.StreamReader(new System.IO.MemoryStream(res.data), true)){
-						var detectedEncoding = reader.CurrentEncoding;
-						onResult(new DropboxRequestResult<T>(detectedEncoding.GetString(res.data) as T));
-					}					
+				onResultMiddle = (res) => {					
+					onResult(new DropboxRequestResult<T>(DropboxSyncUtils.GetAudtoDetectedEncodingStringFromBytes(res.data) as T));										
 				};				
+			}
+			else if(typeof(T) == typeof(JsonObject) || typeof(T) == typeof(JsonArray)){
+				// JSON OBJECT/ARRAY
+				onResultMiddle = (res) => {					
+					onResult(new DropboxRequestResult<T>(SimpleJson.DeserializeObject(
+						DropboxSyncUtils.GetAudtoDetectedEncodingStringFromBytes(res.data)
+					) as T));
+				};	
 			}
 			else if(typeof(T) == typeof(Texture2D)){
 				// IMAGE DATA
