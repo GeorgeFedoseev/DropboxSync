@@ -31,11 +31,15 @@ namespace DropboxSync.Model {
 
 
 	[Serializable]
-	public class DropboxGetMetadataParams : DropboxRequestParams {
+	public class DropboxGetMetadataRequestParams : DropboxRequestParams {
 		public string path;	
 		public bool include_media_info = false;
 		public bool include_deleted = false;
 		public bool include_has_explicit_shared_members = false;	
+
+		public DropboxGetMetadataRequestParams(string _path){
+			path = _path;
+		}
 	}
 
 
@@ -60,6 +64,25 @@ namespace DropboxSync.Model {
 
 		public static DropboxRequestResult<T> Error(string errorDescription){
 			var inst = new DropboxRequestResult<T>(default(T));
+			inst.error = true;
+			inst.errorDescription = errorDescription;
+			return inst;
+		}
+	}
+
+	public class DropboxFileDownloadRequestResult<T> {
+		public T data;
+		public JsonObject fileMetadata;
+		public bool error = false;
+		public string errorDescription = null;
+
+		public DropboxFileDownloadRequestResult(T res, JsonObject metadata){
+			this.data = res;
+			fileMetadata = metadata;
+		}
+
+		public static DropboxFileDownloadRequestResult<T> Error(string errorDescription){
+			var inst = new DropboxFileDownloadRequestResult<T>(default(T), null);
 			inst.error = true;
 			inst.errorDescription = errorDescription;
 			return inst;

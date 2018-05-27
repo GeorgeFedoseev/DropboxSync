@@ -10,6 +10,7 @@ using UnityEngine;
 using DropboxSync.Model;
 using DropboxSync.Utils;
 using UnityEngine.UI;
+using System.IO;
 
 namespace DropboxSync {
 
@@ -74,14 +75,33 @@ namespace DropboxSync {
 			// 	Debug.Log(string.Format("download progress: {0}%", progress*100));
 			// });
 
-			GetFile<JsonArray>("/folder with spaces/second level depth folder/json_array_example.json", onResult: (result) => {
-				if(result.error){
-					Debug.LogError("Error downloading file: "+result.errorDescription);
-				}else{
-					Debug.Log("Got json array: "+string.Join(", ", result.data.Select(x => x as string)));
-				}
-			}, onProgress: (progress) => {
-				Debug.Log(string.Format("download progress: {0}%", progress*100));
+			// GetFile<JsonArray>("/folder with spaces/second level depth folder/json_array_example.json", onResult: (result) => {
+			// 	if(result.error){
+			// 		Debug.LogError("Error downloading file: "+result.errorDescription);
+			// 	}else{
+			// 		Debug.Log("Got json array: "+string.Join(", ", result.data.Select(x => x as string)));
+			// 	}
+			// }, onProgress: (progress) => {
+			// 	Debug.Log(string.Format("download progress: {0}%", progress*100));
+			// });
+
+			// GetFileMetadata("/folder with spaces/second level depth folder/json_array_example.json", onResult: (res) => {
+			// 	if(res.error){
+			// 		Debug.LogError(res.errorDescription);
+			// 	}else{
+			// 		Debug.Log("Got metadata: "+SimpleJson.SerializeObject(res.data));
+			// 	}
+			// });
+
+			CacheFile("/folder with spaces/second level depth folder/json_array_example.json", 
+			onSuccess: () => {
+				Debug.Log("Cached!");
+			},
+			onError: (errStr) => {
+				Debug.LogError(errStr);
+			},
+			onProgress: (progress) => {
+
 			});
 
 			
@@ -107,47 +127,172 @@ namespace DropboxSync {
 
 		// METHODS
 
-		public void GetFile<T>(string path, Action<DropboxRequestResult<T>> onResult, Action<float> onProgress = null) where T : class{
-			Action<DropboxRequestResult<byte[]>> onResultMiddle = null;
+		public void GetFile<T>(string path, Action<DropboxFileDownloadRequestResult<T>> onResult, Action<float> onProgress = null) where T : class{
+			Action<DropboxFileDownloadRequestResult<byte[]>> onResultMiddle = null;
 
 			if(typeof(T) == typeof(string)){
 				// TEXT DATA
 				onResultMiddle = (res) => {					
-					onResult(new DropboxRequestResult<T>(DropboxSyncUtils.GetAudtoDetectedEncodingStringFromBytes(res.data) as T));										
+					onResult(new DropboxFileDownloadRequestResult<T>(DropboxSyncUtils.GetAudtoDetectedEncodingStringFromBytes(res.data) as T, res.fileMetadata));										
 				};				
 			}
 			else if(typeof(T) == typeof(JsonObject) || typeof(T) == typeof(JsonArray)){
 				// JSON OBJECT/ARRAY
 				onResultMiddle = (res) => {					
-					onResult(new DropboxRequestResult<T>(SimpleJson.DeserializeObject(
+					onResult(new DropboxFileDownloadRequestResult<T>(SimpleJson.DeserializeObject(
 						DropboxSyncUtils.GetAudtoDetectedEncodingStringFromBytes(res.data)
-					) as T));
+					) as T, res.fileMetadata));
 				};	
 			}
 			else if(typeof(T) == typeof(Texture2D)){
 				// IMAGE DATA
 				onResultMiddle = (res) => {					
-					onResult(new DropboxRequestResult<T>(DropboxSyncUtils.LoadImageToTexture2D(res.data) as T));
+					onResult(new DropboxFileDownloadRequestResult<T>(DropboxSyncUtils.LoadImageToTexture2D(res.data) as T, res.fileMetadata));
 				};	
 			}
 			else{
-				onResult(DropboxRequestResult<T>.Error(string.Format("Dont have a mapping byte[] -> {0}. Type {0} is not supported.", typeof(T).ToString())));
+				onResult(DropboxFileDownloadRequestResult<T>.Error(string.Format("Dont have a mapping byte[] -> {0}. Type {0} is not supported.", typeof(T).ToString())));
 				return;
 			}
 
 			GetFile(path, onResultMiddle, onProgress);
 		}
 
-		public void GetFile(string path, Action<DropboxRequestResult<byte[]>> onResult, Action<float> onProgress = null){
+		public void GetFile(string path, Action<DropboxFileDownloadRequestResult<byte[]>> onResult, Action<float> onProgress = null){
 			var prms = new DropboxDownloadFileRequestParams(path);
 			MakeDropboxDownloadRequest("https://content.dropboxapi.com/2/files/download", prms,
 			onResponse: (fileMetadata, data) => {
-				onResult(new DropboxRequestResult<byte[]>(data));
+				onResult(new DropboxFileDownloadRequestResult<byte[]>(data, fileMetadata));
 			},
 			onProgress: onProgress,
 			onWebError: (webErrorStr) => {
-				onResult(DropboxRequestResult<byte[]>.Error(webErrorStr));
+				onResult(DropboxFileDownloadRequestResult<byte[]>.Error(webErrorStr));
 			});
+		}
+
+		public void GetFileMetadata(string path, Action<DropboxRequestResult<JsonObject>> onResult){
+			var prms = new DropboxGetMetadataRequestParams(path);
+
+			//Log("GetFileMetadata");
+			MakeDropboxRequest("https://api.dropboxapi.com/2/files/get_metadata", prms, 
+			onResponse: (jsonStr) => {
+				onResult(new DropboxRequestResult<JsonObject>(SimpleJson.DeserializeObject(jsonStr) as JsonObject));
+			},
+			onProgress:null,
+			onWebError: (errStr) => {
+				//Log("GetFileMetadata:onWebError");
+				onResult(DropboxRequestResult<JsonObject>.Error(errStr));
+			});
+		}
+
+		void CacheFile(string dropboxPath, Action onSuccess, Action<float> onProgress, Action<string> onError){
+
+			var metadataFilePath = GetMetadataFilePath(dropboxPath);
+
+			JsonObject remoteMedatadata = null;
+
+			if(File.Exists(metadataFilePath)){
+				// get local content hash
+				var fileJsonStr = File.ReadAllText(metadataFilePath);
+				string local_content_hash = null;
+				bool localMetadataReadError = false;
+				try {
+					var localJsonMetadata = SimpleJson.DeserializeObject(fileJsonStr) as JsonObject;
+					local_content_hash = localJsonMetadata["content_hash"].ToString();
+				}catch{
+					localMetadataReadError = true;					
+				}				
+
+				if(!localMetadataReadError){
+					// request for metadata to get remote content hash
+					//Log("Getting metadata");
+					GetFileMetadata(dropboxPath, onResult: (res) => {
+						if(res.error){							
+							if (res.errorDescription.Contains("not_found")){
+								//Log("file not found");
+								// delete file from cache
+								DeleteFileFromCache(dropboxPath);
+							}else{
+								onError(res.errorDescription);
+							}
+							return;						
+						}else{
+							//Log("Got metadata");
+							remoteMedatadata = res.data;
+							var remote_content_hash = remoteMedatadata["content_hash"].ToString();
+
+							if(local_content_hash != remote_content_hash){
+								DownloadToCache(dropboxPath, onSuccess: onSuccess, onProgress: onProgress, onError: onError);
+							}
+						}
+					});
+				}else{
+					//Log("Getting local metadata error - download to cache");
+					DownloadToCache(dropboxPath, onSuccess: onSuccess, onProgress: onProgress, onError: onError);	
+				}				
+				
+			}else{
+				DownloadToCache(dropboxPath, onSuccess: onSuccess, onProgress: onProgress, onError: onError);
+			}
+
+			
+		}
+
+		void DeleteFileFromCache(string dropboxPath){
+			var localFilePath = GetFilePathInCache(dropboxPath);
+			if(File.Exists(localFilePath)){
+				File.Delete(localFilePath);
+			}		
+
+			var metadataFilePath = GetMetadataFilePath(dropboxPath);
+			if(File.Exists(metadataFilePath)){
+				File.Delete(metadataFilePath);
+			}
+		}
+
+		void DownloadToCache (string dropboxPath, Action onSuccess, Action<float> onProgress, Action<string> onError){
+				//Log("DownloadToCache");
+				GetFile(dropboxPath, (res) => {
+					if(res.error){
+						onError(res.errorDescription);						
+					}else{
+						var localFilePath = GetFilePathInCache(dropboxPath);
+						Log("Cache folder path: "+CacheFolderPathForToken	);
+						Log("Local cached file path: "+localFilePath);					
+						
+
+						// make sure containing directory exists
+						var fileDirectoryPath = Path.GetDirectoryName(localFilePath);
+						Log("Local cached directory path: "+fileDirectoryPath);
+						Directory.CreateDirectory(fileDirectoryPath);
+
+						File.WriteAllBytes(localFilePath, res.data);						
+
+						// write metadata to separate file near
+						var newMetadataFilePath = GetMetadataFilePath(dropboxPath);
+						File.WriteAllText(newMetadataFilePath, SimpleJson.SerializeObject(res.fileMetadata));
+
+						Log("Wrote metadata file "+newMetadataFilePath);
+
+						onSuccess();
+					}
+				}, onProgress: onProgress);
+			}
+
+		string GetFilePathInCache(string dropboxPath){
+			var relativeDropboxPath = dropboxPath.Substring(1);
+			return Path.Combine(CacheFolderPathForToken, relativeDropboxPath);
+		}
+
+		string GetMetadataFilePath(string dropboxPath){
+			return GetFilePathInCache(dropboxPath)+".dbxsync";
+		}
+
+		string CacheFolderPathForToken {
+			get {
+				var accessTokeFirst5Characters = DBXAccessToken.Substring(0, 5);
+				return Path.Combine(Application.persistentDataPath, accessTokeFirst5Characters);
+			}		
 		}
 
 		public void GetFolder(string path, Action<DropboxRequestResult<DBXFolder>> onResult, Action<float> onProgress = null){
@@ -289,9 +434,21 @@ namespace DropboxSync {
 						}						
 					};
 
+					
+
 					client.UploadDataCompleted += (s, e) => {
+						//Log("MakeDropboxRequest:client.UploadDataCompleted");
 						if(e.Error != null){
-							onWebError(e.Error.Message);
+							//Log("MakeDropboxRequest:client.UploadDataCompleted:Error");
+							//var respStr = Encoding.UTF8.GetString(e.Result);
+							var webex = e.Error as WebException;
+							var stream = webex.Response.GetResponseStream();
+							var reader = new StreamReader(stream);
+							var responseStr = reader.ReadToEnd();
+							var json = SimpleJson.DeserializeObject(responseStr) as JsonObject;
+							var errorSummary = json["error_summary"].ToString();
+							//Log(responseStr);
+							onWebError(errorSummary);
 						}else{
 							var respStr = Encoding.UTF8.GetString(e.Result);
 							onResponse(respStr);
@@ -299,10 +456,17 @@ namespace DropboxSync {
 					};
 
 					var uri = new Uri(url);
+					//Log("MakeDropboxRequest:client.UploadDataAsync");
+					
 					client.UploadDataAsync(uri, "POST", Encoding.Default.GetBytes(jsonParameters));										
+					
+					
 				}
-			} catch (WebException ex){
+			} catch (Exception ex){
+				//onWebError(ex.Message);
+				//Log("caught exeption");
 				onWebError(ex.Message);
+				//Log(ex.Response.ToString());
 			}
 		}
 
@@ -332,7 +496,14 @@ namespace DropboxSync {
 
 					client.DownloadDataCompleted += (s, e) => {
 						if(e.Error != null){
-							onWebError(e.Error.Message);
+							var webex = e.Error as WebException;
+							var stream = webex.Response.GetResponseStream();
+							var reader = new StreamReader(stream);
+							var responseStr = reader.ReadToEnd();
+							var json = SimpleJson.DeserializeObject(responseStr) as JsonObject;
+							var errorSummary = json["error_summary"].ToString();
+							//Log(responseStr);
+							onWebError(errorSummary);
 						}else if(e.Cancelled){
 							onWebError("Download was cancelled.");
 						}else{
@@ -383,7 +554,7 @@ namespace DropboxSync {
 				client.Headers.Set("Authorization", "Bearer "+DBXAccessToken);
 				client.Headers.Set("Content-Type", "application/json");				
 
-				var par = new DropboxGetMetadataParams{path="/folder with spaces"};
+				var par = new DropboxGetMetadataRequestParams("/folder with spaces");
 			
 
 				var respBytes = client.UploadData(url, "POST", Encoding.Default.GetBytes(JsonUtility.ToJson(par)));
