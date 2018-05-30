@@ -123,16 +123,16 @@ namespace DropboxSync {
 
 
 
-			// FolderGetRemoteChanges("/HelloThereFolder", onResult: (res) => {
-			// 	if(res.error){
-			// 		Debug.LogError(res.errorDescription);
-			// 	}else{
-			// 		Debug.Log("File changes: "+res.data.Count);
-			// 		foreach(var change in res.data){
-			// 			Debug.Log(string.Format("{0} - {1}", change.path, change.change.ToString()));
-			// 		}
-			// 	}
-			// });
+			FolderGetRemoteChanges("/HelloThereFolder", onResult: (res) => {
+				if(res.error){
+					Debug.LogError(res.errorDescription);
+				}else{
+					Debug.Log("File changes: "+res.data.Count);
+					foreach(var change in res.data){
+						Debug.Log(string.Format("{0} - {1}", change.file.path, change.change.ToString()));
+					}
+				}
+			});
 
 
 
@@ -156,7 +156,7 @@ namespace DropboxSync {
 		void Update () {
 			if(Time.unscaledTime - _lastTimeCheckedForChanges > DBXChangeForChangesIntervalSeconds){
 				CheckChangesForSubscribedItems();
-				_lastTimeCheckedForChanges = Time.unscaledDeltaTime;
+				_lastTimeCheckedForChanges = Time.unscaledTime;
 			}
 		}
 
@@ -499,15 +499,18 @@ namespace DropboxSync {
 
 					Log("Find all metadata paths");
 					var localDirectoryPath = GetPathInCache(dropboxFolderPath);
-					foreach (string localMetadataFilePath in Directory.GetFiles(localDirectoryPath, "*.dbxsync", SearchOption.AllDirectories)){
-						Log(localMetadataFilePath);
-						var metadata = ParseLocalMetadata(localMetadataFilePath);
-						var dropboxPath = metadata.path;
-						if(!processedDropboxFilePaths.Contains(dropboxPath)){
-							// wasnt in remote data - means removed
-							fileChanges.Add(new DBXFileChange(new DBXFile(dropboxPath), DBXFileChangeType.Deleted));
+					if(Directory.Exists(localDirectoryPath)){
+						foreach (string localMetadataFilePath in Directory.GetFiles(localDirectoryPath, "*.dbxsync", SearchOption.AllDirectories)){
+							Log(localMetadataFilePath);
+							var metadata = ParseLocalMetadata(localMetadataFilePath);
+							var dropboxPath = metadata.path;
+							if(!processedDropboxFilePaths.Contains(dropboxPath)){
+								// wasnt in remote data - means removed
+								fileChanges.Add(new DBXFileChange(new DBXFile(dropboxPath), DBXFileChangeType.Deleted));
+							}
 						}
 					}
+					
 
 
 					onResult(new DropboxRequestResult<List<DBXFileChange>>(fileChanges));
