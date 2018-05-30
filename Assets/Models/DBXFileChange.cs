@@ -1,18 +1,20 @@
+namespace DropboxSync.Model {
 
+    public enum DBXFileChangeType {
+        None,
+        Modified,
+        Deleted,
+        Added
+    }
 
-public enum DBXFileChangeType {
-    None,
-    Modified,
-    Deleted,
-    Added
-}
+    public class DBXFileChange {
+        public DBXFile file;
+        public DBXFileChangeType change;    
+        
 
-public class DBXFileChange {
-    public string path;
-    public DBXFileChangeType change;    
-
-    public DBXFileChange(string p, DBXFileChangeType c){
-        path = p;
-        change = c;
+        public DBXFileChange(DBXFile f, DBXFileChangeType c){
+            file = f;
+            change = c;        
+        }
     }
 }

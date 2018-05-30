@@ -72,11 +72,11 @@ namespace DropboxSync.Model {
 
 	public class DropboxFileDownloadRequestResult<T> {
 		public T data;
-		public JsonObject fileMetadata;
+		public DBXFile fileMetadata;
 		public bool error = false;
 		public string errorDescription = null;
 
-		public DropboxFileDownloadRequestResult(T res, JsonObject metadata){
+		public DropboxFileDownloadRequestResult(T res, DBXFile metadata){
 			this.data = res;
 			fileMetadata = metadata;
 		}

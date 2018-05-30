@@ -15,22 +15,27 @@ namespace DropboxSync.Model {
 
         public DBXFile() {
             type = DBXItemType.File;
-
         }
+
+        public DBXFile(string p) {
+            path = p;
+        }
+
+
 
         public static DBXFile FromDropboxJsonObject(JsonObject obj){
             
-        return new DBXFile() {
-            id = obj["id"] as string,
-            name = obj["name"] as string,           
-            path = obj["path_lower"] as string,
+            return new DBXFile() {
+                id = obj["id"] as string,
+                name = obj["name"] as string,           
+                path = obj["path_lower"] as string,
 
-            clientModified = obj["client_modified"] as string,
-            serverModified = obj["server_modified"] as string,
-            revision_id = obj["rev"] as string,
-            filesize = long.Parse(obj["size"].ToString()),
-            contentHash = obj["content_hash"] as string
-        };
+                clientModified = obj["client_modified"] as string,
+                serverModified = obj["server_modified"] as string,
+                revision_id = obj["rev"] as string,
+                filesize = long.Parse(obj["size"].ToString()),
+                contentHash = obj["content_hash"] as string
+            };
         }
     }
 

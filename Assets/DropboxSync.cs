@@ -17,6 +17,7 @@ namespace DropboxSync {
 
 	public class DropboxSync : MonoBehaviour {
 
+		float DBXChangeForChangesIntervalSeconds = 5;
 		string DBXAccessToken = "2TNf3BjlBqAAAAAAAAAADBc1iIKdoEMOI2uig6oNFWtqijlveLRlDHAVDwrhbndr";
 		string _PersistentDataPath = null;
 
@@ -110,15 +111,17 @@ namespace DropboxSync {
 
 			// });
 
-			CacheFolder("/HelloThereFolder", onSuccess: () => {
-				Debug.Log("Cached folder!");
-			}, 
-			onProgress: (progress) => {
-				Debug.Log(progress);
-			}, 
-			onError: (errorStr) => {
-				Debug.LogError(errorStr);
-			});
+			// CacheFolder("/HelloThereFolder", onSuccess: () => {
+			// 	Debug.Log("Cached folder!");
+			// }, 
+			// onProgress: (progress) => {
+			// 	Debug.Log(progress);
+			// }, 
+			// onError: (errorStr) => {
+			// 	Debug.LogError(errorStr);
+			// });
+
+
 
 			// FolderGetRemoteChanges("/HelloThereFolder", onResult: (res) => {
 			// 	if(res.error){
@@ -151,7 +154,10 @@ namespace DropboxSync {
 		
 		// Update is called once per frame
 		void Update () {
-			
+			if(Time.unscaledTime - _lastTimeCheckedForChanges > DBXChangeForChangesIntervalSeconds){
+				CheckChangesForSubscribedItems();
+				_lastTimeCheckedForChanges = Time.unscaledDeltaTime;
+			}
 		}
 
 		// METHODS
@@ -163,18 +169,25 @@ namespace DropboxSync {
 
 		// MONITORING CHANGES
 
+		float _lastTimeCheckedForChanges = -999999;
+
 		Dictionary<DBXItem, List<Action<List<DBXFileChange>>>> OnChangeCallbacksDict = new Dictionary<DBXItem, List<Action<List<DBXFileChange>>>>();
 
 		void CheckChangesForSubscribedItems(){
+			Log("CheckChangesForSubscribedItems");
+
 			foreach(var kv in OnChangeCallbacksDict){
 				var item = kv.Key;
 				var callbacks = kv.Value;
 				
 				switch(item.type){
 					case DBXItemType.File:
-					FileGetRemoteChanges(item.path, (changeType) => {
+					FileGetRemoteChanges(item.path, (fileChange) => {
+						// write to local metadata to save state
+						SaveFileMetadata(fileChange.file);
+
 						foreach(var cb in callbacks){
-							cb(new List<DBXFileChange>(){new DBXFileChange(item.path, changeType)});
+							cb(new List<DBXFileChange>(){fileChange});
 						}
 					}, (errorStr) => {
 						LogError("Failed to check file changes: "+errorStr);
@@ -204,6 +217,8 @@ namespace DropboxSync {
 			}
 
 			OnChangeCallbacksDict[item].Add(onChange);
+
+			CheckChangesForSubscribedItems();
 		}
 
 		public void UnsubscribeAllForItem(DBXItem item){
@@ -221,7 +236,7 @@ namespace DropboxSync {
 
 		// GETTING FILE/FOLDER
 
-		public void GetFile<T>(string path, Action<DropboxFileDownloadRequestResult<T>> onResult, Action<float> onProgress = null) where T : class{
+		public void GetFile<T>(string dropboxPath, Action<DropboxFileDownloadRequestResult<T>> onResult, Action<float> onProgress = null) where T : class{
 			Action<DropboxFileDownloadRequestResult<byte[]>> onResultMiddle = null;
 
 			if(typeof(T) == typeof(string)){
@@ -249,11 +264,11 @@ namespace DropboxSync {
 				return;
 			}
 
-			GetFile(path, onResultMiddle, onProgress);
+			GetFile(dropboxPath, onResultMiddle, onProgress);
 		}
 
-		public void GetFile(string path, Action<DropboxFileDownloadRequestResult<byte[]>> onResult, Action<float> onProgress = null){
-			var prms = new DropboxDownloadFileRequestParams(path);
+		public void GetFile(string dropboxPath, Action<DropboxFileDownloadRequestResult<byte[]>> onResult, Action<float> onProgress = null){
+			var prms = new DropboxDownloadFileRequestParams(dropboxPath);
 			MakeDropboxDownloadRequest("https://content.dropboxapi.com/2/files/download", prms,
 			onResponse: (fileMetadata, data) => {
 				onResult(new DropboxFileDownloadRequestResult<byte[]>(data, fileMetadata));
@@ -264,25 +279,26 @@ namespace DropboxSync {
 			});
 		}
 
-		public void GetFileMetadata(string path, Action<DropboxRequestResult<JsonObject>> onResult){
-			var prms = new DropboxGetMetadataRequestParams(path);
+		public void GetFileMetadata(string dropboxPath, Action<DropboxRequestResult<DBXFile>> onResult){
+			var prms = new DropboxGetMetadataRequestParams(dropboxPath);
 
 			//Log("GetFileMetadata");
 			MakeDropboxRequest("https://api.dropboxapi.com/2/files/get_metadata", prms, 
 			onResponse: (jsonStr) => {
-				onResult(new DropboxRequestResult<JsonObject>(SimpleJson.DeserializeObject(jsonStr) as JsonObject));
+				var fileMetadata = JsonUtility.FromJson<DBXFile>(jsonStr);
+				onResult(new DropboxRequestResult<DBXFile>(fileMetadata));
 			},
 			onProgress:null,
 			onWebError: (errStr) => {
 				//Log("GetFileMetadata:onWebError");
-				onResult(DropboxRequestResult<JsonObject>.Error(errStr));
+				onResult(DropboxRequestResult<DBXFile>.Error(errStr));
 			});
 		}
 
 
 		// CACHING
 
-		void CacheFolder(string dropboxFolderPath, Action onSuccess, Action<float> onProgress, Action<string> onError){
+		void UpdateFolderFromRemote(string dropboxFolderPath, Action onSuccess, Action<float> onProgress, Action<string> onError){
 			FolderGetRemoteChanges(dropboxFolderPath, onResult:(res) => {
 				if(res.error){
 					onError(res.errorDescription);
@@ -296,7 +312,7 @@ namespace DropboxSync {
 							var wasError = false;
 
 							if(fileChange.change == DBXFileChangeType.Added || fileChange.change == DBXFileChangeType.Modified){
-								DownloadToCache(fileChange.path, onSuccess: () => {
+								DownloadToCache(fileChange.file.path, onSuccess: () => {
 									finishedCachingFile = true;
 								}, 
 								onProgress: (progress) => {
@@ -309,7 +325,7 @@ namespace DropboxSync {
 								});
 							}else if(fileChange.change == DBXFileChangeType.Deleted){
 								// file deleted on remote
-								DeleteFileFromCache(fileChange.path);
+								DeleteFileFromCache(fileChange.file.path);
 								finishedCachingFile = true;
 							}else{
 								// no changes
@@ -342,15 +358,16 @@ namespace DropboxSync {
 			
 		}
 
-		void CacheFile(DBXFile dropboxFile, Action onSuccess, Action<float> onProgress, Action<string> onError){
-			CacheFile(dropboxFile.path, onSuccess, onProgress, onError);
+		void UpdateFileFromRemote(DBXFile dropboxFile, Action onSuccess, Action<float> onProgress, Action<string> onError){
+			UpdateFileFromRemote(dropboxFile.path, onSuccess, onProgress, onError);
 		}
 
-		void CacheFile(string dropboxPath, Action onSuccess, Action<float> onProgress, Action<string> onError){
-			FileGetRemoteChanges(dropboxPath, onResult: (change) => {
-				if(change == DBXFileChangeType.Modified || change == DBXFileChangeType.Added){
+		void UpdateFileFromRemote(string dropboxPath, Action onSuccess, Action<float> onProgress, Action<string> onError){
+			FileGetRemoteChanges(dropboxPath, onResult: (fileChange) => {
+				
+				if(fileChange.change == DBXFileChangeType.Modified || fileChange.change == DBXFileChangeType.Added){
 					DownloadToCache(dropboxPath, onSuccess: onSuccess, onProgress: onProgress, onError: onError);
-				}else if(change == DBXFileChangeType.Deleted){
+				}else if(fileChange.change == DBXFileChangeType.Deleted){
 					DeleteFileFromCache(dropboxPath);
 					onSuccess();
 				}else{
@@ -359,16 +376,18 @@ namespace DropboxSync {
 			}, onError: onError);									
 		}
 
-		void DeleteFileFromCache(string dropboxPath){
+		void DeleteFileFromCache(string dropboxPath, bool deleteWithMetadata = true){
 			var localFilePath = GetPathInCache(dropboxPath);
 			if(File.Exists(localFilePath)){
 				File.Delete(localFilePath);
 			}		
 
-			var metadataFilePath = GetMetadataFilePath(dropboxPath);
-			if(File.Exists(metadataFilePath)){
-				File.Delete(metadataFilePath);
-			}
+			if(deleteWithMetadata){
+				var metadataFilePath = GetMetadataFilePath(dropboxPath);
+				if(File.Exists(metadataFilePath)){
+					File.Delete(metadataFilePath);
+				}	
+			}			
 		}
 
 		void DownloadToCache (string dropboxPath, Action onSuccess, Action<float> onProgress, Action<string> onError){
@@ -389,19 +408,23 @@ namespace DropboxSync {
 
 						File.WriteAllBytes(localFilePath, res.data);						
 
-						// write metadata to separate file near
-						var newMetadataFilePath = GetMetadataFilePath(dropboxPath);
-						File.WriteAllText(newMetadataFilePath, SimpleJson.SerializeObject(res.fileMetadata));
-
-						Log("Wrote metadata file "+newMetadataFilePath);
+						// write metadata
+						SaveFileMetadata(res.fileMetadata);
 
 						onSuccess();
 					}
 				}, onProgress: onProgress);
-			}
+		}
+
+		bool IsFileDownloaded(string dropboxPath){
+			return File.Exists(GetPathInCache(dropboxPath));
+		}
 
 		string GetPathInCache(string dropboxPath){
 			var relativeDropboxPath = dropboxPath.Substring(1);
+			if(relativeDropboxPath.Last() == '/'){
+				relativeDropboxPath = relativeDropboxPath.Substring(relativeDropboxPath.Length-1);
+			}
 			return Path.Combine(CacheFolderPathForToken, relativeDropboxPath);
 		}	
 
@@ -416,18 +439,32 @@ namespace DropboxSync {
 			}		
 		}
 
-		JsonObject GetLocalMetadataForFile(string dropboxFilePath){
+		void SaveFileMetadata(DBXFile fileMetadata){		
+
+			var localFilePath = GetPathInCache(fileMetadata.path);			
+			// make sure containing directory exists
+			var fileDirectoryPath = Path.GetDirectoryName(localFilePath);
+			//Log("Local cached directory path: "+fileDirectoryPath);
+			Directory.CreateDirectory(fileDirectoryPath);
+
+			// write metadata to separate file near
+			var newMetadataFilePath = GetMetadataFilePath(fileMetadata.path);
+			File.WriteAllText(newMetadataFilePath, JsonUtility.ToJson(fileMetadata));
+			Log("Wrote metadata file "+newMetadataFilePath);
+		}
+
+		DBXFile GetLocalMetadataForFile(string dropboxFilePath){
 			var metadataFilePath = GetMetadataFilePath(dropboxFilePath);
 			return ParseLocalMetadata(metadataFilePath);
 		}
 
-		JsonObject ParseLocalMetadata(string localMetadataPath){
+		DBXFile ParseLocalMetadata(string localMetadataPath){
 			if(File.Exists(localMetadataPath)){
 				// get local content hash
 				var fileJsonStr = File.ReadAllText(localMetadataPath);				
 				
 				try {
-					return SimpleJson.DeserializeObject(fileJsonStr) as JsonObject;					
+					return JsonUtility.FromJson<DBXFile>(fileJsonStr);					
 				}catch{
 					return null;
 				}		
@@ -445,15 +482,15 @@ namespace DropboxSync {
 				}else{
 					var fileChanges = new List<DBXFileChange>();
 
-					foreach(DBXFile file in res.data.Where(x => x.type == DBXItemType.File)){
-						var localMetadata = GetLocalMetadataForFile(file.path);
+					foreach(DBXFile remoteMetadata in res.data.Where(x => x.type == DBXItemType.File)){
+						var localMetadata = GetLocalMetadataForFile(remoteMetadata.path);
 						if(localMetadata != null){
-							if(localMetadata["content_hash"].ToString() != file.contentHash){
-								fileChanges.Add(new DBXFileChange(file.path, DBXFileChangeType.Modified));						
+							if(localMetadata.contentHash != remoteMetadata.contentHash){
+								fileChanges.Add(new DBXFileChange(remoteMetadata, DBXFileChangeType.Modified));						
 							}
 						}else{
 							// no local metadata for this remote path - new object
-							fileChanges.Add(new DBXFileChange(file.path, DBXFileChangeType.Added));
+							fileChanges.Add(new DBXFileChange(remoteMetadata, DBXFileChangeType.Added));
 						}						
 					}
 
@@ -465,10 +502,10 @@ namespace DropboxSync {
 					foreach (string localMetadataFilePath in Directory.GetFiles(localDirectoryPath, "*.dbxsync", SearchOption.AllDirectories)){
 						Log(localMetadataFilePath);
 						var metadata = ParseLocalMetadata(localMetadataFilePath);
-						var dropboxPath = metadata["path_lower"].ToString();
+						var dropboxPath = metadata.path;
 						if(!processedDropboxFilePaths.Contains(dropboxPath)){
 							// wasnt in remote data - means removed
-							fileChanges.Add(new DBXFileChange(dropboxPath, DBXFileChangeType.Deleted));
+							fileChanges.Add(new DBXFileChange(new DBXFile(dropboxPath), DBXFileChangeType.Deleted));
 						}
 					}
 
@@ -478,60 +515,58 @@ namespace DropboxSync {
 			}, recursive:true, onProgress:null);
 		}
 
-		public void FileGetRemoteChanges(string dropboxFilePath, Action<DBXFileChangeType> onResult, Action<string> onError){
+		public void FileGetRemoteChanges(string dropboxFilePath, Action<DBXFileChange> onResult, Action<string> onError){
 			var localFilePath = GetPathInCache(dropboxFilePath);
-			var metadataFilePath = GetMetadataFilePath(dropboxFilePath);
-
-			JsonObject remoteMedatadata = null;
-
-			var localMetadata = GetLocalMetadataForFile(dropboxFilePath);
-
-			if(localMetadata != null){
-				// get local content hash				
-				var local_content_hash = localMetadata["content_hash"].ToString();							
-
+			var metadataFilePath = GetMetadataFilePath(dropboxFilePath);			
 				
-				// request for metadata to get remote content hash
-				//Log("Getting metadata");
-				GetFileMetadata(dropboxFilePath, onResult: (res) => {
-					if(res.error){							
-						if (res.errorDescription.Contains("not_found")){
-							//Log("file not found");
-							// file was deleted or moved
-							onResult(DBXFileChangeType.Deleted);				
-						}else{
-							onError(res.errorDescription);
-						}
-						return;						
+			// request for metadata to get remote content hash
+			//Log("Getting metadata");
+			GetFileMetadata(dropboxFilePath, onResult: (res) => {
+				if(res.error){							
+					if (res.errorDescription.Contains("not_found")){
+						//Log("file not found");
+						// file was deleted or moved
+						onResult(new DBXFileChange(new DBXFile(dropboxFilePath), DBXFileChangeType.Deleted));				
 					}else{
-						//Log("Got metadata");
-						remoteMedatadata = res.data;
-						var remote_content_hash = remoteMedatadata["content_hash"].ToString();
+						onError(res.errorDescription);
+					}
+					return;						
+				}else{
+					//Log("Got metadata");
+					var remoteMedatadata = res.data;
+
+					var localMetadata = GetLocalMetadataForFile(dropboxFilePath);			
+					if(localMetadata != null){
+						// get local content hash				
+						var local_content_hash = localMetadata.contentHash;
+
+						var remote_content_hash = remoteMedatadata.contentHash;
 
 						if(local_content_hash != remote_content_hash){
-							onResult(DBXFileChangeType.Modified);
+							onResult(new DBXFileChange(remoteMedatadata, DBXFileChangeType.Modified));
 						}else{
 							// check if local file has same size
-							var remoteByteSize = (long)remoteMedatadata["size"];								
+							var remoteByteSize = remoteMedatadata.filesize;								
 							if(File.Exists(localFilePath)){
 								var localByteSize = new FileInfo(localFilePath).Length;
 								if(localByteSize != remoteByteSize){
-									onResult(DBXFileChangeType.Modified);
+									onResult(new DBXFileChange(remoteMedatadata, DBXFileChangeType.Modified));
 								}else{
-									onResult(DBXFileChangeType.None);
+									onResult(new DBXFileChange(remoteMedatadata, DBXFileChangeType.None));
 								}
 							}else{
-								onResult(DBXFileChangeType.Added);
+								onResult(new DBXFileChange(remoteMedatadata, DBXFileChangeType.Added));
 							}
-						}
+						}	
+					}else{
+						// metadata file doesnt exist
+						// TODO: check maybe file itself exists and right version, then just create metadata file - no need to redownload file itself
+						onResult(new DBXFileChange(remoteMedatadata, DBXFileChangeType.Added));
 					}
-				});
+				}
+			});
 												
-			}else{
-				// metadata file doesnt exist
-				// TODO: check maybe file itself exists and right version, then just create metadata file - no need to redownload file itself
-				onResult(DBXFileChangeType.Added);
-			}	
+				
 		}
 
 		
@@ -723,11 +758,11 @@ namespace DropboxSync {
 			}
 		}
 
-		void MakeDropboxDownloadRequest<T>(string url, T parametersObject, Action<JsonObject, byte[]> onResponse, Action<float> onProgress, Action<string> onWebError) where T : DropboxRequestParams{
+		void MakeDropboxDownloadRequest<T>(string url, T parametersObject, Action<DBXFile, byte[]> onResponse, Action<float> onProgress, Action<string> onWebError) where T : DropboxRequestParams{
 			MakeDropboxDownloadRequest(url, JsonUtility.ToJson(parametersObject), onResponse, onProgress, onWebError);
 		}
 
-		void MakeDropboxDownloadRequest(string url, string jsonParameters, Action<JsonObject, byte[]> onResponse, Action<float> onProgress, Action<string> onWebError){
+		void MakeDropboxDownloadRequest(string url, string jsonParameters, Action<DBXFile, byte[]> onResponse, Action<float> onProgress, Action<string> onWebError){
 			try {
 				using (var client = new WebClient()){				
 					client.Headers.Set("Authorization", "Bearer "+DBXAccessToken);					
@@ -772,7 +807,7 @@ namespace DropboxSync {
 							//var respStr = Encoding.UTF8.GetString(e.Result);
 							var metadataJsonStr = client.ResponseHeaders["Dropbox-API-Result"].ToString();
 							Log(metadataJsonStr);
-							var fileMetadata = SimpleJson.DeserializeObject(metadataJsonStr) as JsonObject;
+							var fileMetadata = JsonUtility.FromJson<DBXFile>(metadataJsonStr);
 							onResponse(fileMetadata, e.Result);
 						}
 					};
