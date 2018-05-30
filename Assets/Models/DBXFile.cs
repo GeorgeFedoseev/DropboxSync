@@ -1,5 +1,5 @@
 using System;
-
+using DropboxSync.Utils;
 
 namespace DropboxSync.Model {
 
@@ -13,12 +13,19 @@ namespace DropboxSync.Model {
         public long filesize;
         public string contentHash;
 
+        public bool deletedOnRemote = false;
+
         public DBXFile() {
             type = DBXItemType.File;
         }
 
         public DBXFile(string p) {
-            path = p;
+            type = DBXItemType.File;
+            path = DropboxSyncUtils.NormalizePath(p);
+        }
+
+        public static DBXFile DeletedOnRemote(string p) {
+            return new DBXFile{path=p, deletedOnRemote=true};
         }
 
 

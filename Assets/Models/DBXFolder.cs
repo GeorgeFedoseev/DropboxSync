@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DropboxSync.Utils;
 
 namespace DropboxSync.Model {
 
@@ -10,6 +11,11 @@ namespace DropboxSync.Model {
 
         public DBXFolder() {
             type = DBXItemType.Folder;
+        }
+
+        public DBXFolder(string p) {
+            type = DBXItemType.Folder;
+            path = DropboxSyncUtils.NormalizePath(p);
         }
 
         public static DBXFolder FromDropboxJsonObject(JsonObject obj){
