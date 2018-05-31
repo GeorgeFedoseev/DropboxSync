@@ -2,6 +2,7 @@
 
 using System;
 using System.Linq;
+using System.Net;
 using UnityEngine;
 
 namespace DropboxSync.Utils {
@@ -43,6 +44,18 @@ namespace DropboxSync.Utils {
                 var detectedEncoding = reader.CurrentEncoding;
                 return detectedEncoding.GetString(bytes);
             }	
+        }
+
+        public static bool IsOnline(){
+            try {
+                using (WebClient client = new WebClient()){
+                    using (client.OpenRead("http://www.google.com/")){
+                        return true;
+                    }
+                }
+            }catch{
+                return false;
+            }
         }
 
     }
