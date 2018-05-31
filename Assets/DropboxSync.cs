@@ -296,7 +296,7 @@ namespace DropboxSync {
 				// TEXT DATA
 				onResultMiddle = (res) => {		
 					if(res.error){
-						DropboxRequestResult<T>.Error(res.errorDescription);
+						onResult(DropboxRequestResult<T>.Error(res.errorDescription));
 					}else{			
 						onResult(new DropboxRequestResult<T>(DropboxSyncUtils.GetAudtoDetectedEncodingStringFromBytes(res.data) as T));										
 					}
@@ -308,7 +308,7 @@ namespace DropboxSync {
 				// JSON OBJECT/ARRAY
 				onResultMiddle = (res) => {					
 					if(res.error){
-						DropboxRequestResult<T>.Error(res.errorDescription);
+						onResult(DropboxRequestResult<T>.Error(res.errorDescription));
 					}else{
 						onResult(new DropboxRequestResult<T>(SimpleJson.DeserializeObject(
 							DropboxSyncUtils.GetAudtoDetectedEncodingStringFromBytes(res.data)
@@ -321,7 +321,7 @@ namespace DropboxSync {
 				// IMAGE DATA
 				onResultMiddle = (res) => {				
 					if(res.error){
-						DropboxRequestResult<T>.Error(res.errorDescription);
+						onResult(DropboxRequestResult<T>.Error(res.errorDescription));
 					}else{
 						onResult(new DropboxRequestResult<T>(DropboxSyncUtils.LoadImageToTexture2D(res.data) as T));
 					}
