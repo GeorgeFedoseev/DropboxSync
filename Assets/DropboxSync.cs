@@ -23,6 +23,8 @@ namespace DropboxSync {
 		string DBXAccessToken = "2TNf3BjlBqAAAAAAAAAADBc1iIKdoEMOI2uig6oNFWtqijlveLRlDHAVDwrhbndr";
 		string _PersistentDataPath = null;
 
+		List<Action> MainThreadQueuedActions = new List<Action>();
+
 		void Awake(){
 			Initialize();
 		}
@@ -144,25 +146,40 @@ namespace DropboxSync {
 			// 		}
 			// });
 
-			SubscribeToFileChanges("/hellotherefolder/fatezer.mp3", (change) => {
-				Debug.Log("File change: "+change.file.path+" - "+change.change.ToString());
+			Action<string> updatePic = (dropboxPath) => {
+				var rawImage = FindObjectOfType<RawImage>();
+
+				if(dropboxPath != null){
+					GetFile<Texture2D>(dropboxPath, onResult: (result) => {
+						if(result.error){
+							Debug.LogError("Error downloading file: "+result.errorDescription);
+						}else{
+							Debug.Log("Got Texture2D: "+result.data.width+"x"+result.data.height);
+							
+							rawImage.texture = result.data;
+							rawImage.GetComponent<AspectRatioFitter>().aspectRatio = (float)result.data.width/result.data.height;
+						}
+					}, onProgress: (progress) => {
+						Debug.Log(string.Format("download progress: {0}%", progress*100));
+					});
+				}else{
+					rawImage.texture = null;
+				}
+				
+			};
+
+			SubscribeToFileChanges("/Meydanprojectsmap_scaled.jpg", (change) => {
+				if(change.change == DBXFileChangeType.Deleted){
+					updatePic(null);
+				}else{
+					updatePic(change.file.path);
+				}				
 			});
 
 
 			
 
-			// GetFile<Texture2D>("/Meydanprojectsmap_scaled.jpg", onResult: (result) => {
-			// 	if(result.error){
-			// 		Debug.LogError("Error downloading file: "+result.errorDescription);
-			// 	}else{
-			// 		Debug.Log("Got Texture2D: "+result.data.width+"x"+result.data.height);
-			// 		var rawImage = FindObjectOfType<RawImage>();
-			// 		rawImage.texture = result.data;
-			// 		rawImage.GetComponent<AspectRatioFitter>().aspectRatio = (float)result.data.width/result.data.height;
-			// 	}
-			// }, onProgress: (progress) => {
-			// 	Debug.Log(string.Format("download progress: {0}%", progress*100));
-			// });
+			
 		}
 		
 		// Update is called once per frame
@@ -170,6 +187,14 @@ namespace DropboxSync {
 			if(Time.unscaledTime - _lastTimeCheckedForChanges > DBXChangeForChangesIntervalSeconds){
 				CheckChangesForSubscribedItems();
 				_lastTimeCheckedForChanges = Time.unscaledTime;
+			}
+
+			lock(MainThreadQueuedActions){
+				var _currentActions = new List<Action>(MainThreadQueuedActions);
+				MainThreadQueuedActions.Clear();
+				foreach(var a in _currentActions){
+					a();
+				}
 			}
 		}
 
@@ -775,10 +800,14 @@ namespace DropboxSync {
 							//Log(string.Format("Downloaded {0} bytes out of {1}", e.BytesReceived, e.TotalBytesToReceive));
 							if(e.TotalBytesToReceive != -1){
 								// if download size in known from server
-								onProgress((float)e.BytesReceived/e.TotalBytesToReceive);	
+								QueueOnMainThread(() => {
+									onProgress((float)e.BytesReceived/e.TotalBytesToReceive);	
+								});
 							}else{
 								// return progress is going but unknown
-								onProgress(-1);
+								QueueOnMainThread(() => {
+									onProgress(-1);
+								});
 							}
 						}						
 					};
@@ -798,17 +827,25 @@ namespace DropboxSync {
 								try{								
 									var json = SimpleJson.DeserializeObject(responseStr) as JsonObject;
 									var errorSummary = json["error_summary"].ToString();								
-									onWebError(errorSummary);
+									QueueOnMainThread(() => {
+										onWebError(errorSummary);
+									});
 								}catch{
-									onWebError(e.Error.Message);
+									QueueOnMainThread(() => {
+										onWebError(e.Error.Message);
+									});
 								}
 							}else{
-								onWebError(e.Error.Message);
+								QueueOnMainThread(() => {
+									onWebError(e.Error.Message);
+								});
 							}
 
 						}else{
 							var respStr = Encoding.UTF8.GetString(e.Result);
-							onResponse(respStr);
+							QueueOnMainThread(() => {
+								onResponse(respStr);
+							});
 						}
 					};
 
@@ -843,10 +880,14 @@ namespace DropboxSync {
 							//Log(string.Format("Downloaded {0} bytes out of {1} ({2}%)", e.BytesReceived, e.TotalBytesToReceive, e.ProgressPercentage));
 							if(e.TotalBytesToReceive != -1){
 								// if download size in known from server
-								onProgress((float)e.BytesReceived/e.TotalBytesToReceive);	
+								QueueOnMainThread(() => {
+									onProgress((float)e.BytesReceived/e.TotalBytesToReceive);	
+								});
 							}else{
 								// return progress is going but unknown
-								onProgress(-1);
+								QueueOnMainThread(() => {
+									onProgress(-1);
+								});
 							}
 						}						
 					};
@@ -862,23 +903,34 @@ namespace DropboxSync {
 
 								try{								
 									var json = SimpleJson.DeserializeObject(responseStr) as JsonObject;
-									var errorSummary = json["error_summary"].ToString();								
-									onWebError(errorSummary);
+									var errorSummary = json["error_summary"].ToString();	
+									QueueOnMainThread(() => {							
+										onWebError(errorSummary);
+									});
 								}catch{
-									onWebError(e.Error.Message);
+									QueueOnMainThread(() => {
+										onWebError(e.Error.Message);
+									});
 								}
 							}else{
-								onWebError(e.Error.Message);
+								QueueOnMainThread(() => {
+									onWebError(e.Error.Message);
+								});
 							}
 						}else if(e.Cancelled){
-							onWebError("Download was cancelled.");
+							QueueOnMainThread(() => {
+								onWebError("Download was cancelled.");
+							});
 						}else{
 							//var respStr = Encoding.UTF8.GetString(e.Result);
 							var metadataJsonStr = client.ResponseHeaders["Dropbox-API-Result"].ToString();
 							Log(metadataJsonStr);
 							var jsonObj = SimpleJson.DeserializeObject(metadataJsonStr) as JsonObject;
 							var fileMetadata = DBXFile.FromDropboxJsonObject(jsonObj);
-							onResponse(fileMetadata, e.Result);
+
+							QueueOnMainThread(() => {
+								onResponse(fileMetadata, e.Result);
+							});							
 						}
 					};
 
@@ -886,7 +938,9 @@ namespace DropboxSync {
 					client.DownloadDataAsync(uri);
 				}
 			} catch (WebException ex){
-				onWebError(ex.Message);
+				QueueOnMainThread(() => {
+					onWebError(ex.Message);
+				});
 			}
 		} 
 
@@ -931,6 +985,14 @@ namespace DropboxSync {
 		// 	}
 		// }
 
+
+		// THREADING
+
+		void QueueOnMainThread(Action a){
+			lock(MainThreadQueuedActions){
+				MainThreadQueuedActions.Add(a);
+			}
+		}
 
 		// LOGGING
 
