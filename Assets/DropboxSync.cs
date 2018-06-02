@@ -402,8 +402,7 @@ namespace DropboxSync {
 			//Log("GetFileMetadata");
 			MakeDropboxRequest("https://api.dropboxapi.com/2/files/get_metadata", prms, 
 			onResponse: (jsonStr) => {
-				var dict = JSON.FromJson<Dictionary<string, object>>(jsonStr);
-				Log("Parsed metadata dict: "+dict.ToJson());
+				var dict = JSON.FromJson<Dictionary<string, object>>(jsonStr);				
 				var fileMetadata = DBXFile.FromDropboxDictionary(dict);
 				onResult(new DropboxRequestResult<DBXFile>(fileMetadata));
 			},
@@ -916,8 +915,7 @@ namespace DropboxSync {
 
 						}else{
 							var respStr = Encoding.UTF8.GetString(e.Result);
-							QueueOnMainThread(() => {
-								Log("respStr: "+respStr);
+							QueueOnMainThread(() => {								
 								onResponse(respStr);
 							});
 						}
