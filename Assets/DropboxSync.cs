@@ -15,6 +15,7 @@ using System.Threading;
 
 
 
+
 namespace DropboxSync {
 
 	public class DropboxSync : MonoBehaviour {
@@ -31,6 +32,10 @@ namespace DropboxSync {
 
 		// Use this for initialization
 		void Start () {
+
+			//var obj = JSON.FromJson<Dictionary<string, int>>("{\"a\": 1}");
+			//Debug.Log(obj["a"]);
+			//Debug.Log(JSON.ToJson(obj));
 
 			// try {
 			// 	TestListFolder();	
@@ -76,25 +81,27 @@ namespace DropboxSync {
 			// 	Debug.Log(string.Format("download progress: {0}%", progress*100));
 			// });
 
-			// GetFile<JsonObject>("/folder with spaces/second level depth folder/dbx_list_recursive_example.json", onResult: (result) => {
-			// 	if(result.error){
-			// 		Debug.LogError("Error downloading file: "+result.errorDescription);
-			// 	}else{
-			// 		Debug.Log("Got json cursor: "+result.data["cursor"].ToString());
-			// 	}
-			// }, onProgress: (progress) => {
-			// 	Debug.Log(string.Format("download progress: {0}%", progress*100));
-			// });
+			GetFile<JsonObject>("/folder with spaces/second level depth folder/dbx_list_recursive_example.json", onResult: (result) => {
+				if(result.error){
+					Debug.LogError("Error downloading file: "+result.errorDescription);
+				}else{					
+					Debug.Log("Got json cursor: "+result.data["cursor"].ToString());
+					Debug.Log("Got json cusor back to json: "+JSON.ToJson(result.data));
+				}
+			}, onProgress: (progress) => {
+				Debug.Log(string.Format("download progress: {0}%", progress*100));
+			});
 
-			// GetFile<JsonArray>("/folder with spaces/second level depth folder/json_array_example.json", onResult: (result) => {
-			// 	if(result.error){
-			// 		Debug.LogError("Error downloading file: "+result.errorDescription);
-			// 	}else{
-			// 		Debug.Log("Got json array: "+string.Join(", ", result.data.Select(x => x as string)));
-			// 	}
-			// }, onProgress: (progress) => {
-			// 	Debug.Log(string.Format("download progress: {0}%", progress*100));
-			// });
+			GetFile<JsonArray>("/folder with spaces/second level depth folder/json_array_example.json", onResult: (result) => {
+				if(result.error){
+					Debug.LogError("Error downloading file: "+result.errorDescription);
+				}else{
+					Debug.Log("Got json array: "+string.Join(", ", result.data.Select(x => x as string).ToArray()));
+					Debug.Log("Got json array back to json: "+JSON.ToJson(result.data));
+				}
+			}, onProgress: (progress) => {
+				Debug.Log(string.Format("download progress: {0}%", progress*100));
+			});
 
 			// GetFileMetadata("/folder with spaces/second level depth folder/json_array_example.json", onResult: (res) => {
 			// 	if(res.error){
@@ -179,7 +186,9 @@ namespace DropboxSync {
 				var _currentActions = new List<Action>(MainThreadQueuedActions);
 				MainThreadQueuedActions.Clear();
 				foreach(var a in _currentActions){
-					a();
+					if(a != null){
+						a();
+					}						
 				}
 			}
 		}
@@ -310,9 +319,9 @@ namespace DropboxSync {
 					if(res.error){
 						onResult(DropboxRequestResult<T>.Error(res.errorDescription));
 					}else{
-						onResult(new DropboxRequestResult<T>(SimpleJson.DeserializeObject(
+						onResult(new DropboxRequestResult<T>(JSON.FromJson<T>(
 							DropboxSyncUtils.GetAudtoDetectedEncodingStringFromBytes(res.data)
-						) as T));
+						)));
 					}
 				};	
 			}
@@ -393,8 +402,9 @@ namespace DropboxSync {
 			//Log("GetFileMetadata");
 			MakeDropboxRequest("https://api.dropboxapi.com/2/files/get_metadata", prms, 
 			onResponse: (jsonStr) => {
-				var obj = SimpleJson.DeserializeObject(jsonStr) as JsonObject;
-				var fileMetadata = DBXFile.FromDropboxJsonObject(obj);
+				var dict = JSON.FromJson<Dictionary<string, object>>(jsonStr);
+				Log("Parsed metadata dict: "+dict.ToJson());
+				var fileMetadata = DBXFile.FromDropboxDictionary(dict);
 				onResult(new DropboxRequestResult<DBXFile>(fileMetadata));
 			},
 			onProgress:null,
@@ -804,20 +814,20 @@ namespace DropboxSync {
 			MakeDropboxRequest(url, prms, onResponse: (jsonStr) => {
 				Log("Got reponse: "+jsonStr);
 
-				JsonObject root = null;
+				Dictionary<string, object> root = null;
 				try {
-					root = SimpleJson.DeserializeObject(jsonStr) as JsonObject;
+					root = JSON.FromJson<Dictionary<string, object>>(jsonStr);
 				}catch(Exception ex){
 					onError(ex.Message);
 					return;
 				}
 
-				var entries = root["entries"] as JsonArray;
-				foreach(JsonObject entry in entries){
+				var entries = root["entries"] as List<object>;
+				foreach(Dictionary<string, object> entry in entries){
 					if(entry[".tag"].ToString() == "file"){
-						currentResults.Add(DBXFile.FromDropboxJsonObject(entry));
+						currentResults.Add(DBXFile.FromDropboxDictionary(entry));
 					}else if(entry[".tag"].ToString() == "folder"){
-						currentResults.Add(DBXFolder.FromDropboxJsonObject(entry));
+						currentResults.Add(DBXFolder.FromDropboxDictionary(entry));
 					}else{
 						onError("Unknown entry tag "+entry[".tag".ToString()]);
 						return;
@@ -888,8 +898,8 @@ namespace DropboxSync {
 								Log(responseStr);
 
 								try{								
-									var json = SimpleJson.DeserializeObject(responseStr) as JsonObject;
-									var errorSummary = json["error_summary"].ToString();								
+									var dict = JSON.FromJson<Dictionary<string, object>>(responseStr);
+									var errorSummary = dict["error_summary"].ToString();								
 									QueueOnMainThread(() => {
 										onWebError(errorSummary);
 									});
@@ -907,6 +917,7 @@ namespace DropboxSync {
 						}else{
 							var respStr = Encoding.UTF8.GetString(e.Result);
 							QueueOnMainThread(() => {
+								Log("respStr: "+respStr);
 								onResponse(respStr);
 							});
 						}
@@ -965,8 +976,8 @@ namespace DropboxSync {
 								Log(responseStr);
 
 								try{								
-									var json = SimpleJson.DeserializeObject(responseStr) as JsonObject;
-									var errorSummary = json["error_summary"].ToString();	
+									var dict = JSON.FromJson<Dictionary<string, object>>(responseStr);
+									var errorSummary = dict["error_summary"].ToString();	
 									QueueOnMainThread(() => {							
 										onWebError(errorSummary);
 									});
@@ -988,8 +999,8 @@ namespace DropboxSync {
 							//var respStr = Encoding.UTF8.GetString(e.Result);
 							var metadataJsonStr = client.ResponseHeaders["Dropbox-API-Result"].ToString();
 							Log(metadataJsonStr);
-							var jsonObj = SimpleJson.DeserializeObject(metadataJsonStr) as JsonObject;
-							var fileMetadata = DBXFile.FromDropboxJsonObject(jsonObj);
+							var dict = JSON.FromJson<Dictionary<string, object>>(metadataJsonStr);
+							var fileMetadata = DBXFile.FromDropboxDictionary(dict);
 
 							QueueOnMainThread(() => {
 								onResponse(fileMetadata, e.Result);

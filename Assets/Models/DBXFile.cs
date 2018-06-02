@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using DropboxSync.Utils;
 
 namespace DropboxSync.Model {
@@ -30,7 +31,7 @@ namespace DropboxSync.Model {
 
 
 
-        public static DBXFile FromDropboxJsonObject(JsonObject obj){
+        public static DBXFile FromDropboxDictionary(Dictionary<string, object> obj){
             
             return new DBXFile() {
                 id = obj["id"] as string,

@@ -18,8 +18,7 @@ namespace DropboxSync.Model {
             path = DropboxSyncUtils.NormalizePath(p);
         }
 
-        public static DBXFolder FromDropboxJsonObject(JsonObject obj){
-                       
+        public static DBXFolder FromDropboxDictionary(Dictionary<string, object> obj){                       
             
             return new DBXFolder() {
                 id = obj["id"] as string,
