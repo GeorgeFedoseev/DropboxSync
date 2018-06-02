@@ -81,27 +81,25 @@ namespace DropboxSync {
 			// 	Debug.Log(string.Format("download progress: {0}%", progress*100));
 			// });
 
-			GetFile<JsonObject>("/folder with spaces/second level depth folder/dbx_list_recursive_example.json", onResult: (result) => {
-				if(result.error){
-					Debug.LogError("Error downloading file: "+result.errorDescription);
-				}else{					
-					Debug.Log("Got json cursor: "+result.data["cursor"].ToString());
-					Debug.Log("Got json cusor back to json: "+JSON.ToJson(result.data));
-				}
-			}, onProgress: (progress) => {
-				Debug.Log(string.Format("download progress: {0}%", progress*100));
-			});
+			// GetFile<JsonObject>("/folder with spaces/second level depth folder/dbx_list_recursive_example.json", onResult: (result) => {
+			// 	if(result.error){
+			// 		Debug.LogError("Error downloading file: "+result.errorDescription);
+			// 	}else{					
+			// 		Debug.Log("Got json cursor: "+result.data["cursor"].ToString());					
+			// 	}
+			// }, onProgress: (progress) => {
+			// 	Debug.Log(string.Format("download progress: {0}%", progress*100));
+			// });
 
-			GetFile<JsonArray>("/folder with spaces/second level depth folder/json_array_example.json", onResult: (result) => {
-				if(result.error){
-					Debug.LogError("Error downloading file: "+result.errorDescription);
-				}else{
-					Debug.Log("Got json array: "+string.Join(", ", result.data.Select(x => x as string).ToArray()));
-					Debug.Log("Got json array back to json: "+JSON.ToJson(result.data));
-				}
-			}, onProgress: (progress) => {
-				Debug.Log(string.Format("download progress: {0}%", progress*100));
-			});
+			// GetFile<JsonArray>("/folder with spaces/second level depth folder/json_array_example.json", onResult: (result) => {
+			// 	if(result.error){
+			// 		Debug.LogError("Error downloading file: "+result.errorDescription);
+			// 	}else{
+			// 		Debug.Log("Got json array: "+string.Join(", ", result.data.Select(x => x as string).ToArray()));					
+			// 	}
+			// }, onProgress: (progress) => {
+			// 	Debug.Log(string.Format("download progress: {0}%", progress*100));
+			// });
 
 			// GetFileMetadata("/folder with spaces/second level depth folder/json_array_example.json", onResult: (res) => {
 			// 	if(res.error){
@@ -165,9 +163,10 @@ namespace DropboxSync {
 				if(res.error){
 					Debug.LogError(res.errorDescription);
 				}else{
+					Debug.Log("received texture");
 					updatePic(res.data);
 				}
-			}, useCachedIfPossible:false, useCachedIfOffline:false);
+			}, useCachedIfPossible:false, useCachedIfOffline:true, receiveUpdates:true);
 
 
 			
@@ -175,10 +174,33 @@ namespace DropboxSync {
 			
 		}
 		
+		// internet connection
+		bool _noIternetWarningDisplayed = false;
+		List<Action> OnInternetRecoverOnceCallbacks = new List<Action>();
+
 		// Update is called once per frame
 		void Update () {
 			if(Time.unscaledTime - _lastTimeCheckedForChanges > DBXChangeForChangesIntervalSeconds){
-				CheckChangesForSubscribedItems();
+				if(DropboxSyncUtils.IsOnline()){
+					if(_noIternetWarningDisplayed){
+						Log("Internet connection recovered");
+
+						foreach(var a in OnInternetRecoverOnceCallbacks){
+							a();
+						}
+						OnInternetRecoverOnceCallbacks.Clear();
+						
+					}
+					_noIternetWarningDisplayed = false;					
+					
+					CheckChangesForSubscribedItems();
+				}else{
+					if(!_noIternetWarningDisplayed){
+						LogWarning("No internet connection - can't check dropbox updates");
+					}					
+					_noIternetWarningDisplayed = true;
+				}
+				
 				_lastTimeCheckedForChanges = Time.unscaledTime;
 			}
 
@@ -205,6 +227,7 @@ namespace DropboxSync {
 		float _lastTimeCheckedForChanges = -999999;
 
 		Dictionary<DBXItem, List<Action<List<DBXFileChange>>>> OnChangeCallbacksDict = new Dictionary<DBXItem, List<Action<List<DBXFileChange>>>>();
+		
 
 		void CheckChangesForSubscribedItems(){
 			if(OnChangeCallbacksDict.Count == 0){
@@ -248,6 +271,10 @@ namespace DropboxSync {
 					break;
 				}
 			}
+		}
+
+		void SubscribeToInternetRecoverOnce(Action a){			
+			OnInternetRecoverOnceCallbacks.Add(a);
 		}
 
 		public void SubscribeToFileChanges(string dropboxFilePath, Action<DBXFileChange> onChange){
@@ -296,11 +323,11 @@ namespace DropboxSync {
 		// GETTING FILE/FOLDER
 
 		public void GetFile<T>(string dropboxPath, Action<DropboxRequestResult<T>> onResult, Action<float> onProgress = null, bool useCachedIfPossible = false,
-		bool useCachedIfOffline = true) where T : class{
+		bool useCachedIfOffline = true, bool receiveUpdates = false) where T : class{
 			Action<DropboxRequestResult<byte[]>> onResultMiddle = null;
 
 			if(typeof(T) == typeof(string)){
-				Log("GetFile: text type");
+				//Log("GetFile: text type");
 
 				// TEXT DATA
 				onResultMiddle = (res) => {		
@@ -312,7 +339,7 @@ namespace DropboxSync {
 				};				
 			}
 			else if(typeof(T) == typeof(JsonObject) || typeof(T) == typeof(JsonArray)){
-				Log("GetFile: JSON type");
+				//Log("GetFile: JSON type");
 
 				// JSON OBJECT/ARRAY
 				onResultMiddle = (res) => {					
@@ -326,7 +353,7 @@ namespace DropboxSync {
 				};	
 			}
 			else if(typeof(T) == typeof(Texture2D)){
-				Log("GetFile: Texture2D type");
+				//Log("GetFile: Texture2D type");
 				// IMAGE DATA
 				onResultMiddle = (res) => {				
 					if(res.error){
@@ -342,23 +369,30 @@ namespace DropboxSync {
 				return;
 			}
 
-			GetFileAsBytes(dropboxPath, onResultMiddle, onProgress, useCachedIfPossible, useCachedIfOffline);
+			GetFileAsBytes(dropboxPath, onResultMiddle, onProgress, useCachedIfPossible, useCachedIfOffline, receiveUpdates);
 		}
 
 
 		public void GetFileAsBytes(string dropboxPath, Action<DropboxRequestResult<byte[]>> onResult, Action<float> onProgress = null, bool useCachedIfPossible = false,
-		bool useCachedIfOffline = true){
+		bool useCachedIfOffline = true, bool receiveUpdates = false){
 			Action returnCachedResult = () => {
-				var bytes = File.ReadAllBytes(GetPathInCache(dropboxPath));
-				onResult(new DropboxRequestResult<byte[]>(bytes));
+				var cachedFilePath = GetPathInCache(dropboxPath);
+
+				if(File.Exists(cachedFilePath)){
+					var bytes = File.ReadAllBytes(cachedFilePath);
+					onResult(new DropboxRequestResult<byte[]>(bytes));
+				}else{
+					Log("cache doesnt have file");
+					onResult(new DropboxRequestResult<byte[]>(null));
+				}				
 			};
 
 			// maybe no need to do any remote requests
-			if(useCachedIfPossible && IsFileCached(dropboxPath)){	
-				Log("GetFile: using cached version without checking for updates");			
+			if(useCachedIfPossible && IsFileCached(dropboxPath) || receiveUpdates){	
+				Log("GetFile: using cached version");			
 				returnCachedResult();
 			}else{
-				Log("GetFile: check if online");
+				//Log("GetFile: check if online");
 				// now check if we online
 				if(DropboxSyncUtils.IsOnline()){
 					Log("GetFile: internet available");
@@ -368,6 +402,7 @@ namespace DropboxSync {
 						// return updated cached result
 						returnCachedResult();
 					}, onProgress: onProgress, onError: (errorStr) => {
+						//Log("error");
 						onResult(DropboxRequestResult<byte[]>.Error("Cant get file: "+errorStr));
 					});
 				}else{
@@ -377,10 +412,29 @@ namespace DropboxSync {
 						Log("GetFile: cannot check for updates - using cached version");
 						returnCachedResult();
 					}else{
-						// error
-						onResult(DropboxRequestResult<byte[]>.Error("GetFile: No internet connection"));
+						if(receiveUpdates){
+							// try again when internet recovers
+							SubscribeToInternetRecoverOnce(() => {
+								GetFileAsBytes(dropboxPath, onResult, onProgress, useCachedIfPossible, useCachedIfOffline, receiveUpdates);
+							});
+						}else{
+							// error
+							onResult(DropboxRequestResult<byte[]>.Error("GetFile: No internet connection"));	
+						}						
 					}
 				}
+			}
+
+			// handle updates
+			if(receiveUpdates){
+				SubscribeToFileChanges(dropboxPath, (fileChange) => {					
+					UpdateFileFromRemote(dropboxPath, onSuccess: () => {							
+						// return updated cached result
+						returnCachedResult();
+					}, onProgress: onProgress, onError: (errorStr) => {
+						onResult(DropboxRequestResult<byte[]>.Error("Cant get file: "+errorStr));
+					});					
+				});
 			}
 		}
 
@@ -481,8 +535,9 @@ namespace DropboxSync {
 		}
 
 		void UpdateFileFromRemote(string dropboxPath, Action onSuccess, Action<float> onProgress, Action<string> onError){
+			Log("UpdateFileFromRemote");
 			FileGetRemoteChanges(dropboxPath, onResult: (fileChange) => {
-								
+				Log("FileGetRemoteChanges:onResult");
 				
 				if(fileChange.change == DBXFileChangeType.Modified || fileChange.change == DBXFileChangeType.Added){
 					DownloadToCache(dropboxPath, onSuccess: onSuccess, onProgress: onProgress, onError: onError);
@@ -491,28 +546,35 @@ namespace DropboxSync {
 					onSuccess();
 				}else{
 					// no changes on remote
-					// check if file actually downloaded, not only metadata
-					if(IsFileCached(dropboxPath)){
-						onSuccess();
+					if(!GetLocalMetadataForFile(dropboxPath).deletedOnRemote){
+						// check if file actually downloaded, not only metadata
+						if(IsFileCached(dropboxPath)){
+							onSuccess();
+						}else{
+							DownloadToCache(dropboxPath, onSuccess: onSuccess, onProgress: onProgress, onError: onError);
+						}
 					}else{
-						DownloadToCache(dropboxPath, onSuccess: onSuccess, onProgress: onProgress, onError: onError);
-					}					
+						DeleteFileFromCache(dropboxPath);
+						// no changes, file is deleted locally and on remote - synced
+						onSuccess();
+					}
+										
 				}
 			}, onError: onError, saveChangesInfoLocally:true);									
 		}
 
-		void DeleteFileFromCache(string dropboxPath, bool deleteWithMetadata = true){
+		void DeleteFileFromCache(string dropboxPath/*, bool deleteWithMetadata = true*/){
 			var localFilePath = GetPathInCache(dropboxPath);
 			if(File.Exists(localFilePath)){
 				File.Delete(localFilePath);
 			}		
 
-			if(deleteWithMetadata){
-				var metadataFilePath = GetMetadataFilePath(dropboxPath);
-				if(File.Exists(metadataFilePath)){
-					File.Delete(metadataFilePath);
-				}	
-			}			
+			// if(deleteWithMetadata){
+			// 	var metadataFilePath = GetMetadataFilePath(dropboxPath);
+			// 	if(File.Exists(metadataFilePath)){
+			// 		File.Delete(metadataFilePath);
+			// 	}	
+			// }			
 		}
 
 		void DownloadToCache (string dropboxPath, Action onSuccess, Action<float> onProgress, Action<string> onError){
@@ -583,7 +645,7 @@ namespace DropboxSync {
 			// write metadata to separate file near
 			var newMetadataFilePath = GetMetadataFilePath(fileMetadata.path);
 			File.WriteAllText(newMetadataFilePath, JsonUtility.ToJson(fileMetadata));
-			Log("Wrote metadata file "+newMetadataFilePath);
+			//Log("Wrote metadata file "+newMetadataFilePath);
 		}
 
 		DBXFile GetLocalMetadataForFile(string dropboxFilePath){
@@ -677,7 +739,12 @@ namespace DropboxSync {
 							// if we didnt know that it was removed
 							if(!localMetadata.deletedOnRemote){
 								result = new DBXFileChange(DBXFile.DeletedOnRemote(dropboxFilePath), DBXFileChangeType.Deleted);
-							}							
+							}else{
+								// no change								
+								result = new DBXFileChange(localMetadata, DBXFileChangeType.None);
+							}
+						}else{
+							onError("File "+dropboxFilePath+" not found on DropBox");
 						}
 						
 					}else{
@@ -811,7 +878,7 @@ namespace DropboxSync {
 
 			
 			MakeDropboxRequest(url, prms, onResponse: (jsonStr) => {
-				Log("Got reponse: "+jsonStr);
+				//Log("Got reponse: "+jsonStr);
 
 				Dictionary<string, object> root = null;
 				try {
@@ -862,6 +929,10 @@ namespace DropboxSync {
 		}	
 
 		void MakeDropboxRequest(string url, string jsonParameters, Action<string> onResponse, Action<float> onProgress, Action<string> onWebError){
+			if(!DropboxSyncUtils.IsOnline()){
+				onWebError("No internet connection");
+			}
+
 			try {
 				using (var client = new WebClient()){				
 					client.Headers.Set("Authorization", "Bearer "+DBXAccessToken);
@@ -941,6 +1012,10 @@ namespace DropboxSync {
 		}
 
 		void MakeDropboxDownloadRequest(string url, string jsonParameters, Action<DBXFile, byte[]> onResponse, Action<float> onProgress, Action<string> onWebError){
+			if(!DropboxSyncUtils.IsOnline()){
+				onWebError("No internet connection");
+			}
+
 			try {
 				using (var client = new WebClient()){				
 					client.Headers.Set("Authorization", "Bearer "+DBXAccessToken);					
