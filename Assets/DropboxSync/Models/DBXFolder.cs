@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using DropboxSync.Utils;
+using DBXSync.Utils;
 
-namespace DropboxSync.Model {
+namespace DBXSync.Model {
 
     [Serializable]
     public class DBXFolder : DBXItem {

@@ -1,4 +1,4 @@
-namespace DropboxSync.Model {
+namespace DBXSync.Model {
 
     public enum DBXFileChangeType {
         None,
@@ -9,12 +9,12 @@ namespace DropboxSync.Model {
 
     public class DBXFileChange {
         public DBXFile file;
-        public DBXFileChangeType change;    
+        public DBXFileChangeType changeType;    
         
 
         public DBXFileChange(DBXFile f, DBXFileChangeType c){
             file = f;
-            change = c;        
+            changeType = c;        
         }
     }
 }

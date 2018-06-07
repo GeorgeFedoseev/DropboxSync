@@ -28,7 +28,7 @@ using System.Runtime.Serialization;
 using System.Text;
 
 
-namespace DropboxSync.Utils {
+namespace DBXSync.Utils {
 
 	
 	public class JsonObject : System.Collections.Generic.Dictionary<string, object> {

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Net;
 using UnityEngine;
 
-namespace DropboxSync.Utils {
+namespace DBXSync.Utils {
 
     public class DropboxSyncUtils {
         public static string NormalizePath(string strPath){	

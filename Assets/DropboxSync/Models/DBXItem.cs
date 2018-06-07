@@ -1,6 +1,6 @@
 using System;
 
-namespace DropboxSync.Model {
+namespace DBXSync.Model {
     
     [Serializable]
     public enum DBXItemType {

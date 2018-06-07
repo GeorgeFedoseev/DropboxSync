@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 
 
-namespace DropboxSync.Model {
+namespace DBXSync.Model {
 
 	[Serializable]
 	public class DropboxRequestParams {
