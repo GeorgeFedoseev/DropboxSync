@@ -3,6 +3,7 @@
 using System;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using UnityEngine;
 
 namespace DBXSync.Utils {
@@ -13,6 +14,20 @@ namespace DBXSync.Utils {
 			var components = strPath.Split(new char[] {'/'}, StringSplitOptions.RemoveEmptyEntries);
 			return ("/"+string.Join("/", components)).ToLower();
 		}
+
+        public static bool IsBadDropboxPath(string dropboxPath){
+            if(dropboxPath.Length == 0){
+                return true;
+            }
+
+            if(dropboxPath[0] != '/'){
+                Debug.LogError("Dropbox paths should start with '/'");
+                return true;
+            }
+            
+
+            return false;
+        }
 
 		public static bool IsPathImmediateChildOfFolder(string folderPath, string candidatePath){
 			if(folderPath == candidatePath){
@@ -56,6 +71,14 @@ namespace DBXSync.Utils {
             }catch{
                 return false;
             }
+        }
+
+         public static void IsOnlineAsync(Action<bool> onResult){
+            var thread = new Thread(() => {                
+                onResult(IsOnline());
+            });
+            thread.IsBackground = true;
+            thread.Start();
         }
 
     }

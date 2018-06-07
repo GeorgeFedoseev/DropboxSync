@@ -28,7 +28,7 @@ using System.Runtime.Serialization;
 using System.Text;
 
 
-namespace DBXSync.Utils {
+namespace DBXSync {
 
 	
 	public class JsonObject : System.Collections.Generic.Dictionary<string, object> {
