@@ -197,7 +197,7 @@ namespace DBXSync {
 
 		// GETTING FILE/FOLDER
 
-		public void GetFile<T>(string dropboxPath, Action<DropboxRequestResult<T>> onResult, Action<float> onProgress = null, bool useCachedIfPossible = false,
+		public void GetFile<T>(string dropboxPath, Action<DropboxRequestResult<T>> onResult, Action<float> onProgress = null, bool useCachedFirst = false,
 		bool useCachedIfOffline = true, bool receiveUpdates = false) where T : class{
 			Action<DropboxRequestResult<byte[]>> onResultMiddle = null;
 
@@ -243,10 +243,10 @@ namespace DBXSync {
 				return;
 			}
 
-			GetFileAsBytes(dropboxPath, onResultMiddle, onProgress, useCachedIfPossible, useCachedIfOffline, receiveUpdates);
+			GetFileAsBytes(dropboxPath, onResultMiddle, onProgress, useCachedFirst, useCachedIfOffline, receiveUpdates);
 		}
 
-		public void GetFileAsLocalCachedPath(string dropboxPath, Action<DropboxRequestResult<string>> onResult, Action<float> onProgress = null, bool useCachedIfPossible = false,
+		public void GetFileAsLocalCachedPath(string dropboxPath, Action<DropboxRequestResult<string>> onResult, Action<float> onProgress = null, bool useCachedFirst = false,
 		bool useCachedIfOffline = true, bool receiveUpdates = false){
 			Action<DropboxRequestResult<byte[]>> onResultMiddle = (res) => {					
 				if(res.error){
@@ -260,10 +260,10 @@ namespace DBXSync {
 				}
 			};	
 
-			GetFileAsBytes(dropboxPath, onResultMiddle, onProgress, useCachedIfPossible, useCachedIfOffline, receiveUpdates);
+			GetFileAsBytes(dropboxPath, onResultMiddle, onProgress, useCachedFirst, useCachedIfOffline, receiveUpdates);
 		}
 
-		public void GetFileAsBytes(string dropboxPath, Action<DropboxRequestResult<byte[]>> onResult, Action<float> onProgress = null, bool useCachedIfPossible = false,
+		public void GetFileAsBytes(string dropboxPath, Action<DropboxRequestResult<byte[]>> onResult, Action<float> onProgress = null, bool useCachedFirst = false,
 		bool useCachedIfOffline = true, bool receiveUpdates = false){
 			if(DropboxSyncUtils.IsBadDropboxPath(dropboxPath)){
 				onResult(DropboxRequestResult<byte[]>.Error("Cant get file: bad path "+dropboxPath));
@@ -294,7 +294,7 @@ namespace DBXSync {
 			};
 
 			// maybe no need to do any remote requests
-			if((useCachedIfPossible) && IsFileCached(dropboxPath)){	
+			if((useCachedFirst) && IsFileCached(dropboxPath)){	
 				Log("GetFile: using cached version");			
 				returnCachedResult();
 
@@ -337,7 +337,7 @@ namespace DBXSync {
 							if(receiveUpdates){
 								// try again when internet recovers
 								SubscribeToInternetRecoverOnce(() => {
-									GetFileAsBytes(dropboxPath, onResult, onProgress, useCachedIfPossible, useCachedIfOffline, receiveUpdates);								
+									GetFileAsBytes(dropboxPath, onResult, onProgress, useCachedFirst, useCachedIfOffline, receiveUpdates);								
 								});
 
 								subscribeToUpdatesAction();
