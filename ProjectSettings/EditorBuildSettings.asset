@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/DropboxSync/Examples/DropboxSyncFoldersExample - File Explorer.unity
+    guid: 41c16739219d84310bf4542c39014503
+  - enabled: 1
     path: Assets/DropboxSync/Examples/DropboxSyncFilesExample - Working with files.unity
     guid: ab25381e907934dbfaf94ed9827ecb24
   m_configObjects: {}
