@@ -29,7 +29,7 @@ namespace DBXSync {
 		public static DropboxSyncLogLevel LOG_LEVEL = DropboxSyncLogLevel.Warnings;
 
 		float DBXChangeForChangesIntervalSeconds = 5;
-		public string DropboxAccessToken = "2TNf3BjlBqAAAAAAAAAADBc1iIKdoEMOI2uig6oNFWtqijlveLRlDHAVDwrhbndr";
+		public string DropboxAccessToken = "<YOUR ACCESS TOKEN>";
 		string _PersistentDataPath = null;
 
 
@@ -101,7 +101,7 @@ namespace DBXSync {
 		// METHODS
 
 		void Initialize(){
-			_PersistentDataPath = Application.persistentDataPath;
+			_PersistentDataPath = Application.persistentDataPath;			
 		}
 
 		
@@ -329,7 +329,10 @@ namespace DBXSync {
 
 						if(useCachedIfOffline && IsFileCached(dropboxPath)){
 							Log("GetFile: cannot check for updates - using cached version");
-							returnCachedResult();
+							QueueOnMainThread(() => {
+								returnCachedResult();
+							});
+							
 							if(receiveUpdates){
 								subscribeToUpdatesAction();
 							}
@@ -472,18 +475,11 @@ namespace DBXSync {
 			}, onError: onError, saveChangesInfoLocally:true);									
 		}
 
-		void DeleteFileFromCache(string dropboxPath/*, bool deleteWithMetadata = true*/){
+		void DeleteFileFromCache(string dropboxPath){
 			var localFilePath = GetPathInCache(dropboxPath);
 			if(File.Exists(localFilePath)){
 				File.Delete(localFilePath);
 			}		
-
-			// if(deleteWithMetadata){
-			// 	var metadataFilePath = GetMetadataFilePath(dropboxPath);
-			// 	if(File.Exists(metadataFilePath)){
-			// 		File.Delete(metadataFilePath);
-			// 	}	
-			// }			
 		}
 
 		void DownloadToCache (string dropboxPath, Action onSuccess, Action<float> onProgress, Action<string> onError){
@@ -536,6 +532,8 @@ namespace DBXSync {
 
 		string CacheFolderPathForToken {
 			get {
+				DropboxSyncUtils.ValidateAccessToken(DropboxAccessToken);
+
 				var accessTokeFirst5Characters = DropboxAccessToken.Substring(0, 5);
 				return Path.Combine(_PersistentDataPath, accessTokeFirst5Characters);
 			}		
@@ -813,6 +811,8 @@ namespace DBXSync {
 		}	
 
 		void MakeDropboxRequest(string url, string jsonParameters, Action<string> onResponse, Action<float> onProgress, Action<string> onWebError){
+			DropboxSyncUtils.ValidateAccessToken(DropboxAccessToken);
+
 			if(!DropboxSyncUtils.IsOnline()){
 				onWebError("No internet connection");
 			}
@@ -891,6 +891,8 @@ namespace DBXSync {
 		}
 
 		void MakeDropboxDownloadRequest(string url, string jsonParameters, Action<DBXFile, byte[]> onResponse, Action<float> onProgress, Action<string> onWebError){
+			DropboxSyncUtils.ValidateAccessToken(DropboxAccessToken);
+
 			if(!DropboxSyncUtils.IsOnline()){
 				onWebError("No internet connection");
 			}
@@ -994,10 +996,6 @@ namespace DBXSync {
 			if(LOG_LEVEL <= DropboxSyncLogLevel.Errors)
 				Debug.LogError("[DropboxSync] "+message);
 		}
-
-
-
-		// EVENTS
 
 	} // class
 } // namespace

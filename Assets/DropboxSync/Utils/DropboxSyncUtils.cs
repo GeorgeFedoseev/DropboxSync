@@ -15,6 +15,24 @@ namespace DBXSync.Utils {
 			return ("/"+string.Join("/", components)).ToLower();
 		}
 
+        public static void ValidateAccessToken(string accessToken){
+            if(DropboxSyncUtils.IsBadAccessToken(accessToken)){
+                throw new Exception("Bad Dropbox access token. Please specify valid access token.");					
+            }
+        }
+
+        public static bool IsBadAccessToken(string accessToken){
+            if(accessToken.Trim().Length == 0){
+                return true;
+            }
+
+            if(accessToken.Length < 20){
+                return true;
+            }
+
+            return false;
+        }
+
         public static bool IsBadDropboxPath(string dropboxPath){
             if(dropboxPath.Length == 0){
                 return true;

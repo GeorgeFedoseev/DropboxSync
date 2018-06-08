@@ -2,10 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.Video;
 
 using DBXSync;
+using UnityEngine.UI;
+using UnityEngine.Video;
 using System.Linq;
 
 public class DropboxSyncFilesExampleScript : MonoBehaviour {
@@ -28,9 +28,10 @@ public class DropboxSyncFilesExampleScript : MonoBehaviour {
 				Debug.LogError("Error getting text string: "+res.errorDescription);
 			}else{
 				Debug.Log("Received text string from Dropbox!");
-				UpdatePlanetDescription(res.data);
+				var textStr = res.data;
+				UpdatePlanetDescription(textStr);
 			}
-		}, receiveUpdates:true, useCachedFirst:true);
+		}, receiveUpdates:true);
 
 		// JSON OBJECT
 		DropboxSync.Main.GetFile<JsonObject>("/DropboxSyncExampleFolder/object.json", (res) => {
@@ -38,9 +39,10 @@ public class DropboxSyncFilesExampleScript : MonoBehaviour {
 				Debug.LogError("Error getting JSON object: "+res.errorDescription);
 			}else{
 				Debug.Log("Received JSON object from Dropbox!");
-				UpdatePlanetInfo(res.data);
+				var jsonObject = res.data;
+				UpdatePlanetInfo(jsonObject);
 			}
-		}, receiveUpdates:true, useCachedFirst:true);
+		}, receiveUpdates:true);
 
 		
 		// IMAGE
@@ -49,9 +51,10 @@ public class DropboxSyncFilesExampleScript : MonoBehaviour {
 				Debug.LogError("Error getting picture from Dropbox: "+res.errorDescription);
 			}else{
 				Debug.Log("Received picture from Dropbox!");
-				UpdatePicture(res.data);
+				var tex = res.data;
+				UpdatePicture(tex);
 			}
-		}, useCachedFirst:true, useCachedIfOffline:true, receiveUpdates:true);
+		}, useCachedFirst:true);
 
 
 		// VIDEO
@@ -60,13 +63,26 @@ public class DropboxSyncFilesExampleScript : MonoBehaviour {
 				Debug.LogError("Error getting video from Dropbox: "+res.errorDescription);
 			}else{
 				Debug.Log("Received video from Dropbox!");
-				UpdateVideo(res.data);
+				var filePathInCache = res.data;
+				UpdateVideo(filePathInCache);
 			}
-		}, useCachedFirst:true, useCachedIfOffline:true, receiveUpdates:true);
+		}, receiveUpdates:true);
 
-		
+
+		// BYTES ARRAY
+		DropboxSync.Main.GetFileAsBytes("/DropboxSyncExampleFolder/image.jpg", (res) => {
+			if(res.error){
+				Debug.LogError("Failed to get file bytes: "+res.errorDescription);
+			}else{
+				var imageBytes = res.data;
+				Debug.Log("Got file as bytes array, length: "+imageBytes.Length.ToString()+" bytes");
+			}
+		}, receiveUpdates:true);		
 		
 	}
+
+
+	// UI-update methods
 
 	void UpdatePlanetDescription(string desc){
 		planetDescriptionText.text = desc;
@@ -84,7 +100,7 @@ public class DropboxSyncFilesExampleScript : MonoBehaviour {
 
 			planetInfoText.text += string.Format("<b>{0}:</b> {1}\n", kv.Key, valStr);
 		}	
-	}	
+	}		
 
 	void UpdatePicture(Texture2D tex){
 		rawImage.texture = tex;
@@ -98,7 +114,7 @@ public class DropboxSyncFilesExampleScript : MonoBehaviour {
 			videoPlayer.GetComponentInChildren<RawImage>().texture = null;		
 			return;
 		}
-		Debug.Log("Update local video path: "+localVideoPath);
+		
 		videoPlayer.source = VideoSource.Url;
 		videoPlayer.url = "file://"+localVideoPath;
 		videoPlayer.isLooping = true;
