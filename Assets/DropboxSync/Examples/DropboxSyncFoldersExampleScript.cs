@@ -2,56 +2,122 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+using System.Linq;
+using UnityEngine.UI;
 using DBXSync;
+using DBXSync.Model;
 
 public class DropboxSyncFoldersExampleScript : MonoBehaviour {
 
+	public Button goUpButton;
+
+	public ScrollRect scrollRect;
+	public Text fileStatusText;
+
+	List<string> pathsHistory = new List<string>();
+
 	// Use this for initialization
-	void Start () {
-		// GetFolderItemsFlatRecursive("/folder with spaces", onResult: (items) => {
-			// 	Debug.Log("Got results: "+items.Count);
-			// }, onError: (errorStr) => {
-			// 	Debug.LogError("Got error: "+errorStr);
-			// });
-			
-			// GetFolder("/", onResult: (res) => {
-			// 	if(!res.error){
-					
-			// 	}else{
-			// 		Debug.LogError(res.errorDescription);
-			// 	}
-			// });
+	void Start () {		
+		RenderFolder("/");
 
-			// GetFolderItems("/", (res) => {
-			// 	if(!res.error){
-			// 		Debug.Log("Total files on dropbox: "+res.data.Where(x => x.type == DBXItemType.File).Count().ToString()); 
-			// 	}else{
-			// 		Debug.LogError(res.errorDescription);
-			// 	}
-			// }, recursive:true, onProgress:(progress) => {
-			// 	if(progress > 0){
-			// 		Debug.Log("progress: "+progress.ToString());
-			// 	}				
-			// });
+		goUpButton.onClick.AddListener(() => {
+			GoUp();
+		});
+	}
 
-			DropboxSync.Main.SyncFolderFromDropbox("/helloThereFolder", () => {
-				Debug.Log("Synced folder!");
-			},
-			(progress) => {
-				Debug.Log(string.Format("Syncing folder: {0}%", progress*100));
-			},
-			(errorStr) => {
-				Debug.LogError(errorStr);
-			});
-			
-			// SUBSCRIBE TO FOLDER CHANGES
-			DropboxSync.Main.SubscribeToFolderChanges("/helloThereFolder", (changes) => {
-					Debug.Log("File changes: "+changes.Count);
-					foreach(var change in changes){
-						Debug.Log(string.Format("{0} - {1}", change.file.path, change.changeType.ToString()));
-					}
-			});
+	void GoUp(){
+		if(pathsHistory.Count > 1){
+			pathsHistory.Remove(pathsHistory.Last());
+			var prev = pathsHistory.Last();
+			pathsHistory.Remove(prev);
+			RenderFolder(prev);
+		}
+	}
 
+	void RenderFolder(string dropboxFolderPath){
+		Debug.Log("render folder "+dropboxFolderPath);
+		RenderLoading();
+
+		pathsHistory.Add(dropboxFolderPath);
+
+		DropboxSync.Main.GetFolderItems(dropboxFolderPath, (res) => {
+			if(res.error){
+				Debug.LogError("Failed to get folder items for folder "+dropboxFolderPath+" "+res.errorDescription);
+			}else{
+				var folderItems = res.data;
+				RenderFolderItems(folderItems);
+			}
+		});
+	}
+
+	void RenderFolderItems(List<DBXItem> folderItems){
+		// clear content
+		foreach(Transform t in scrollRect.content.transform){
+			Destroy(t.gameObject);
+		}
+
+		var orderedItems = folderItems.OrderBy(x => x.name).OrderByDescending(x => x.type);
+
+		foreach(var item in orderedItems){
+			var _item = item;
+			switch(item.type){
+				case DBXItemType.Folder:
+					var go = Instantiate(Resources.Load("DBXExplorerFolderRow")) as GameObject;
+					go.transform.SetParent(scrollRect.content.transform);
+					go.transform.position = Vector3.zero;
+					go.transform.rotation = Quaternion.identity;
+					go.transform.localScale = Vector3.one;
+
+					go.GetComponentInChildren<Text>().text = _item.name;
+					go.GetComponentInChildren<Button>().onClick.AddListener(() => {
+						RenderFolder(_item.path);						
+					});
+
+				break;
+				case DBXItemType.File:
+					var _go = Instantiate(Resources.Load("DBXExplorerFileRow")) as GameObject;
+					_go.transform.SetParent(scrollRect.content.transform);
+					_go.transform.position = Vector3.zero;
+					_go.transform.rotation = Quaternion.identity;
+					_go.transform.localScale = Vector3.one;
+
+					_go.GetComponentInChildren<Text>().text = _item.name;
+					_go.GetComponentInChildren<Button>().onClick.AddListener(() => {
+						DisplayFileStatus("Downloading file "+_item.path+"...");
+						DropboxSync.Main.GetFileAsBytes(_item.path, (res) => {
+							if(res.error){
+								DisplayFileStatus("Failed to download "+_item.path+" to cache: "+res.errorDescription);
+							}else{
+								DisplayFileStatus("Downloaded "+_item.path+" to cache.\nTotal: "+res.data.Length.ToString()+" bytes");
+							}
+						}, (progress) => {
+							DisplayFileStatus("Downloading "+_item.path+"... "+(progress*100).ToString()+"%");
+						});
+					});
+
+				break;
+				default:
+				break;
+			}
+		}
+		
+	}
+
+	void RenderLoading(){
+		// clear content
+		foreach(Transform t in scrollRect.content.transform){
+			Destroy(t.gameObject);
+		}
+		
+		var go = Instantiate(Resources.Load("LoadingRow")) as GameObject;
+		go.transform.SetParent(scrollRect.content.transform);
+		go.transform.position = Vector3.zero;
+		go.transform.rotation = Quaternion.identity;
+		go.transform.localScale = Vector3.one;
+	}
+
+	void DisplayFileStatus(string status){
+		fileStatusText.text = status;
 	}
 
 }
