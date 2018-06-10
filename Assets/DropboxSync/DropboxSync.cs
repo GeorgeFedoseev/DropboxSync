@@ -28,7 +28,8 @@ namespace DBXSync {
 
 		public static DropboxSyncLogLevel LOG_LEVEL = DropboxSyncLogLevel.Warnings;
 
-		float DBXChangeForChangesIntervalSeconds = 5;
+		[HideInInspector]
+		public float DBXChangeForChangesIntervalSeconds = 5;
 		public string DropboxAccessToken = "<YOUR ACCESS TOKEN>";
 		string _PersistentDataPath = null;
 
@@ -161,8 +162,8 @@ namespace DBXSync {
 			});
 		}
 
-		public void SubscribeToFolderChanges(string dropboxFilePath, Action<List<DBXFileChange>> onChange){
-			var item = new DBXFolder(dropboxFilePath);
+		public void SubscribeToFolderChanges(string dropboxFolderPath, Action<List<DBXFileChange>> onChange){
+			var item = new DBXFolder(dropboxFolderPath);
 			SubscribeToChanges(item, onChange);
 		}
 
@@ -176,7 +177,7 @@ namespace DBXSync {
 		}
 			
 
-		public void UnsubscribeAllForPath(string dropboxPath){
+		public void UnsubscribeAllFromChangesForPath(string dropboxPath){
 			dropboxPath = DropboxSyncUtils.NormalizePath(dropboxPath);
 
 			var removeKeys = OnChangeCallbacksDict.Where(p => p.Key.path == dropboxPath).Select(p => p.Key).ToList();
@@ -692,8 +693,8 @@ namespace DBXSync {
 		
 		// GETTING FOLDER STRUCTURE
 
-		public void GetFolderStructure(string path, Action<DropboxRequestResult<DBXFolder>> onResult, Action<float> onProgress = null){
-			path = DropboxSyncUtils.NormalizePath(path);
+		public void GetFolderStructure(string dropboxFolderPath, Action<DropboxRequestResult<DBXFolder>> onResult, Action<float> onProgress = null){
+			var path = DropboxSyncUtils.NormalizePath(dropboxFolderPath);
 
 			_GetFolderItemsFlat(path, onResult: (items) => {
 				DBXFolder rootFolder = null;
@@ -715,7 +716,7 @@ namespace DBXSync {
 			}, recursive: true);
 		}
 
-		public void GetFolderItems(string path, Action<DropboxRequestResult<List<DBXItem>>> onResult, bool recursive = false, Action<float> onProgress = null){
+		public void GetFolderItems(string path, Action<DropboxRequestResult<List<DBXItem>>> onResult, Action<float> onProgress = null, bool recursive = false){
 			_GetFolderItemsFlat(path, onResult: (items) => {		
 				onResult(new DropboxRequestResult<List<DBXItem>>(items));
 			},

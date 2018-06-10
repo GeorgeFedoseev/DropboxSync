@@ -210,11 +210,6 @@ Prefab:
       propertyPath: m_Pivot.y
       value: 0.5
       objectReference: {fileID: 0}
-    - target: {fileID: 224762960222962696, guid: c99973c4a036b4bc8b69f3781d1e2550,
-        type: 2}
-      propertyPath: m_AnchoredPosition.x
-      value: 8.200012
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: c99973c4a036b4bc8b69f3781d1e2550, type: 2}
   m_IsPrefabParent: 0
@@ -676,7 +671,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6e58b23c8a844a6f825316a97d52120, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DropboxAccessToken: 2TNf3BjlBqAAAAAAAAAADBc1iIKdoEMOI2uig6oNFWtqijlveLRlDHAVDwrhbndr
+  DBXChangeForChangesIntervalSeconds: 5
+  DropboxAccessToken: sVawC-LSz14AAAAAAAAIfpF5QlOHRPYaIEdwo81sO3-DrebdSAH_5Rr0yOoD6ZyW
 --- !u!4 &996569776
 Transform:
   m_ObjectHideFlags: 0
@@ -1732,11 +1728,6 @@ Prefab:
         type: 2}
       propertyPath: m_Pivot.y
       value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 224536094539531976, guid: c731f5d54cc3a4e1a9ebf250c93cf3ca,
-        type: 2}
-      propertyPath: m_AnchoredPosition.x
-      value: 8.200012
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: c731f5d54cc3a4e1a9ebf250c93cf3ca, type: 2}

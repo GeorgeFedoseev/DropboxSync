@@ -45,7 +45,7 @@ public class DropboxSyncFoldersExampleScript : MonoBehaviour {
 				Debug.LogError("Failed to get folder items for folder "+dropboxFolderPath+" "+res.errorDescription);
 			}else{
 				var folderItems = res.data;
-				RenderFolderItems(folderItems);
+				RenderFolderItems(folderItems);				
 			}
 		});
 	}
