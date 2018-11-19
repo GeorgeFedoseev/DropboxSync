@@ -108,6 +108,7 @@ namespace DBXSync {
 			_PersistentDataPath = Application.persistentDataPath;	
 
 			// trust all certificates
+			// TODO: do something smarter instead of this
 			System.Net.ServicePointManager.ServerCertificateValidationCallback =
     							((sender, certificate, chain, sslPolicyErrors) => true);		
 		}
