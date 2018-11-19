@@ -26,10 +26,10 @@ namespace DBXSync {
 
 	public class DropboxSync : MonoBehaviour {
 
-		public static DropboxSyncLogLevel LOG_LEVEL = DropboxSyncLogLevel.Warnings;
+		public static DropboxSyncLogLevel LOG_LEVEL = DropboxSyncLogLevel.Debug;
 
 		[HideInInspector]
-		public float DBXChangeForChangesIntervalSeconds = 5;
+		public float DBXChangeForChangesIntervalSeconds = 15;
 		public string DropboxAccessToken = "<YOUR ACCESS TOKEN>";
 		string _PersistentDataPath = null;
 
@@ -102,7 +102,11 @@ namespace DBXSync {
 		// METHODS
 
 		void Initialize(){
-			_PersistentDataPath = Application.persistentDataPath;			
+			_PersistentDataPath = Application.persistentDataPath;	
+
+			// trust all certificates
+			System.Net.ServicePointManager.ServerCertificateValidationCallback =
+    							((sender, certificate, chain, sslPolicyErrors) => true);		
 		}
 
 		
@@ -372,16 +376,17 @@ namespace DBXSync {
 		public void GetFileMetadata(string dropboxPath, Action<DropboxRequestResult<DBXFile>> onResult){
 			var prms = new DropboxGetMetadataRequestParams(dropboxPath);
 
-			//Log("GetFileMetadata");
+			Log("GetFileMetadata for "+dropboxPath);
 			MakeDropboxRequest("https://api.dropboxapi.com/2/files/get_metadata", prms, 
 			onResponse: (jsonStr) => {
+				Log("GetFileMetadata onResponse");
 				var dict = JSON.FromJson<Dictionary<string, object>>(jsonStr);				
 				var fileMetadata = DBXFile.FromDropboxDictionary(dict);
 				onResult(new DropboxRequestResult<DBXFile>(fileMetadata));
 			},
 			onProgress:null,
 			onWebError: (errStr) => {
-				//Log("GetFileMetadata:onWebError");
+				Log("GetFileMetadata:onWebError");
 				onResult(DropboxRequestResult<DBXFile>.Error(errStr));
 			});
 		}
@@ -484,7 +489,7 @@ namespace DBXSync {
 		}
 
 		void DownloadToCache (string dropboxPath, Action onSuccess, Action<float> onProgress, Action<string> onError){
-				//Log("DownloadToCache");
+				Log("DownloadToCache");
 				DownloadFileBytes(dropboxPath, (res) => {
 					if(res.error){
 						onError(res.errorDescription);						
@@ -524,7 +529,10 @@ namespace DBXSync {
 			if(relativeDropboxPath.Last() == '/'){
 				relativeDropboxPath = relativeDropboxPath.Substring(relativeDropboxPath.Length-1);
 			}
-			return Path.Combine(CacheFolderPathForToken, relativeDropboxPath);
+			var fullPath = Path.Combine(CacheFolderPathForToken, relativeDropboxPath);
+			// replace slashes with backslashes if needed
+			fullPath = Path.GetFullPath(fullPath);
+			return fullPath;
 		}	
 
 		string GetMetadataFilePath(string dropboxPath){
@@ -632,6 +640,7 @@ namespace DBXSync {
 			// request for metadata to get remote content hash
 			//Log("Getting metadata");
 			GetFileMetadata(dropboxFilePath, onResult: (res) => {
+				Log("Got metadata for file "+dropboxFilePath);
 				DBXFileChange result = null;
 
 				if(res.error){							
@@ -812,7 +821,10 @@ namespace DBXSync {
 		}	
 
 		void MakeDropboxRequest(string url, string jsonParameters, Action<string> onResponse, Action<float> onProgress, Action<string> onWebError){
+			Log("MakeDropboxRequest url: "+url);
+
 			DropboxSyncUtils.ValidateAccessToken(DropboxAccessToken);
+		
 
 			if(!DropboxSyncUtils.IsOnline()){
 				onWebError("No internet connection");
@@ -825,7 +837,7 @@ namespace DBXSync {
 					
 					client.DownloadProgressChanged += (s, e) => {
 						if(onProgress != null){
-							//Log(string.Format("Downloaded {0} bytes out of {1}", e.BytesReceived, e.TotalBytesToReceive));
+							Log(string.Format("Downloaded {0} bytes out of {1}", e.BytesReceived, e.TotalBytesToReceive));
 							if(e.TotalBytesToReceive != -1){
 								// if download size in known from server
 								QueueOnMainThread(() => {
@@ -840,9 +852,12 @@ namespace DBXSync {
 						}						
 					};
 
-					client.UploadDataCompleted += (s, e) => {						
+					client.UploadDataCompleted += (s, e) => {
+						Log("MakeDropboxRequest -> UploadDataCompleted");						
 
 						if(e.Error != null){
+							LogError("MakeDropboxRequest -> UploadDataCompleted -> Error "+e.Error.Message);
+							
 							if(e.Error is WebException){
 								var webex = e.Error as WebException;
 								var stream = webex.Response.GetResponseStream();
@@ -875,8 +890,10 @@ namespace DBXSync {
 						}
 					};
 
+					
+
 					var uri = new Uri(url);
-					//Log("MakeDropboxRequest:client.UploadDataAsync");				
+					Log("MakeDropboxRequest:client.UploadDataAsync");				
 					client.UploadDataAsync(uri, "POST", Encoding.Default.GetBytes(jsonParameters));						
 				}
 			} catch (Exception ex){

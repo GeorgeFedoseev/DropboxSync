@@ -116,7 +116,7 @@ public class DropboxSyncFilesExampleScript : MonoBehaviour {
 		}
 		
 		videoPlayer.source = VideoSource.Url;
-		videoPlayer.url = "file://"+localVideoPath;
+		videoPlayer.url = localVideoPath;
 		videoPlayer.isLooping = true;
 
 		if(videoRenderTexture == null){			
