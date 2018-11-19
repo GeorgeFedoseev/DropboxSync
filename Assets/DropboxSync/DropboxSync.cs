@@ -1,4 +1,7 @@
-﻿using System;
+﻿// DropboxSync v1.1
+// Created by George Fedoseev 2018
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,7 +29,7 @@ namespace DBXSync {
 
 	public class DropboxSync : MonoBehaviour {
 
-		public static DropboxSyncLogLevel LOG_LEVEL = DropboxSyncLogLevel.Debug;
+		public static DropboxSyncLogLevel LOG_LEVEL = DropboxSyncLogLevel.Warnings;
 
 		[HideInInspector]
 		public float DBXChangeForChangesIntervalSeconds = 15;
