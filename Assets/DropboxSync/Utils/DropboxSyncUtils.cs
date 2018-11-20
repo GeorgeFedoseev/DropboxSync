@@ -64,7 +64,7 @@ namespace DBXSync.Utils {
             Texture2D tex = null;
             tex = new Texture2D(2, 2);                     
             
-            tex.LoadImage(data); //..this will auto-resize the texture dimensions.
+            tex.LoadImage(data);
             //tex.filterMode = FilterMode.Trilinear; 	
             //tex.wrapMode = TextureWrapMode.Clamp;
             //tex.anisoLevel = 9;

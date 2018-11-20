@@ -16,8 +16,6 @@ using UnityEngine.UI;
 using System.IO;
 using System.Threading;
 
-
-
 namespace DBXSync {
 
 	public enum DropboxSyncLogLevel {
@@ -26,79 +24,68 @@ namespace DBXSync {
 		Errors = 2
 	}
 
-
 	public class DropboxSync : MonoBehaviour {
-
 		public static DropboxSyncLogLevel LOG_LEVEL = DropboxSyncLogLevel.Warnings;
 
-		[HideInInspector]
-		public float DBXChangeForChangesIntervalSeconds = 15;
-		public string DropboxAccessToken = "<YOUR ACCESS TOKEN>";
-		string _PersistentDataPath = null;
-
-
+		// SINGLETONE
 		public static DropboxSync Main {
 			get {
 				var instance = FindObjectOfType<DropboxSync>();
 				if(instance != null){
 					return instance;
 				}else{
-					Debug.LogError("DropboxSync script wasn't found on scene.");
+					Debug.LogError("DropboxSync script wasn't found on the scene.");
 					return null;
 				}
 			}
 		}
+
+		// <INSPECTOR
+
+		[HideInInspector]
+		public float DBXCheckForChangesIntervalSeconds = 15;
+		public string DropboxAccessToken = "<YOUR ACCESS TOKEN>";
+
+		// INSPECTOR>		
+
+		// INTERNET CONNECTION
+		InternetConnectionWatcher _internetConnectionWatcher;
 		
+
+		// TIMERS
+		float _lastTimeCheckedForChanges = -999999;
+
+		// MAIN THREAD
+		List<Action> MainThreadQueuedActions = new List<Action>();
+
+		// OTHER
+		string _PersistentDataPath = null;
 
 		void Awake(){
 			Initialize();
-		}		
-
-		
-		// internet connection
-		bool _noIternetWarningDisplayed = false;
-		List<Action> OnInternetRecoverOnceCallbacks = new List<Action>();
-		
-
-		List<Action> MainThreadQueuedActions = new List<Action>();
-		
-		float _lastTimeCheckedForChanges = -999999;
+		}
 
 		void Update () {
-			if(Time.unscaledTime - _lastTimeCheckedForChanges > DBXChangeForChangesIntervalSeconds){
-				DropboxSyncUtils.IsOnlineAsync((isOnline) => {
-					if(isOnline){
-						if(_noIternetWarningDisplayed){
-							Log("Internet connection recovered");
-
-							foreach(var a in OnInternetRecoverOnceCallbacks){
-								a();
-							}
-							OnInternetRecoverOnceCallbacks.Clear();
-							
-						}
-						_noIternetWarningDisplayed = false;					
-						
-						CheckChangesForSubscribedItems();
-					}else{
-						if(!_noIternetWarningDisplayed){
-							LogWarning("No internet connection - can't check dropbox updates");
-						}					
-						_noIternetWarningDisplayed = true;
-					}
-				});
-				
+			_internetConnectionWatcher.Update();
+			
+			// check remote changes for subscribed
+			if(Time.unscaledTime - _lastTimeCheckedForChanges > DBXCheckForChangesIntervalSeconds){									
+				if(_internetConnectionWatcher.IsConnected){
+					CheckChangesForSubscribedItems();
+				}				
 				_lastTimeCheckedForChanges = Time.unscaledTime;
 			}
 
-			lock(MainThreadQueuedActions){
-				var _currentActions = new List<Action>(MainThreadQueuedActions);
-				MainThreadQueuedActions.Clear();
-				foreach(var a in _currentActions){
+			// execute main thread queued actions
+			lock(MainThreadQueuedActions){				
+				
+				foreach(var a in MainThreadQueuedActions){
 					if(a != null){
 						a();
 					}						
 				}
+
+				MainThreadQueuedActions.Clear();
 			}
 		}
 
@@ -106,6 +93,8 @@ namespace DBXSync {
 
 		void Initialize(){
 			_PersistentDataPath = Application.persistentDataPath;	
+
+			_internetConnectionWatcher = new InternetConnectionWatcher();
 
 			// trust all certificates
 			// TODO: do something smarter instead of this
@@ -159,9 +148,7 @@ namespace DBXSync {
 			}
 		}
 
-		void SubscribeToInternetRecoverOnce(Action a){			
-			OnInternetRecoverOnceCallbacks.Add(a);
-		}
+	
 
 		public void SubscribeToFileChanges(string dropboxFilePath, Action<DBXFileChange> onChange){
 			var item = new DBXFile(dropboxFilePath);
@@ -348,7 +335,7 @@ namespace DBXSync {
 						}else{
 							if(receiveUpdates){
 								// try again when internet recovers
-								SubscribeToInternetRecoverOnce(() => {
+								_internetConnectionWatcher.SubscribeToInternetConnectionRecoverOnce(() => {
 									GetFileAsBytes(dropboxPath, onResult, onProgress, useCachedFirst, useCachedIfOffline, receiveUpdates);								
 								});
 
