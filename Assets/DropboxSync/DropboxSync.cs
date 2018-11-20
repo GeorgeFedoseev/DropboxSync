@@ -51,9 +51,8 @@ namespace DBXSync {
 		// INTERNET CONNECTION
 		InternetConnectionWatcher _internetConnectionWatcher;
 		
-
 		// TIMERS
-		float _lastTimeCheckedForChanges = -999999;
+		float _lastTimeCheckedForSubscribedItemsChanges = -999999;
 
 		// MAIN THREAD
 		List<Action> MainThreadQueuedActions = new List<Action>();
@@ -61,6 +60,7 @@ namespace DBXSync {
 		// OTHER
 		string _PersistentDataPath = null;
 
+		// MONOBEHAVIOUR
 		void Awake(){
 			Initialize();
 		}
@@ -69,16 +69,15 @@ namespace DBXSync {
 			_internetConnectionWatcher.Update();
 			
 			// check remote changes for subscribed
-			if(Time.unscaledTime - _lastTimeCheckedForChanges > DBXCheckForChangesIntervalSeconds){									
+			if(Time.unscaledTime - _lastTimeCheckedForSubscribedItemsChanges > DBXCheckForChangesIntervalSeconds){									
 				if(_internetConnectionWatcher.IsConnected){
 					CheckChangesForSubscribedItems();
 				}				
-				_lastTimeCheckedForChanges = Time.unscaledTime;
+				_lastTimeCheckedForSubscribedItemsChanges = Time.unscaledTime;
 			}
 
 			// execute main thread queued actions
 			lock(MainThreadQueuedActions){				
-				
 				foreach(var a in MainThreadQueuedActions){
 					if(a != null){
 						a();
@@ -103,6 +102,8 @@ namespace DBXSync {
 		}
 
 		
+		// SUBSCRIBING TO CHANGES
+
 		Dictionary<DBXItem, List<Action<List<DBXFileChange>>>> OnChangeCallbacksDict = new Dictionary<DBXItem, List<Action<List<DBXFileChange>>>>();
 		void CheckChangesForSubscribedItems(){
 			if(OnChangeCallbacksDict.Count == 0){
@@ -148,8 +149,6 @@ namespace DBXSync {
 			}
 		}
 
-	
-
 		public void SubscribeToFileChanges(string dropboxFilePath, Action<DBXFileChange> onChange){
 			var item = new DBXFile(dropboxFilePath);
 			SubscribeToChanges(item, (changes) => {
@@ -191,7 +190,7 @@ namespace DBXSync {
 		}
 
 
-		// GETTING FILE/FOLDER
+		// GETTING ONE FILE
 
 		public void GetFile<T>(string dropboxPath, Action<DropboxRequestResult<T>> onResult, Action<float> onProgress = null, bool useCachedFirst = false,
 		bool useCachedIfOffline = true, bool receiveUpdates = false) where T : class{
@@ -472,6 +471,18 @@ namespace DBXSync {
 			}, onError: onError, saveChangesInfoLocally:true);									
 		}
 
+
+		// CACHING
+
+		string CacheFolderPathForToken {
+			get {
+				DropboxSyncUtils.ValidateAccessToken(DropboxAccessToken);
+
+				var accessTokeFirst5Characters = DropboxAccessToken.Substring(0, 5);
+				return Path.Combine(_PersistentDataPath, accessTokeFirst5Characters);
+			}		
+		}
+
 		void DeleteFileFromCache(string dropboxPath){
 			var localFilePath = GetPathInCache(dropboxPath);
 			if(File.Exists(localFilePath)){
@@ -530,15 +541,9 @@ namespace DBXSync {
 			return GetPathInCache(dropboxPath)+".dbxsync";
 		}
 
-		string CacheFolderPathForToken {
-			get {
-				DropboxSyncUtils.ValidateAccessToken(DropboxAccessToken);
+		
 
-				var accessTokeFirst5Characters = DropboxAccessToken.Substring(0, 5);
-				return Path.Combine(_PersistentDataPath, accessTokeFirst5Characters);
-			}		
-		}
-
+		// METADATA
 		void SaveFileMetadata(DBXFile fileMetadata){		
 			
 			var localFilePath = GetPathInCache(fileMetadata.path);		
@@ -706,7 +711,7 @@ namespace DBXSync {
 					rootFolder = items.Where(x => x.path == path).First() as DBXFolder;			
 				}
 				// squash flat results
-				rootFolder = BuildStructureFromPool(rootFolder, items);
+				rootFolder = BuildStructureFromFlat(rootFolder, items);
 
 				onResult(new DropboxRequestResult<DBXFolder>(rootFolder));
 			},
@@ -726,14 +731,14 @@ namespace DBXSync {
 			}, recursive: recursive);
 		}
 
-		DBXFolder BuildStructureFromPool(DBXFolder rootFolder, List<DBXItem> pool){		
+		DBXFolder BuildStructureFromFlat(DBXFolder rootFolder, List<DBXItem> pool){		
 			foreach(var poolItem in pool){
 				// if item is immediate child of rootFolder
 				if(DropboxSyncUtils.IsPathImmediateChildOfFolder(rootFolder.path, poolItem.path)){
 					// add poolItem to folder children
 					if(poolItem.type == DBXItemType.Folder){
 						//Debug.Log("Build structure recursive");
-						rootFolder.items.Add(BuildStructureFromPool(poolItem as DBXFolder, pool));	
+						rootFolder.items.Add(BuildStructureFromFlat(poolItem as DBXFolder, pool));	
 					}else{
 						rootFolder.items.Add(poolItem);	
 					}				
