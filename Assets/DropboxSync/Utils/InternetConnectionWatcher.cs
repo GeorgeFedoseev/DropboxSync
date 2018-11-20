@@ -10,23 +10,28 @@ namespace DBXSync.Utils {
 		float INTERNET_CONNECTION_CHECK_INTERVAL_SECONDS = 5f;
 		
 		public Action OnLostInternetConnection = () => {};
+		public Action OnInternetConnectionRecovered = () => {};
 
-		bool _isConnected = false;
-		public bool IsConnected {
-			get {
-				return _isConnected;
-			}
-		}
+		bool _isConnected = true;
+		// public bool IsConnected {
+		// 	get {
+
+		// 		return _isConnected;
+		// 	}
+		// }
 
 		private List<Action> _onInternetRecoverOnceCallbacks = new List<Action>();
 
 		float _lastTimeCheckedInternetConnection = -999;
 
+		
 		public void Update(){
 			if(Time.unscaledTime - _lastTimeCheckedInternetConnection > INTERNET_CONNECTION_CHECK_INTERVAL_SECONDS){
 				DropboxSyncUtils.IsOnlineAsync((isOnline) => {
 					if(isOnline){
-						if(!_isConnected){					
+						if(!_isConnected){			
+
+							OnInternetConnectionRecovered();		
 
 							foreach(var a in _onInternetRecoverOnceCallbacks){
 								a();

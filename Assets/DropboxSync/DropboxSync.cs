@@ -19,7 +19,8 @@ using System.Threading;
 namespace DBXSync {
 
 	public partial class DropboxSync : MonoBehaviour {
-		
+		static float CHECK_REMOTE_UPDATES_INTERVAL_SECONDS = 15;
+		static DropboxSyncLogLevel LOG_LEVEL = DropboxSyncLogLevel.Debug;
 
 		// SINGLETONE
 		public static DropboxSync Main {
@@ -35,11 +36,7 @@ namespace DBXSync {
 		}
 
 		// <INSPECTOR
-
-		[HideInInspector]
-		public float DBXCheckForChangesIntervalSeconds = 15;
 		public string DropboxAccessToken = "<YOUR ACCESS TOKEN>";
-
 		// INSPECTOR>		
 
 		// INTERNET CONNECTION
@@ -49,7 +46,7 @@ namespace DBXSync {
 		float _lastTimeCheckedForSubscribedItemsChanges = -999999;
 
 		// MAIN THREAD
-		List<Action> MainThreadQueuedActions = new List<Action>();
+		private MainThreadQueueRunner _mainThreadQueueRunner;
 
 		// OTHER
 		string _PersistentDataPath = null;
@@ -61,25 +58,18 @@ namespace DBXSync {
 
 		void Update () {
 			_internetConnectionWatcher.Update();
+			_mainThreadQueueRunner.PerformQueuedTasks();
 			
 			// check remote changes for subscribed
-			if(Time.unscaledTime - _lastTimeCheckedForSubscribedItemsChanges > DBXCheckForChangesIntervalSeconds){									
-				if(_internetConnectionWatcher.IsConnected){
-					CheckChangesForSubscribedItems();
-				}				
+			if(Time.unscaledTime - _lastTimeCheckedForSubscribedItemsChanges > CHECK_REMOTE_UPDATES_INTERVAL_SECONDS){									
+				DropboxSyncUtils.IsOnlineAsync((isOnline) => {
+					if(isOnline){
+						CheckChangesForSubscribedItems();
+					}
+				});
+								
 				_lastTimeCheckedForSubscribedItemsChanges = Time.unscaledTime;
-			}
-
-			// execute main thread queued actions
-			lock(MainThreadQueuedActions){				
-				foreach(var a in MainThreadQueuedActions){
-					if(a != null){
-						a();
-					}						
-				}
-
-				MainThreadQueuedActions.Clear();
-			}
+			}			
 		}
 
 		// METHODS
@@ -88,6 +78,14 @@ namespace DBXSync {
 			_PersistentDataPath = Application.persistentDataPath;	
 
 			_internetConnectionWatcher = new InternetConnectionWatcher();
+			_internetConnectionWatcher.OnLostInternetConnection += () => {
+				LogWarning("Lost internet connection.");
+			};
+			_internetConnectionWatcher.OnInternetConnectionRecovered += () => {
+				LogWarning("Internet connection recovered.");
+			};
+
+			_mainThreadQueueRunner = new MainThreadQueueRunner();
 
 			// trust all certificates
 			// TODO: do something smarter instead of this
@@ -95,12 +93,5 @@ namespace DBXSync {
     							((sender, certificate, chain, sslPolicyErrors) => true);		
 		}
 
-		// THREADING
-
-		void QueueOnMainThread(Action a){
-			lock(MainThreadQueuedActions){
-				MainThreadQueuedActions.Add(a);
-			}
-		}
 	} // class
 } // namespace

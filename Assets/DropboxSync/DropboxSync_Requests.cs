@@ -33,6 +33,7 @@ namespace DBXSync {
 
 			if(!DropboxSyncUtils.IsOnline()){
 				onWebError("No internet connection");
+				return;
 			}
 
 			try {
@@ -45,12 +46,12 @@ namespace DBXSync {
 							Log(string.Format("Downloaded {0} bytes out of {1}", e.BytesReceived, e.TotalBytesToReceive));
 							if(e.TotalBytesToReceive != -1){
 								// if download size in known from server
-								QueueOnMainThread(() => {
+								_mainThreadQueueRunner.QueueOnMainThread(() => {
 									onProgress((float)e.BytesReceived/e.TotalBytesToReceive);	
 								});
 							}else{
 								// return progress is going but unknown
-								QueueOnMainThread(() => {
+								_mainThreadQueueRunner.QueueOnMainThread(() => {
 									onProgress(-1);
 								});
 							}
@@ -64,38 +65,38 @@ namespace DBXSync {
 							LogError("MakeDropboxRequest -> UploadDataCompleted -> Error "+e.Error.Message);
 							
 							if(e.Error is WebException){
+								
 								var webex = e.Error as WebException;
-								var stream = webex.Response.GetResponseStream();
-								var reader = new StreamReader(stream);
-								var responseStr = reader.ReadToEnd();
-								Log(responseStr);
 
-								try{								
+								try{
+									var stream = webex.Response.GetResponseStream();
+									var reader = new StreamReader(stream);
+									var responseStr = reader.ReadToEnd();
+																								
 									var dict = JSON.FromJson<Dictionary<string, object>>(responseStr);
 									var errorSummary = dict["error_summary"].ToString();								
-									QueueOnMainThread(() => {
+									_mainThreadQueueRunner.QueueOnMainThread(() => {
 										onWebError(errorSummary);
 									});
 								}catch{
-									QueueOnMainThread(() => {
+									_mainThreadQueueRunner.QueueOnMainThread(() => {
 										onWebError(e.Error.Message);
 									});
 								}
 							}else{
-								QueueOnMainThread(() => {
+								_mainThreadQueueRunner.QueueOnMainThread(() => {
 									onWebError(e.Error.Message);
 								});
 							}
 
 						}else{
-							var respStr = Encoding.UTF8.GetString(e.Result);
-							QueueOnMainThread(() => {								
+							// no error
+							var respStr = Encoding.UTF8.GetString(e.Result);							
+							_mainThreadQueueRunner.QueueOnMainThread(() => {								
 								onResponse(respStr);
 							});
 						}
 					};
-
-					
 
 					var uri = new Uri(url);
 					Log("MakeDropboxRequest:client.UploadDataAsync");				
@@ -118,6 +119,7 @@ namespace DBXSync {
 
 			if(!DropboxSyncUtils.IsOnline()){
 				onWebError("No internet connection");
+				return;
 			}
 
 			try {
@@ -131,12 +133,12 @@ namespace DBXSync {
 							//Log(string.Format("Downloaded {0} bytes out of {1} ({2}%)", e.BytesReceived, e.TotalBytesToReceive, e.ProgressPercentage));
 							if(e.TotalBytesToReceive != -1){
 								// if download size in known from server
-								QueueOnMainThread(() => {
+								_mainThreadQueueRunner.QueueOnMainThread(() => {
 									onProgress((float)e.BytesReceived/e.TotalBytesToReceive);	
 								});
 							}else{
 								// return progress is going but unknown
-								QueueOnMainThread(() => {
+								_mainThreadQueueRunner.QueueOnMainThread(() => {
 									onProgress(-1);
 								});
 							}
@@ -155,21 +157,21 @@ namespace DBXSync {
 								try{								
 									var dict = JSON.FromJson<Dictionary<string, object>>(responseStr);
 									var errorSummary = dict["error_summary"].ToString();	
-									QueueOnMainThread(() => {							
+									_mainThreadQueueRunner.QueueOnMainThread(() => {							
 										onWebError(errorSummary);
 									});
 								}catch{
-									QueueOnMainThread(() => {
+									_mainThreadQueueRunner.QueueOnMainThread(() => {
 										onWebError(e.Error.Message);
 									});
 								}
 							}else{
-								QueueOnMainThread(() => {
+								_mainThreadQueueRunner.QueueOnMainThread(() => {
 									onWebError(e.Error.Message);
 								});
 							}
 						}else if(e.Cancelled){
-							QueueOnMainThread(() => {
+							_mainThreadQueueRunner.QueueOnMainThread(() => {
 								onWebError("Download was cancelled.");
 							});
 						}else{
@@ -179,7 +181,7 @@ namespace DBXSync {
 							var dict = JSON.FromJson<Dictionary<string, object>>(metadataJsonStr);
 							var fileMetadata = DBXFile.FromDropboxDictionary(dict);
 
-							QueueOnMainThread(() => {
+							_mainThreadQueueRunner.QueueOnMainThread(() => {
 								onResponse(fileMetadata, e.Result);
 							});							
 						}
@@ -189,7 +191,7 @@ namespace DBXSync {
 					client.DownloadDataAsync(uri);
 				}
 			} catch (WebException ex){
-				QueueOnMainThread(() => {
+				_mainThreadQueueRunner.QueueOnMainThread(() => {
 					onWebError(ex.Message);
 				});
 			}

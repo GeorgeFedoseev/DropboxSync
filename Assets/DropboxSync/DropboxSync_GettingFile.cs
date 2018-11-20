@@ -128,32 +128,33 @@ namespace DBXSync {
 			}else{
 				//Log("GetFile: check if online");
 				// now check if we online
+				
 				DropboxSyncUtils.IsOnlineAsync((isOnline) => {
 					if(isOnline){
-					Log("GetFile: internet available");
-					// check if have updates and load them
-					UpdateFileFromRemote(dropboxPath, onSuccess: () => {
-						Log("GetFile: file "+dropboxPath+" is latest ver now");
-						// return updated cached result
-						returnCachedResult();
+						Log("GetFile: internet available");
+						// check if have updates and load them
+						UpdateFileFromRemote(dropboxPath, onSuccess: () => {
+							Log("GetFile: file "+dropboxPath+" is latest ver now");
+							// return updated cached result
+							returnCachedResult();
 
-						if(receiveUpdates){
-							subscribeToUpdatesAction();
-						}
-					}, onProgress: onProgress, onError: (errorStr) => {
-						//Log("error");
-						onResult(DropboxRequestResult<byte[]>.Error("Cant get file: "+errorStr));
+							if(receiveUpdates){
+								subscribeToUpdatesAction();
+							}
+						}, onProgress: onProgress, onError: (errorStr) => {
+							//Log("error");
+							onResult(DropboxRequestResult<byte[]>.Error("Cant get file: "+errorStr));
 
-						if(receiveUpdates){
-							subscribeToUpdatesAction();
-						}
-					});
+							if(receiveUpdates){
+								subscribeToUpdatesAction();
+							}
+						});
 					}else{
 						Log("GetFile: internet not available");
 
 						if(useCachedIfOffline && IsFileCached(dropboxPath)){
 							Log("GetFile: cannot check for updates - using cached version");
-							QueueOnMainThread(() => {
+							_mainThreadQueueRunner.QueueOnMainThread(() => {
 								returnCachedResult();
 							});
 							
@@ -175,6 +176,8 @@ namespace DBXSync {
 						}
 					}
 				});
+				
+				
 			}
 
 			

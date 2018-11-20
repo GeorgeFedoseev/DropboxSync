@@ -26,8 +26,7 @@ namespace DBXSync {
 
 	public partial class DropboxSync: MonoBehaviour {
 
-		// LOGGING
-		public static DropboxSyncLogLevel LOG_LEVEL = DropboxSyncLogLevel.Warnings;
+		// LOGGING		
 
 		void Log(string message){
 			if(LOG_LEVEL <= DropboxSyncLogLevel.Debug)
