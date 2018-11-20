@@ -1,0 +1,199 @@
+﻿// DropboxSync v1.1
+// Created by George Fedoseev 2018
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Security;
+using System.Text;
+using UnityEngine;
+
+using DBXSync.Model;
+using DBXSync.Utils;
+using UnityEngine.UI;
+using System.IO;
+using System.Threading;
+
+namespace DBXSync {
+	public partial class DropboxSync: MonoBehaviour {
+
+		// BASE REQUESTS
+
+		void MakeDropboxRequest<T>(string url, T parametersObject, Action<string> onResponse, Action<float> onProgress, Action<string> onWebError) where T : DropboxRequestParams{
+			MakeDropboxRequest(url, JsonUtility.ToJson(parametersObject), onResponse, onProgress, onWebError);
+		}	
+
+		void MakeDropboxRequest(string url, string jsonParameters, Action<string> onResponse, Action<float> onProgress, Action<string> onWebError){
+			Log("MakeDropboxRequest url: "+url);
+
+			DropboxSyncUtils.ValidateAccessToken(DropboxAccessToken);
+		
+
+			if(!DropboxSyncUtils.IsOnline()){
+				onWebError("No internet connection");
+			}
+
+			try {
+				using (var client = new WebClient()){				
+					client.Headers.Set("Authorization", "Bearer "+DropboxAccessToken);
+					client.Headers.Set("Content-Type", "application/json");
+					
+					client.DownloadProgressChanged += (s, e) => {
+						if(onProgress != null){
+							Log(string.Format("Downloaded {0} bytes out of {1}", e.BytesReceived, e.TotalBytesToReceive));
+							if(e.TotalBytesToReceive != -1){
+								// if download size in known from server
+								QueueOnMainThread(() => {
+									onProgress((float)e.BytesReceived/e.TotalBytesToReceive);	
+								});
+							}else{
+								// return progress is going but unknown
+								QueueOnMainThread(() => {
+									onProgress(-1);
+								});
+							}
+						}						
+					};
+
+					client.UploadDataCompleted += (s, e) => {
+						Log("MakeDropboxRequest -> UploadDataCompleted");						
+
+						if(e.Error != null){
+							LogError("MakeDropboxRequest -> UploadDataCompleted -> Error "+e.Error.Message);
+							
+							if(e.Error is WebException){
+								var webex = e.Error as WebException;
+								var stream = webex.Response.GetResponseStream();
+								var reader = new StreamReader(stream);
+								var responseStr = reader.ReadToEnd();
+								Log(responseStr);
+
+								try{								
+									var dict = JSON.FromJson<Dictionary<string, object>>(responseStr);
+									var errorSummary = dict["error_summary"].ToString();								
+									QueueOnMainThread(() => {
+										onWebError(errorSummary);
+									});
+								}catch{
+									QueueOnMainThread(() => {
+										onWebError(e.Error.Message);
+									});
+								}
+							}else{
+								QueueOnMainThread(() => {
+									onWebError(e.Error.Message);
+								});
+							}
+
+						}else{
+							var respStr = Encoding.UTF8.GetString(e.Result);
+							QueueOnMainThread(() => {								
+								onResponse(respStr);
+							});
+						}
+					};
+
+					
+
+					var uri = new Uri(url);
+					Log("MakeDropboxRequest:client.UploadDataAsync");				
+					client.UploadDataAsync(uri, "POST", Encoding.Default.GetBytes(jsonParameters));						
+				}
+			} catch (Exception ex){
+				//onWebError(ex.Message);
+				//Log("caught exeption");
+				onWebError(ex.Message);
+				//Log(ex.Response.ToString());
+			}
+		}
+
+		void MakeDropboxDownloadRequest<T>(string url, T parametersObject, Action<DBXFile, byte[]> onResponse, Action<float> onProgress, Action<string> onWebError) where T : DropboxRequestParams{
+			MakeDropboxDownloadRequest(url, JsonUtility.ToJson(parametersObject), onResponse, onProgress, onWebError);
+		}
+
+		void MakeDropboxDownloadRequest(string url, string jsonParameters, Action<DBXFile, byte[]> onResponse, Action<float> onProgress, Action<string> onWebError){
+			DropboxSyncUtils.ValidateAccessToken(DropboxAccessToken);
+
+			if(!DropboxSyncUtils.IsOnline()){
+				onWebError("No internet connection");
+			}
+
+			try {
+				using (var client = new WebClient()){				
+					client.Headers.Set("Authorization", "Bearer "+DropboxAccessToken);					
+					client.Headers.Set("Dropbox-API-Arg", jsonParameters);
+					
+					client.DownloadProgressChanged += (s, e) => {
+						
+						if(onProgress != null){
+							//Log(string.Format("Downloaded {0} bytes out of {1} ({2}%)", e.BytesReceived, e.TotalBytesToReceive, e.ProgressPercentage));
+							if(e.TotalBytesToReceive != -1){
+								// if download size in known from server
+								QueueOnMainThread(() => {
+									onProgress((float)e.BytesReceived/e.TotalBytesToReceive);	
+								});
+							}else{
+								// return progress is going but unknown
+								QueueOnMainThread(() => {
+									onProgress(-1);
+								});
+							}
+						}						
+					};
+
+					client.DownloadDataCompleted += (s, e) => {
+						if(e.Error != null){
+							if(e.Error is WebException){
+								var webex = e.Error as WebException;
+								var stream = webex.Response.GetResponseStream();
+								var reader = new StreamReader(stream);
+								var responseStr = reader.ReadToEnd();
+								Log(responseStr);
+
+								try{								
+									var dict = JSON.FromJson<Dictionary<string, object>>(responseStr);
+									var errorSummary = dict["error_summary"].ToString();	
+									QueueOnMainThread(() => {							
+										onWebError(errorSummary);
+									});
+								}catch{
+									QueueOnMainThread(() => {
+										onWebError(e.Error.Message);
+									});
+								}
+							}else{
+								QueueOnMainThread(() => {
+									onWebError(e.Error.Message);
+								});
+							}
+						}else if(e.Cancelled){
+							QueueOnMainThread(() => {
+								onWebError("Download was cancelled.");
+							});
+						}else{
+							//var respStr = Encoding.UTF8.GetString(e.Result);
+							var metadataJsonStr = client.ResponseHeaders["Dropbox-API-Result"].ToString();
+							Log(metadataJsonStr);
+							var dict = JSON.FromJson<Dictionary<string, object>>(metadataJsonStr);
+							var fileMetadata = DBXFile.FromDropboxDictionary(dict);
+
+							QueueOnMainThread(() => {
+								onResponse(fileMetadata, e.Result);
+							});							
+						}
+					};
+
+					var uri = new Uri(url);
+					client.DownloadDataAsync(uri);
+				}
+			} catch (WebException ex){
+				QueueOnMainThread(() => {
+					onWebError(ex.Message);
+				});
+			}
+		}
+		
+	}
+}
