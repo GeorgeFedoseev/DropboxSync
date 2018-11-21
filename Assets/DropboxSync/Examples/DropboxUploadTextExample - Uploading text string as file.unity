@@ -846,7 +846,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: DropboxUploadFileExample - Uploading file
+  m_Text: DropboxUploadTextExample - Uploading text string as file
 --- !u!222 &1460150599
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -963,7 +963,7 @@ GameObject:
   - component: {fileID: 1686903681}
   - component: {fileID: 1686903680}
   m_Layer: 0
-  m_Name: DropboxSyncUploadFileExampleScript
+  m_Name: DropboxUploadTextExampleScript
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

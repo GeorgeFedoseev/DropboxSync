@@ -31,6 +31,7 @@ namespace DBXSync {
 		}
 
 		void DeleteFileFromCache(string dropboxPath){
+			Log("DeleteFileFromCache: "+dropboxPath);
 			var localFilePath = GetPathInCache(dropboxPath);
 			if(File.Exists(localFilePath)){
 				File.Delete(localFilePath);

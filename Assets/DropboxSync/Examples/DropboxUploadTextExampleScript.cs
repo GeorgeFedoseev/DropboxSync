@@ -9,7 +9,7 @@ using UnityEngine.Video;
 using System.Linq;
 using System.Text;
 
-public class DropboxSyncUploadFileExampleScript : MonoBehaviour {
+public class DropboxUploadTextExampleScript : MonoBehaviour {
 
 	string TEXT_FILE_PATH = "/DropboxSyncExampleFolder/uploaded_text.txt";
 

@@ -21,8 +21,21 @@ namespace DBXSync {
 
 		// UPLOADING FILE
 
-		public void UploadFile<T>(string dropboxPath, T fileData, Action<DropboxRequestResult<DBXFile>> onResult, Action<float> onProgress = null)  where T : class {
+		public void UploadFile(string dropboxPath, string localFilePath, Action<DropboxRequestResult<DBXFile>> onResult, Action<float> onProgress = null) {
+			if(!File.Exists(localFilePath)){
+				onResult(DropboxRequestResult<DBXFile>.Error("Local file "+localFilePath+" does not exist."));
+				return;
+			}
 
+			byte[] fileBytes = null;
+			try{
+				fileBytes = File.ReadAllBytes(localFilePath);
+			}catch(Exception ex){
+				onResult(DropboxRequestResult<DBXFile>.Error("Failed to read local file "+localFilePath+": "+ex.Message));
+				return;
+			}
+
+			UploadFile(dropboxPath, fileBytes, onResult, onProgress);			
 		}
 
 		public void UploadFile(string dropboxPath, byte[] bytes, Action<DropboxRequestResult<DBXFile>> onResult, Action<float> onProgress = null) {

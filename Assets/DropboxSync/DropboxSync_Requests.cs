@@ -229,12 +229,17 @@ namespace DBXSync {
 						client.Headers.Set("Content-Type", "application/octet-stream");
 						
 						client.UploadProgressChanged += (s, e) => {
-							
+							Log(string.Format("Upload {0} bytes out of {1} ({2}%)", e.BytesSent, e.TotalBytesToSend, e.ProgressPercentage));
+
 							if(onProgress != null){
-								Log(string.Format("Upload {0} bytes out of {1} ({2}%)", e.BytesSent, e.TotalBytesToSend, e.ProgressPercentage));
-								
 								_mainThreadQueueRunner.QueueOnMainThread(() => {
-									onProgress((float)e.BytesSent/e.TotalBytesToSend);	
+									if(e.ProgressPercentage == 50){
+										// waiting for Dropbox to reply
+										onProgress(0.99f);
+									}else{
+										onProgress((float)e.BytesSent/e.TotalBytesToSend);
+									}
+										
 								});							
 							}						
 						};

@@ -20,7 +20,7 @@ namespace DBXSync {
 
 	public partial class DropboxSync : MonoBehaviour {
 		static float CHECK_REMOTE_UPDATES_INTERVAL_SECONDS = 7;
-		static DropboxSyncLogLevel LOG_LEVEL = DropboxSyncLogLevel.Warnings;
+		static DropboxSyncLogLevel LOG_LEVEL = DropboxSyncLogLevel.Debug;
 
 		// SINGLETONE
 		public static DropboxSync Main {
@@ -89,8 +89,10 @@ namespace DBXSync {
 
 			// trust all certificates
 			// TODO: do something smarter instead of this
-			System.Net.ServicePointManager.ServerCertificateValidationCallback =
-    							((sender, certificate, chain, sslPolicyErrors) => true);		
+			ServicePointManager.ServerCertificateValidationCallback =
+    							((sender, certificate, chain, sslPolicyErrors) => true);	
+
+			ServicePointManager.DefaultConnectionLimit = 20;	
 		}
 
 	} // class
