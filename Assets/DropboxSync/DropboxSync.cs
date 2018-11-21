@@ -19,8 +19,8 @@ using System.Threading;
 namespace DBXSync {
 
 	public partial class DropboxSync : MonoBehaviour {
-		static float CHECK_REMOTE_UPDATES_INTERVAL_SECONDS = 15;
-		static DropboxSyncLogLevel LOG_LEVEL = DropboxSyncLogLevel.Debug;
+		static float CHECK_REMOTE_UPDATES_INTERVAL_SECONDS = 7;
+		static DropboxSyncLogLevel LOG_LEVEL = DropboxSyncLogLevel.Warnings;
 
 		// SINGLETONE
 		public static DropboxSync Main {
