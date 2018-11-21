@@ -72,7 +72,7 @@ namespace DBXSync.Utils {
             return tex;
         }
 
-        public static string GetAudtoDetectedEncodingStringFromBytes(byte[] bytes){
+        public static string GetAutoDetectedEncodingStringFromBytes(byte[] bytes){
             using (var reader = new System.IO.StreamReader(new System.IO.MemoryStream(bytes), true)){
                 var detectedEncoding = reader.CurrentEncoding;
                 return detectedEncoding.GetString(bytes);

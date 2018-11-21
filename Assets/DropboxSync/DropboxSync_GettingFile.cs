@@ -46,7 +46,7 @@ namespace DBXSync {
 						onResult(DropboxRequestResult<T>.Error(res.errorDescription));
 					}else{
 						onResult(new DropboxRequestResult<T>(JSON.FromJson<T>(
-							DropboxSyncUtils.GetAutoDetectedEncodingStringFromBytes(res.data)
+ 							DropboxSyncUtils.GetAutoDetectedEncodingStringFromBytes(res.data)
 						)));
 					}
 				};	
@@ -102,7 +102,8 @@ namespace DBXSync {
 					onResult(new DropboxRequestResult<byte[]>(bytes));
 				}else{
 					Log("cache doesnt have file");
-					onResult(new DropboxRequestResult<byte[]>(null));
+					onResult(DropboxRequestResult<byte[]>.Error("File "+dropboxPath+" is removed on remote"));
+					//onResult(new DropboxRequestResult<byte[]>(null));
 				}				
 			};
 
@@ -134,7 +135,7 @@ namespace DBXSync {
 						Log("GetFile: internet available");
 						// check if have updates and load them
 						UpdateFileFromRemote(dropboxPath, onSuccess: () => {
-							Log("GetFile: file "+dropboxPath+" is latest ver now");
+							Log("GetFile: state of dropbox file is "+dropboxPath+" is synced now");
 							// return updated cached result
 							returnCachedResult();
 
@@ -280,6 +281,7 @@ namespace DBXSync {
 					}else{
 						DeleteFileFromCache(dropboxPath);
 						// no changes, file is deleted locally and on remote - synced
+						Log("no changes, file is deleted locally and on remote - synced");
 						onSuccess();
 					}									
 				}
