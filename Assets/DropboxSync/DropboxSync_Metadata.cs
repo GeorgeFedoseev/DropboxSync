@@ -21,6 +21,24 @@ namespace DBXSync {
 
 		// METADATA
 
+		public void GetFileMetadata(string dropboxPath, Action<DropboxRequestResult<DBXFile>> onResult){
+			var prms = new DropboxGetMetadataRequestParams(dropboxPath);
+
+			Log("GetFileMetadata for "+dropboxPath);
+			MakeDropboxRequest("https://api.dropboxapi.com/2/files/get_metadata", prms, 
+			onResponse: (jsonStr) => {
+				Log("GetFileMetadata onResponse");
+				var dict = JSON.FromJson<Dictionary<string, object>>(jsonStr);				
+				var fileMetadata = DBXFile.FromDropboxDictionary(dict);
+				onResult(new DropboxRequestResult<DBXFile>(fileMetadata));
+			},
+			onProgress:null,
+			onWebError: (errStr) => {
+				Log("GetFileMetadata:onWebError");
+				onResult(DropboxRequestResult<DBXFile>.Error(errStr));
+			});
+		}
+
 		void SaveFileMetadata(DBXFile fileMetadata){		
 			
 			var localFilePath = GetPathInCache(fileMetadata.path);		
@@ -37,7 +55,9 @@ namespace DBXSync {
 		}
 
 		DBXFile GetLocalMetadataForFile(string dropboxFilePath){
+			Log("GetLocalMetadataForFile "+dropboxFilePath);
 			var metadataFilePath = GetMetadataFilePath(dropboxFilePath);
+			Log("Local metadata path: "+metadataFilePath);
 			return ParseLocalMetadata(metadataFilePath);
 		}
 

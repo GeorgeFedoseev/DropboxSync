@@ -52,6 +52,18 @@ namespace DBXSync.Model {
 		}
 	}
 
+	[Serializable]
+	public class DropboxUploadFileRequestParams : DropboxRequestParams {
+		public string path;
+		public string mode;
+
+
+		public DropboxUploadFileRequestParams(string _path){
+			path = _path;
+			mode = "overwrite";
+		}
+	}
+
 
 	public class DropboxRequestResult<T> {
 		public T data;

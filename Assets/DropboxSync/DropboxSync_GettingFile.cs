@@ -30,10 +30,10 @@ namespace DBXSync {
 
 				// TEXT DATA
 				onResultMiddle = (res) => {		
-					if(res.error){
+					if(res.error || res.data == null){
 						onResult(DropboxRequestResult<T>.Error(res.errorDescription));
-					}else{			
-						onResult(new DropboxRequestResult<T>(DropboxSyncUtils.GetAudtoDetectedEncodingStringFromBytes(res.data) as T));										
+					}else{
+						onResult(new DropboxRequestResult<T>(DropboxSyncUtils.GetAutoDetectedEncodingStringFromBytes(res.data) as T));										
 					}
 				};				
 			}
@@ -46,7 +46,7 @@ namespace DBXSync {
 						onResult(DropboxRequestResult<T>.Error(res.errorDescription));
 					}else{
 						onResult(new DropboxRequestResult<T>(JSON.FromJson<T>(
-							DropboxSyncUtils.GetAudtoDetectedEncodingStringFromBytes(res.data)
+							DropboxSyncUtils.GetAutoDetectedEncodingStringFromBytes(res.data)
 						)));
 					}
 				};	
@@ -195,23 +195,7 @@ namespace DBXSync {
 			});
 		}
 
-		public void GetFileMetadata(string dropboxPath, Action<DropboxRequestResult<DBXFile>> onResult){
-			var prms = new DropboxGetMetadataRequestParams(dropboxPath);
-
-			Log("GetFileMetadata for "+dropboxPath);
-			MakeDropboxRequest("https://api.dropboxapi.com/2/files/get_metadata", prms, 
-			onResponse: (jsonStr) => {
-				Log("GetFileMetadata onResponse");
-				var dict = JSON.FromJson<Dictionary<string, object>>(jsonStr);				
-				var fileMetadata = DBXFile.FromDropboxDictionary(dict);
-				onResult(new DropboxRequestResult<DBXFile>(fileMetadata));
-			},
-			onProgress:null,
-			onWebError: (errStr) => {
-				Log("GetFileMetadata:onWebError");
-				onResult(DropboxRequestResult<DBXFile>.Error(errStr));
-			});
-		}
+		
 
 
 

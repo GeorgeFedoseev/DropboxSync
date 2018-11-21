@@ -62,7 +62,7 @@ namespace DBXSync {
 						Log("MakeDropboxRequest -> UploadDataCompleted");						
 
 						if(e.Error != null){
-							LogError("MakeDropboxRequest -> UploadDataCompleted -> Error "+e.Error.Message);
+							//LogError("MakeDropboxRequest -> UploadDataCompleted -> Error "+e.Error.Message);
 							
 							if(e.Error is WebException){
 								
@@ -110,6 +110,10 @@ namespace DBXSync {
 			}
 		}
 
+		
+
+
+		// DOWNLOAD BYTES
 		void MakeDropboxDownloadRequest<T>(string url, T parametersObject, Action<DBXFile, byte[]> onResponse, Action<float> onProgress, Action<string> onWebError) where T : DropboxRequestParams{
 			MakeDropboxDownloadRequest(url, JsonUtility.ToJson(parametersObject), onResponse, onProgress, onWebError);
 		}
@@ -189,6 +193,92 @@ namespace DBXSync {
 
 					var uri = new Uri(url);
 					client.DownloadDataAsync(uri);
+				}
+			} catch (WebException ex){
+				_mainThreadQueueRunner.QueueOnMainThread(() => {
+					onWebError(ex.Message);
+				});
+			}
+		}
+
+		// UPLOAD BYTES
+		void MakeDropboxUploadRequest<T>(string url, byte[] dataToUpload, T parametersObject, Action<DBXFile> onResponse, Action<float> onProgress, Action<string> onWebError){
+			MakeDropboxUploadRequest(url, dataToUpload, JsonUtility.ToJson(parametersObject), onResponse, onProgress, onWebError);
+		}
+
+		void MakeDropboxUploadRequest(string url, byte[] dataToUpload, string jsonParameters, Action<DBXFile> onResponse, Action<float> onProgress, Action<string> onWebError){
+			DropboxSyncUtils.ValidateAccessToken(DropboxAccessToken);
+
+			if(!DropboxSyncUtils.IsOnline()){
+				onWebError("No internet connection");
+				return;
+			}
+
+			try {
+				using (var client = new WebClient()){			
+					
+
+					client.Headers.Set("Authorization", "Bearer "+DropboxAccessToken);					
+					client.Headers.Set("Dropbox-API-Arg", jsonParameters);
+					client.Headers.Set("Content-Type", "application/octet-stream");
+					
+					client.UploadProgressChanged += (s, e) => {
+						
+						if(onProgress != null){
+							Log(string.Format("Upload {0} bytes out of {1} ({2}%)", e.BytesSent, e.TotalBytesToSend, e.ProgressPercentage));
+							
+							_mainThreadQueueRunner.QueueOnMainThread(() => {
+								onProgress((float)e.BytesSent/e.TotalBytesToSend);	
+							});							
+						}						
+					};
+
+					client.UploadDataCompleted += (s, e) => {
+						Log("MakeDropboxUploadRequest -> UploadDataCompleted");
+						if(e.Error != null){
+							if(e.Error is WebException){
+								var webex = e.Error as WebException;
+								var stream = webex.Response.GetResponseStream();
+								var reader = new StreamReader(stream);
+								var responseStr = reader.ReadToEnd();
+								LogWarning(responseStr);
+
+								try{								
+									var dict = JSON.FromJson<Dictionary<string, object>>(responseStr);
+									var errorSummary = dict["error_summary"].ToString();	
+									_mainThreadQueueRunner.QueueOnMainThread(() => {							
+										onWebError(errorSummary);
+									});
+								}catch{
+									_mainThreadQueueRunner.QueueOnMainThread(() => {
+										onWebError(e.Error.Message);
+									});
+								}
+							}else{
+								_mainThreadQueueRunner.QueueOnMainThread(() => {
+									Log("e.Error is "+e.Error);
+									onWebError(e.Error.Message);
+								});
+							}
+						}else if(e.Cancelled){
+							_mainThreadQueueRunner.QueueOnMainThread(() => {
+								onWebError("Download was cancelled.");
+							});
+						}else{
+							//var respStr = Encoding.UTF8.GetString(e.Result);
+							var metadataJsonStr = Encoding.UTF8.GetString(e.Result);;
+							Log(metadataJsonStr);
+							var dict = JSON.FromJson<Dictionary<string, object>>(metadataJsonStr);
+							var fileMetadata = DBXFile.FromDropboxDictionary(dict);
+
+							_mainThreadQueueRunner.QueueOnMainThread(() => {
+								onResponse(fileMetadata);
+							});							
+						}
+					};
+
+					var uri = new Uri(url);
+					client.UploadDataAsync(uri, "POST", dataToUpload);
 				}
 			} catch (WebException ex){
 				_mainThreadQueueRunner.QueueOnMainThread(() => {
