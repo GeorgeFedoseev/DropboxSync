@@ -24,8 +24,8 @@ namespace DBXSync {
 		void FolderGetRemoteChanges(string dropboxFolderPath, Action<DropboxRequestResult<List<DBXFileChange>>> onResult, bool saveChangesInfoLocally = false){
 			GetFolderItems(dropboxFolderPath, 
 			onResult: (res) => {
-				if(res.error){
-					onResult(DropboxRequestResult<List<DBXFileChange>>.Error(res.errorDescription, res.errorType));
+				if(res.error != null){
+					onResult(DropboxRequestResult<List<DBXFileChange>>.Error(res.error));
 				}else{
 					var fileChanges = new List<DBXFileChange>();
 
@@ -68,7 +68,7 @@ namespace DBXSync {
 			}, recursive:true, onProgress:null);
 		}
 
-		void FileGetRemoteChanges(string dropboxFilePath, Action<DBXFileChange> onResult, Action<string> onError, bool saveChangesInfoLocally = false){
+		void FileGetRemoteChanges(string dropboxFilePath, Action<DBXFileChange> onResult, Action<DBXError> onError, bool saveChangesInfoLocally = false){
 			var localFilePath = GetPathInCache(dropboxFilePath);
 			var metadataFilePath = GetMetadataFilePath(dropboxFilePath);			
 
@@ -80,8 +80,8 @@ namespace DBXSync {
 				Log("Got metadata for file "+dropboxFilePath);
 				DBXFileChange result = null;
 
-				if(res.error){							
-					if (res.errorDescription.Contains("not_found")){
+				if(res.error != null){
+					if (res.error.ErrorType == DBXErrorType.FileNotFound){
 						//Log("file not found");
 						// file was deleted or moved
 
@@ -95,11 +95,11 @@ namespace DBXSync {
 								result = new DBXFileChange(localMetadata, DBXFileChangeType.None);
 							}
 						}else{
-							onError("File "+dropboxFilePath+" not found on DropBox");
+							onError(res.error);
 						}
 						
 					}else{
-						onError(res.errorDescription);
+						onError(res.error);
 						return;
 					}									
 				}else{

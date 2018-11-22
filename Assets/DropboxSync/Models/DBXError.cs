@@ -14,7 +14,8 @@ namespace DBXSync.Model {
         NetworkProblem,
         DropboxAPIError,
         ParsingError,
-        UserCanceled
+        UserCanceled,
+        NotSupported
 	}
 
     [Serializable]
@@ -27,6 +28,11 @@ namespace DBXSync.Model {
         }
 
         private DBXErrorType _errorType = DBXErrorType.Unknown;
+        public DBXErrorType ErrorType {
+            get {
+                return _errorType;
+            }
+        }
 
         public DBXError(string errorDescription, DBXErrorType errorType){
             _errorDescription = errorDescription;

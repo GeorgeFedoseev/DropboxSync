@@ -38,11 +38,11 @@ namespace DBXSync {
 			}		
 		}
 
-		void DownloadToCache (string dropboxPath, Action onSuccess, Action<float> onProgress, Action<string> onError){
+		void DownloadToCache (string dropboxPath, Action onSuccess, Action<float> onProgress, Action<DBXError> onError){
 				Log("DownloadToCache");
 				DownloadFileBytes(dropboxPath, (res) => {
-					if(res.error){
-						onError(res.errorDescription);						
+					if(res.error != null){
+						onError(res.error);						
 					}else{
 						var localFilePath = GetPathInCache(dropboxPath);
 						//Log("Cache folder path: "+CacheFolderPathForToken	);

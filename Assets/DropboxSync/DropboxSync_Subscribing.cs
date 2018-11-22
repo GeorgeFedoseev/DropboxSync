@@ -48,7 +48,7 @@ namespace DBXSync {
 					break;
 					case DBXItemType.Folder:
 					FolderGetRemoteChanges(item.path, (res) => {
-						if(!res.error){
+						if(res.error == null){
 							if(res.data.Count > 0){
 								foreach(var cb in callbacks){
 									cb(res.data);
@@ -56,7 +56,7 @@ namespace DBXSync {
 							}
 								
 						}else{
-							LogError("Failed to check folder changes: "+res.errorDescription);
+							LogError("Failed to check folder changes: "+res.error.ErrorDescription);
 						}
 					}, saveChangesInfoLocally: true);
 					break;

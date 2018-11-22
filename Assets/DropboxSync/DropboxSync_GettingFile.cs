@@ -30,8 +30,8 @@ namespace DBXSync {
 
 				// TEXT DATA
 				onResultMiddle = (res) => {		
-					if(res.error || res.data == null){
-						onResult(DropboxRequestResult<T>.Error(res.errorDescription));
+					if(res.error != null || res.data == null){
+						onResult(DropboxRequestResult<T>.Error(res.error));
 					}else{
 						onResult(new DropboxRequestResult<T>(DropboxSyncUtils.GetAutoDetectedEncodingStringFromBytes(res.data) as T));										
 					}
@@ -42,8 +42,8 @@ namespace DBXSync {
 
 				// JSON OBJECT/ARRAY
 				onResultMiddle = (res) => {					
-					if(res.error){
-						onResult(DropboxRequestResult<T>.Error(res.errorDescription));
+					if(res.error != null){
+						onResult(DropboxRequestResult<T>.Error(res.error));
 					}else{
 						onResult(new DropboxRequestResult<T>(JSON.FromJson<T>(
  							DropboxSyncUtils.GetAutoDetectedEncodingStringFromBytes(res.data)
@@ -55,15 +55,20 @@ namespace DBXSync {
 				//Log("GetFile: Texture2D type");
 				// IMAGE DATA
 				onResultMiddle = (res) => {				
-					if(res.error){
-						onResult(DropboxRequestResult<T>.Error(res.errorDescription));
+					if(res.error != null){
+						onResult(DropboxRequestResult<T>.Error(res.error));
 					}else{
 						onResult(new DropboxRequestResult<T>(DropboxSyncUtils.LoadImageToTexture2D(res.data) as T));
 					}
 				};	
 			}
 			else{
-				onResult(DropboxRequestResult<T>.Error(string.Format("Dont have a mapping byte[] -> {0}. Type {0} is not supported.", typeof(T).ToString())));
+				onResult(DropboxRequestResult<T>.Error(
+							new DBXError(string.Format("Dont have a mapping byte[] -> {0}. Type {0} is not supported.", typeof(T).ToString()),
+										DBXErrorType.NotSupported
+							)
+						)
+				);
 				return;
 			}
 
@@ -73,8 +78,8 @@ namespace DBXSync {
 		public void GetFileAsLocalCachedPath(string dropboxPath, Action<DropboxRequestResult<string>> onResult, Action<float> onProgress = null, bool useCachedFirst = false,
 		bool useCachedIfOffline = true, bool receiveUpdates = false){
 			Action<DropboxRequestResult<byte[]>> onResultMiddle = (res) => {					
-				if(res.error){
-					onResult(DropboxRequestResult<string>.Error(res.errorDescription));
+				if(res.error != null){
+					onResult(DropboxRequestResult<string>.Error(res.error));
 				}else{
 					if(res.data != null){
 						onResult(new DropboxRequestResult<string>(GetPathInCache(dropboxPath)));
@@ -90,7 +95,10 @@ namespace DBXSync {
 		public void GetFileAsBytes(string dropboxPath, Action<DropboxRequestResult<byte[]>> onResult, Action<float> onProgress = null, bool useCachedFirst = false,
 		bool useCachedIfOffline = true, bool receiveUpdates = false){
 			if(DropboxSyncUtils.IsBadDropboxPath(dropboxPath)){
-				onResult(DropboxRequestResult<byte[]>.Error("Cant get file: bad path "+dropboxPath));
+				onResult(DropboxRequestResult<byte[]>.Error(
+							new DBXError("Cant get file: bad path "+dropboxPath, DBXErrorType.BadRequest)							
+						)
+				);
 				return;
 			}
 
@@ -102,7 +110,11 @@ namespace DBXSync {
 					onResult(new DropboxRequestResult<byte[]>(bytes));
 				}else{
 					Log("cache doesnt have file");
-					onResult(DropboxRequestResult<byte[]>.Error("File "+dropboxPath+" is removed on remote"));
+					onResult(
+						DropboxRequestResult<byte[]>.Error(
+							new DBXError("File "+dropboxPath+" is removed on remote", DBXErrorType.FileNotFound)
+						)
+					);
 					//onResult(new DropboxRequestResult<byte[]>(null));
 				}				
 			};
@@ -112,8 +124,8 @@ namespace DBXSync {
 					UpdateFileFromRemote(dropboxPath, onSuccess: () => {							
 						// return updated cached result
 						returnCachedResult();
-					}, onProgress: onProgress, onError: (errorStr) => {
-						onResult(DropboxRequestResult<byte[]>.Error("Cant get file: "+errorStr));
+					}, onProgress: onProgress, onError: (error) => {
+						onResult(DropboxRequestResult<byte[]>.Error(error));
 					});					
 				});
 			};
@@ -142,9 +154,9 @@ namespace DBXSync {
 							if(receiveUpdates){
 								subscribeToUpdatesAction();
 							}
-						}, onProgress: onProgress, onError: (errorStr) => {
+						}, onProgress: onProgress, onError: (error) => {
 							//Log("error");
-							onResult(DropboxRequestResult<byte[]>.Error("Cant get file: "+errorStr));
+							onResult(DropboxRequestResult<byte[]>.Error(error));
 
 							if(receiveUpdates){
 								subscribeToUpdatesAction();
@@ -172,7 +184,10 @@ namespace DBXSync {
 								subscribeToUpdatesAction();
 							}else{
 								// error
-								onResult(DropboxRequestResult<byte[]>.Error("GetFile: No internet connection"));	
+								onResult(DropboxRequestResult<byte[]>.Error(
+											new DBXError("GetFile: No internet connection", DBXErrorType.NetworkProblem)
+										)
+								);	
 							}						
 						}
 					}
@@ -200,10 +215,10 @@ namespace DBXSync {
 
 
 
-		public void SyncFolderFromDropbox(string dropboxFolderPath, Action onSuccess, Action<float> onProgress, Action<string> onError){
+		public void SyncFolderFromDropbox(string dropboxFolderPath, Action onSuccess, Action<float> onProgress, Action<DBXError> onError){
 			FolderGetRemoteChanges(dropboxFolderPath, onResult:(res) => {
-				if(res.error){
-					onError(res.errorDescription);
+				if(res.error != null){
+					onError(res.error);
 				}else{
 					var fileChanges = res.data;
 
@@ -255,11 +270,11 @@ namespace DBXSync {
 			});
 		}
 
-		void UpdateFileFromRemote(DBXFile dropboxFile, Action onSuccess, Action<float> onProgress, Action<string> onError){
+		void UpdateFileFromRemote(DBXFile dropboxFile, Action onSuccess, Action<float> onProgress, Action<DBXError> onError){
 			UpdateFileFromRemote(dropboxFile.path, onSuccess, onProgress, onError);
 		}
 
-		void UpdateFileFromRemote(string dropboxPath, Action onSuccess, Action<float> onProgress, Action<string> onError){
+		void UpdateFileFromRemote(string dropboxPath, Action onSuccess, Action<float> onProgress, Action<DBXError> onError){
 			Log("UpdateFileFromRemote");
 			FileGetRemoteChanges(dropboxPath, onResult: (fileChange) => {
 				Log("FileGetRemoteChanges:onResult");

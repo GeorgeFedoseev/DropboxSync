@@ -21,9 +21,14 @@ namespace DBXSync {
 
 		// UPLOADING FILE
 
-		public void UploadFile(string dropboxPath, string localFilePath, Action<DropboxRequestResult<DBXFile>> onResult, Action<float> onProgress = null) {
+		public void UploadFile(string dropboxPath, string localFilePath, Action<DropboxRequestResult<DBXFile>> onResult,
+									 Action<float> onProgress = null) 
+		{
 			if(!File.Exists(localFilePath)){
-				onResult(DropboxRequestResult<DBXFile>.Error("Local file "+localFilePath+" does not exist.", DBXErrorType.FileNotFound));
+				onResult(DropboxRequestResult<DBXFile>.Error(
+							new DBXError("Local file "+localFilePath+" does not exist.", DBXErrorType.FileNotFound)
+						)
+				);
 				return;
 			}
 
@@ -31,15 +36,19 @@ namespace DBXSync {
 			try{
 				fileBytes = File.ReadAllBytes(localFilePath);
 			}catch(Exception ex){
-				onResult(DropboxRequestResult<DBXFile>.Error("Failed to read local file "+localFilePath+": "+ex.Message, 
-																	DBXErrorType.LocalFileSystemError));
+				onResult(DropboxRequestResult<DBXFile>.Error(
+							new DBXError("Failed to read local file "+localFilePath+": "+ex.Message, DBXErrorType.LocalFileSystemError)
+					)
+				);
 				return;
 			}
 
 			UploadFile(dropboxPath, fileBytes, onResult, onProgress);
 		}
 
-		public void UploadFile(string dropboxPath, byte[] bytes, Action<DropboxRequestResult<DBXFile>> onResult, Action<float> onProgress = null) {
+		public void UploadFile(string dropboxPath, byte[] bytes, Action<DropboxRequestResult<DBXFile>> onResult,
+										 Action<float> onProgress = null) 
+		{
 			var prms = new DropboxUploadFileRequestParams(dropboxPath);
 			MakeDropboxUploadRequest("https://content.dropboxapi.com/2/files/upload", bytes, prms,
 			onResponse: (fileMetadata) => {

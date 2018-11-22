@@ -72,7 +72,8 @@ namespace DBXSync {
 			return rootFolder;
 		}
 
-		void _GetFolderItemsFlat(string folderPath, Action<List<DBXItem>> onResult, Action<float> onProgress, Action<string> onError, bool recursive = false, string requestCursor = null, List<DBXItem> currentResults = null){
+		void _GetFolderItemsFlat(string folderPath, Action<List<DBXItem>> onResult, Action<float> onProgress,
+				 Action<DBXError> onError, bool recursive = false, string requestCursor = null, List<DBXItem> currentResults = null){
 			folderPath = DropboxSyncUtils.NormalizePath(folderPath);
 
 			if(folderPath == "/"){
@@ -99,7 +100,7 @@ namespace DBXSync {
 				try {
 					root = JSON.FromJson<Dictionary<string, object>>(jsonStr);
 				}catch(Exception ex){
-					onError(ex.Message);
+					onError(new DBXError(ex.Message, DBXErrorType.ParsingError));
 					return;
 				}
 
@@ -110,7 +111,7 @@ namespace DBXSync {
 					}else if(entry[".tag"].ToString() == "folder"){
 						currentResults.Add(DBXFolder.FromDropboxDictionary(entry));
 					}else{
-						onError("Unknown entry tag "+entry[".tag".ToString()]);
+						onError(new DBXError("Unknown entry tag "+entry[".tag".ToString()], DBXErrorType.Unknown));
 						return;
 					}
 				}

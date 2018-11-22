@@ -76,9 +76,9 @@ namespace DBXSync.Model {
 			this.data = res;
 		}
 
-		public static DropboxRequestResult<T> Error(string errorDescription, DBXErrorType errorType = DBXErrorType.Unknown){
+		public static DropboxRequestResult<T> Error(DBXError error){
 			var inst = new DropboxRequestResult<T>(default(T));
-			inst.error = new DBXError(errorDescription, errorType);
+			inst.error = error;
 			return inst;
 		}
 	}
@@ -94,9 +94,9 @@ namespace DBXSync.Model {
 			fileMetadata = metadata;
 		}
 
-		public static DropboxFileDownloadRequestResult<T> Error(string errorDescription, DBXErrorType errorType = DBXErrorType.Unknown){
+		public static DropboxFileDownloadRequestResult<T> Error(DBXError error){
 			var inst = new DropboxFileDownloadRequestResult<T>(default(T), null);
-			inst.error = new DBXError(errorDescription, errorType);
+			inst.error = error;
 			return inst;
 		}
 	}
