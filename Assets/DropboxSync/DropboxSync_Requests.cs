@@ -291,6 +291,8 @@ namespace DBXSync {
 						};
 
 						var uri = new Uri(url);
+
+						// don't use UploadFile (https://stackoverflow.com/questions/18539807/how-to-remove-multipart-form-databoundary-from-webclient-uploadfile)
 						client.UploadDataAsync(uri, "POST", dataToUpload);
 					}
 				} catch (WebException ex){
