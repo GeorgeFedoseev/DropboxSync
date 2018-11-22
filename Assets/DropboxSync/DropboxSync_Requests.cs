@@ -21,11 +21,13 @@ namespace DBXSync {
 
 		// BASE REQUESTS
 
-		void MakeDropboxRequest<T>(string url, T parametersObject, Action<string> onResponse, Action<float> onProgress, Action<string> onWebError) where T : DropboxRequestParams{
+		void MakeDropboxRequest<T>(string url, T parametersObject, 
+				Action<string> onResponse, Action<float> onProgress, Action<DBXError> onWebError) where T : DropboxRequestParams{
 			MakeDropboxRequest(url, JsonUtility.ToJson(parametersObject), onResponse, onProgress, onWebError);
 		}	
 
-		void MakeDropboxRequest(string url, string jsonParameters, Action<string> onResponse, Action<float> onProgress, Action<string> onWebError){
+		void MakeDropboxRequest(string url, string jsonParameters, 
+				Action<string> onResponse, Action<float> onProgress, Action<DBXError> onWebError){
 			Log("MakeDropboxRequest url: "+url);
 
 			DropboxSyncUtils.ValidateAccessToken(DropboxAccessToken);
@@ -33,7 +35,7 @@ namespace DBXSync {
 
 			DropboxSyncUtils.IsOnlineAsync((isOnline) => {
 				if(!isOnline){
-					onWebError("No internet connection");
+					onWebError(new DBXError("No internet connection", DBXErrorType.NetworkProblem));
 					return;
 				}
 
@@ -78,16 +80,16 @@ namespace DBXSync {
 										var dict = JSON.FromJson<Dictionary<string, object>>(responseStr);
 										var errorSummary = dict["error_summary"].ToString();								
 										_mainThreadQueueRunner.QueueOnMainThread(() => {
-											onWebError(errorSummary);
+											onWebError(new DBXError(errorSummary, DBXErrorType.DropboxAPIError));
 										});
 									}catch{
 										_mainThreadQueueRunner.QueueOnMainThread(() => {
-											onWebError(e.Error.Message);
+											onWebError(new DBXError(e.Error.Message, DBXErrorType.ParsingError));
 										});
 									}
 								}else{
 									_mainThreadQueueRunner.QueueOnMainThread(() => {
-										onWebError(e.Error.Message);
+										onWebError(new DBXError(e.Error.Message, DBXErrorType.Unknown));
 									});
 								}
 
@@ -108,7 +110,7 @@ namespace DBXSync {
 				} catch (Exception ex){
 					//onWebError(ex.Message);
 					//Log("caught exeption");
-					onWebError(ex.Message);
+					onWebError(new DBXError(ex.Message, DBXErrorType.Unknown));
 					//Log(ex.Response.ToString());
 				}
 			});
@@ -118,16 +120,18 @@ namespace DBXSync {
 
 
 		// DOWNLOAD BYTES
-		void MakeDropboxDownloadRequest<T>(string url, T parametersObject, Action<DBXFile, byte[]> onResponse, Action<float> onProgress, Action<string> onWebError) where T : DropboxRequestParams{
+		void MakeDropboxDownloadRequest<T>(string url, T parametersObject, 
+				Action<DBXFile, byte[]> onResponse, Action<float> onProgress, Action<DBXError> onWebError) where T : DropboxRequestParams{
 			MakeDropboxDownloadRequest(url, JsonUtility.ToJson(parametersObject), onResponse, onProgress, onWebError);
 		}
 
-		void MakeDropboxDownloadRequest(string url, string jsonParameters, Action<DBXFile, byte[]> onResponse, Action<float> onProgress, Action<string> onWebError){
+		void MakeDropboxDownloadRequest(string url, string jsonParameters, 
+							Action<DBXFile, byte[]> onResponse, Action<float> onProgress, Action<DBXError> onWebError){
 			DropboxSyncUtils.ValidateAccessToken(DropboxAccessToken);
 
 			DropboxSyncUtils.IsOnlineAsync((isOnline) => {
 				if(!isOnline){
-					onWebError("No internet connection");
+					onWebError(new DBXError("No internet connection", DBXErrorType.NetworkProblem));
 					return;
 				}
 
@@ -170,21 +174,21 @@ namespace DBXSync {
 										var dict = JSON.FromJson<Dictionary<string, object>>(responseStr);
 										var errorSummary = dict["error_summary"].ToString();	
 										_mainThreadQueueRunner.QueueOnMainThread(() => {							
-											onWebError(errorSummary);
+											onWebError(new DBXError(errorSummary, DBXErrorType.DropboxAPIError));
 										});
 									}catch{
 										_mainThreadQueueRunner.QueueOnMainThread(() => {
-											onWebError(e.Error.Message);
+											onWebError(new DBXError(e.Error.Message, DBXErrorType.ParsingError));
 										});
 									}
 								}else{
 									_mainThreadQueueRunner.QueueOnMainThread(() => {
-										onWebError(e.Error.Message);
+										onWebError(new DBXError(e.Error.Message, DBXErrorType.Unknown));
 									});
 								}
 							}else if(e.Cancelled){
 								_mainThreadQueueRunner.QueueOnMainThread(() => {
-									onWebError("Download was cancelled.");
+									onWebError(new DBXError("Download was cancelled.", DBXErrorType.UserCanceled));
 								});
 							}else{
 								//var respStr = Encoding.UTF8.GetString(e.Result);
@@ -205,24 +209,26 @@ namespace DBXSync {
 					}
 				} catch (WebException ex){
 					_mainThreadQueueRunner.QueueOnMainThread(() => {
-						onWebError(ex.Message);
+						onWebError(new DBXError(ex.Message, DBXErrorType.Unknown));
 					});
 				}
 			});
 		}
 
 		// UPLOAD BYTES
-		void MakeDropboxUploadRequest<T>(string url, byte[] dataToUpload, T parametersObject, Action<DBXFile> onResponse, Action<float> onProgress, Action<string> onWebError){
+		void MakeDropboxUploadRequest<T>(string url, byte[] dataToUpload, T parametersObject,
+								 Action<DBXFile> onResponse, Action<float> onProgress, Action<DBXError> onWebError){
 			MakeDropboxUploadRequest(url, dataToUpload, JsonUtility.ToJson(parametersObject), onResponse, onProgress, onWebError);
 		}
 
-		void MakeDropboxUploadRequest(string url, byte[] dataToUpload, string jsonParameters, Action<DBXFile> onResponse, Action<float> onProgress, Action<string> onWebError){
+		void MakeDropboxUploadRequest(string url, byte[] dataToUpload, string jsonParameters,
+												 Action<DBXFile> onResponse, Action<float> onProgress, Action<DBXError> onWebError){
 			DropboxSyncUtils.ValidateAccessToken(DropboxAccessToken);
 
 
 			DropboxSyncUtils.IsOnlineAsync((isOnline) => {
 				if(!isOnline){
-					onWebError("No internet connection");
+					onWebError(new DBXError("No internet connection", DBXErrorType.NetworkProblem));
 					return;
 				}
 
@@ -268,22 +274,22 @@ namespace DBXSync {
 										var dict = JSON.FromJson<Dictionary<string, object>>(responseStr);
 										var errorSummary = dict["error_summary"].ToString();	
 										_mainThreadQueueRunner.QueueOnMainThread(() => {							
-											onWebError(errorSummary);
+											onWebError(new DBXError(errorSummary, DBXErrorType.DropboxAPIError));
 										});
 									}catch{
 										_mainThreadQueueRunner.QueueOnMainThread(() => {
-											onWebError(e.Error.Message);
+											onWebError(new DBXError(e.Error.Message, DBXErrorType.ParsingError));
 										});
 									}
 								}else{
 									_mainThreadQueueRunner.QueueOnMainThread(() => {
 										Log("e.Error is "+e.Error);
-										onWebError(e.Error.Message);
+										onWebError(new DBXError(e.Error.Message, DBXErrorType.Unknown));
 									});
 								}
 							}else if(e.Cancelled){
 								_mainThreadQueueRunner.QueueOnMainThread(() => {
-									onWebError("Download was cancelled.");
+									onWebError(new DBXError("Download was cancelled.", DBXErrorType.UserCanceled));
 								});
 							}else{
 								//var respStr = Encoding.UTF8.GetString(e.Result);
@@ -306,7 +312,7 @@ namespace DBXSync {
 					}
 				} catch (WebException ex){
 					_mainThreadQueueRunner.QueueOnMainThread(() => {
-						onWebError(ex.Message);
+						onWebError(new DBXError(ex.Message, DBXErrorType.Unknown));
 					});
 				}
 			});

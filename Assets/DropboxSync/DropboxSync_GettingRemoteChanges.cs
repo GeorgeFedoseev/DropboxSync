@@ -25,7 +25,7 @@ namespace DBXSync {
 			GetFolderItems(dropboxFolderPath, 
 			onResult: (res) => {
 				if(res.error){
-					onResult(DropboxRequestResult<List<DBXFileChange>>.Error(res.errorDescription));
+					onResult(DropboxRequestResult<List<DBXFileChange>>.Error(res.errorDescription, res.errorType));
 				}else{
 					var fileChanges = new List<DBXFileChange>();
 
