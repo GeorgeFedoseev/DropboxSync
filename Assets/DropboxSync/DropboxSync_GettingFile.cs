@@ -19,6 +19,8 @@ using System.Threading;
 namespace DBXSync {
 	public partial class DropboxSync: MonoBehaviour {
 
+		private static readonly string DOWNLOAD_FILE_ENDPOINT = "https://content.dropboxapi.com/2/files/download";
+
 		// GETTING FILE
 
 		public void GetFile<T>(string dropboxPath, Action<DropboxRequestResult<T>> onResult, Action<float> onProgress = null, bool useCachedFirst = false,
@@ -201,7 +203,7 @@ namespace DBXSync {
 
 		void DownloadFileBytes(string dropboxPath, Action<DropboxFileDownloadRequestResult<byte[]>> onResult, Action<float> onProgress = null){
 			var prms = new DropboxDownloadFileRequestParams(dropboxPath);
-			MakeDropboxDownloadRequest("https://content.dropboxapi.com/2/files/download", prms,
+			MakeDropboxDownloadRequest(DOWNLOAD_FILE_ENDPOINT, prms,
 			onResponse: (fileMetadata, data) => {
 				onResult(new DropboxFileDownloadRequestResult<byte[]>(data, fileMetadata));
 			},

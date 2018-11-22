@@ -19,6 +19,10 @@ using System.Threading;
 namespace DBXSync {
 	public partial class DropboxSync: MonoBehaviour {
 
+		private static readonly string LIST_FOLDER_ENDPOINT = "https://api.dropboxapi.com/2/files/list_folder";
+		private static readonly string LIST_FOLDER_CONTINUE_ENDPOINT = "https://api.dropboxapi.com/2/files/list_folder/continue";
+
+
 		// GETTING FOLDER STRUCTURE
 
 		public void GetFolderStructure(string dropboxFolderPath, Action<DropboxRequestResult<DBXFolder>> onResult, Action<float> onProgress = null){
@@ -85,11 +89,11 @@ namespace DBXSync {
 			if(requestCursor == null){
 				// first request
 				currentResults = new List<DBXItem>();
-				url = "https://api.dropboxapi.com/2/files/list_folder";
+				url = LIST_FOLDER_ENDPOINT;
 				prms = new DropboxListFolderRequestParams{path=folderPath, recursive=recursive};
 			}else{
 				// have cursor to continue list
-				url = "https://api.dropboxapi.com/2/files/list_folder/continue";
+				url = LIST_FOLDER_CONTINUE_ENDPOINT;
 				prms = new DropboxContinueWithCursorRequestParams(requestCursor);
 			}
 			

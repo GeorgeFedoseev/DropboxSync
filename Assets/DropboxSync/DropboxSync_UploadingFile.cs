@@ -18,6 +18,7 @@ using System.Threading;
 
 namespace DBXSync {
 	public partial class DropboxSync: MonoBehaviour {
+		private static readonly string UPLOAD_FILE_ENDPOINT = "https://content.dropboxapi.com/2/files/upload";
 
 		// UPLOADING FILE
 
@@ -50,7 +51,7 @@ namespace DBXSync {
 										 Action<float> onProgress = null) 
 		{
 			var prms = new DropboxUploadFileRequestParams(dropboxPath);
-			MakeDropboxUploadRequest("https://content.dropboxapi.com/2/files/upload", bytes, prms,
+			MakeDropboxUploadRequest(UPLOAD_FILE_ENDPOINT, bytes, prms,
 			onResponse: (fileMetadata) => {
 				_mainThreadQueueRunner.QueueOnMainThread(() => {
 					onResult(new DropboxRequestResult<DBXFile>(fileMetadata));	

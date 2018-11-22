@@ -19,13 +19,15 @@ using System.Threading;
 namespace DBXSync {
 	public partial class DropboxSync: MonoBehaviour {
 
+		private static readonly string METADATA_ENDPOINT = "https://api.dropboxapi.com/2/files/get_metadata";
+
 		// METADATA
 
 		public void GetFileMetadata(string dropboxPath, Action<DropboxRequestResult<DBXFile>> onResult){
 			var prms = new DropboxGetMetadataRequestParams(dropboxPath);
 
 			Log("GetFileMetadata for "+dropboxPath);
-			MakeDropboxRequest("https://api.dropboxapi.com/2/files/get_metadata", prms, 
+			MakeDropboxRequest(METADATA_ENDPOINT, prms, 
 			onResponse: (jsonStr) => {
 				Log("GetFileMetadata onResponse");
 				var dict = JSON.FromJson<Dictionary<string, object>>(jsonStr);				
