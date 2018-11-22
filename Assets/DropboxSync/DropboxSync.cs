@@ -45,6 +45,9 @@ namespace DBXSync {
 		// TIMERS
 		float _lastTimeCheckedForSubscribedItemsChanges = -999999;
 
+		// WEB CLIENTS
+		List<DBXWebClient> _activeWebClientsList = new List<DBXWebClient>();
+
 		// MAIN THREAD
 		private MainThreadQueueRunner _mainThreadQueueRunner;
 
@@ -93,6 +96,13 @@ namespace DBXSync {
     							((sender, certificate, chain, sslPolicyErrors) => true);	
 
 			ServicePointManager.DefaultConnectionLimit = 20;	
+		}
+
+		void OnDestroy(){
+			// cancel unfinished downloads/uploads
+			foreach(var wc in _activeWebClientsList){
+				wc.CancelAsync();
+			}
 		}
 
 	} // class

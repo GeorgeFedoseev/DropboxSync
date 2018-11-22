@@ -5,6 +5,15 @@ using System.Collections.Generic;
 namespace DBXSync.Model {
 
 	[Serializable]
+	public enum DBXErrorType {
+		Unknown,
+		NotAuthorized,
+		FileNotFound,
+		BadRequest
+	}
+
+
+	[Serializable]
 	public class DropboxRequestParams {
 
 	}
@@ -69,15 +78,17 @@ namespace DBXSync.Model {
 		public T data;
 		public bool error = false;
 		public string errorDescription = null;
+		public DBXErrorType errorType = DBXErrorType.Unknown;
 
 		public DropboxRequestResult(T res){
 			this.data = res;
 		}
 
-		public static DropboxRequestResult<T> Error(string errorDescription){
+		public static DropboxRequestResult<T> Error(string errorDescription, DBXErrorType errorType = DBXErrorType.Unknown){
 			var inst = new DropboxRequestResult<T>(default(T));
 			inst.error = true;
 			inst.errorDescription = errorDescription;
+			inst.errorType = errorType;
 			return inst;
 		}
 	}
@@ -87,16 +98,18 @@ namespace DBXSync.Model {
 		public DBXFile fileMetadata;
 		public bool error = false;
 		public string errorDescription = null;
+		public DBXErrorType errorType = DBXErrorType.Unknown;
 
 		public DropboxFileDownloadRequestResult(T res, DBXFile metadata){
 			this.data = res;
 			fileMetadata = metadata;
 		}
 
-		public static DropboxFileDownloadRequestResult<T> Error(string errorDescription){
+		public static DropboxFileDownloadRequestResult<T> Error(string errorDescription, DBXErrorType errorType = DBXErrorType.Unknown){
 			var inst = new DropboxFileDownloadRequestResult<T>(default(T), null);
 			inst.error = true;
 			inst.errorDescription = errorDescription;
+			inst.errorType = errorType;
 			return inst;
 		}
 	}

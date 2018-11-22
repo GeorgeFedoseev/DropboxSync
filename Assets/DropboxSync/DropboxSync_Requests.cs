@@ -60,7 +60,8 @@ namespace DBXSync {
 						};
 
 						client.UploadDataCompleted += (s, e) => {
-							Log("MakeDropboxRequest -> UploadDataCompleted");						
+							Log("MakeDropboxRequest -> UploadDataCompleted");	
+							_activeWebClientsList.Remove(client);					
 
 							if(e.Error != null){
 								//LogError("MakeDropboxRequest -> UploadDataCompleted -> Error "+e.Error.Message);
@@ -101,7 +102,8 @@ namespace DBXSync {
 
 						var uri = new Uri(url);
 						Log("MakeDropboxRequest:client.UploadDataAsync");				
-						client.UploadDataAsync(uri, "POST", Encoding.Default.GetBytes(jsonParameters));						
+						client.UploadDataAsync(uri, "POST", Encoding.Default.GetBytes(jsonParameters));	
+						_activeWebClientsList.Add(client);					
 					}
 				} catch (Exception ex){
 					//onWebError(ex.Message);
@@ -152,7 +154,10 @@ namespace DBXSync {
 							}						
 						};
 
+						
 						client.DownloadDataCompleted += (s, e) => {
+							_activeWebClientsList.Remove(client);
+
 							if(e.Error != null){
 								if(e.Error is WebException){
 									var webex = e.Error as WebException;
@@ -196,6 +201,7 @@ namespace DBXSync {
 
 						var uri = new Uri(url);
 						client.DownloadDataAsync(uri);
+						_activeWebClientsList.Add(client);
 					}
 				} catch (WebException ex){
 					_mainThreadQueueRunner.QueueOnMainThread(() => {
@@ -248,6 +254,8 @@ namespace DBXSync {
 
 						client.UploadDataCompleted += (s, e) => {
 							Log("MakeDropboxUploadRequest -> UploadDataCompleted");
+							_activeWebClientsList.Remove(client);
+
 							if(e.Error != null){
 								if(e.Error is WebException){
 									var webex = e.Error as WebException;
@@ -294,6 +302,7 @@ namespace DBXSync {
 
 						// don't use UploadFile (https://stackoverflow.com/questions/18539807/how-to-remove-multipart-form-databoundary-from-webclient-uploadfile)
 						client.UploadDataAsync(uri, "POST", dataToUpload);
+						_activeWebClientsList.Add(client);
 					}
 				} catch (WebException ex){
 					_mainThreadQueueRunner.QueueOnMainThread(() => {
@@ -305,98 +314,6 @@ namespace DBXSync {
 			
 		}
 
-		// void MakeDropboxUploadRequest(string url, byte[] dataToUpload, string jsonParameters, Action<DBXFile> onResponse, Action<float> onProgress, Action<string> onWebError){
-		// 	DropboxSyncUtils.ValidateAccessToken(DropboxAccessToken);
-
-
-		// 	DropboxSyncUtils.IsOnlineAsync((isOnline) => {
-		// 		if(!isOnline){
-		// 			onWebError("No internet connection");
-		// 			return;
-		// 		}
-
-		// 		try {
-		// 			using (var client = new DBXWebClient()){			
-						
-
-		// 				client.Headers.Set("Authorization", "Bearer "+DropboxAccessToken);					
-		// 				client.Headers.Set("Dropbox-API-Arg", jsonParameters);
-		// 				client.Headers.Set("Content-Type", "application/octet-stream");
-
-						
-						
-		// 				client.UploadProgressChanged += (s, e) => {
-		// 					Log(string.Format("Upload {0} bytes out of {1} ({2}%)", e.BytesSent, e.TotalBytesToSend, e.ProgressPercentage));
-
-		// 					if(onProgress != null){
-		// 						_mainThreadQueueRunner.QueueOnMainThread(() => {
-		// 							if(e.ProgressPercentage == 50){
-		// 								// waiting for Dropbox to reply
-		// 								onProgress(0.99f);
-		// 							}else{
-		// 								onProgress((float)e.BytesSent/e.TotalBytesToSend);
-		// 							}
-										
-		// 						});							
-		// 					}						
-		// 				};
-
-		// 				client.UploadDataCompleted += (s, e) => {
-		// 					Log("MakeDropboxUploadRequest -> UploadDataCompleted");
-		// 					if(e.Error != null){
-		// 						if(e.Error is WebException){
-		// 							var webex = e.Error as WebException;
-		// 							var stream = webex.Response.GetResponseStream();
-		// 							var reader = new StreamReader(stream);
-		// 							var responseStr = reader.ReadToEnd();
-		// 							LogWarning(responseStr);
-
-		// 							try{								
-		// 								var dict = JSON.FromJson<Dictionary<string, object>>(responseStr);
-		// 								var errorSummary = dict["error_summary"].ToString();	
-		// 								_mainThreadQueueRunner.QueueOnMainThread(() => {							
-		// 									onWebError(errorSummary);
-		// 								});
-		// 							}catch{
-		// 								_mainThreadQueueRunner.QueueOnMainThread(() => {
-		// 									onWebError(e.Error.Message);
-		// 								});
-		// 							}
-		// 						}else{
-		// 							_mainThreadQueueRunner.QueueOnMainThread(() => {
-		// 								Log("e.Error is "+e.Error);
-		// 								onWebError(e.Error.Message);
-		// 							});
-		// 						}
-		// 					}else if(e.Cancelled){
-		// 						_mainThreadQueueRunner.QueueOnMainThread(() => {
-		// 							onWebError("Download was cancelled.");
-		// 						});
-		// 					}else{
-		// 						//var respStr = Encoding.UTF8.GetString(e.Result);
-		// 						var metadataJsonStr = Encoding.UTF8.GetString(e.Result);;
-		// 						Log(metadataJsonStr);
-		// 						var dict = JSON.FromJson<Dictionary<string, object>>(metadataJsonStr);
-		// 						var fileMetadata = DBXFile.FromDropboxDictionary(dict);
-
-		// 						_mainThreadQueueRunner.QueueOnMainThread(() => {
-		// 							onResponse(fileMetadata);
-		// 						});							
-		// 					}
-		// 				};
-
-		// 				var uri = new Uri(url);
-		// 				client.UploadDataAsync(uri, "POST", dataToUpload);
-		// 			}
-		// 		} catch (WebException ex){
-		// 			_mainThreadQueueRunner.QueueOnMainThread(() => {
-		// 				onWebError(ex.Message);
-		// 			});
-		// 		}
-		// 	});
-
-			
-		// }
 		
 	}
 }
