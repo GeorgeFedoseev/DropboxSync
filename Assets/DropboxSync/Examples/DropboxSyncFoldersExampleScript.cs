@@ -41,8 +41,8 @@ public class DropboxSyncFoldersExampleScript : MonoBehaviour {
 		pathsHistory.Add(dropboxFolderPath);
 
 		DropboxSync.Main.GetFolderItems(dropboxFolderPath, (res) => {
-			if(res.error){
-				Debug.LogError("Failed to get folder items for folder "+dropboxFolderPath+" "+res.errorDescription);
+			if(res.error != null){
+				Debug.LogError("Failed to get folder items for folder "+dropboxFolderPath+" "+res.error.ErrorDescription);
 			}else{
 				var folderItems = res.data;
 				RenderFolderItems(folderItems);				
@@ -85,8 +85,8 @@ public class DropboxSyncFoldersExampleScript : MonoBehaviour {
 					_go.GetComponentInChildren<Button>().onClick.AddListener(() => {
 						DisplayFileStatus("Downloading file "+_item.path+"...");
 						DropboxSync.Main.GetFileAsBytes(_item.path, (res) => {
-							if(res.error){
-								DisplayFileStatus("Failed to download "+_item.path+" to cache: "+res.errorDescription);
+							if(res.error != null){
+								DisplayFileStatus("Failed to download "+_item.path+" to cache: "+res.error.ErrorDescription);
 							}else{
 								DisplayFileStatus("Downloaded "+_item.path+" to cache.\nTotal: "+res.data.Length.ToString()+" bytes");
 							}

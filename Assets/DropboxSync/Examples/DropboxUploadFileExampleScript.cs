@@ -42,8 +42,9 @@ public class DropboxUploadFileExampleScript : MonoBehaviour {
 		Debug.Log(string.Format("Uploading {0} to Dropbox {1}...", localFilePath, uploadDropboxPath));
 
 		DropboxSync.Main.UploadFile(uploadDropboxPath, localFilePath, (res) => {
-			if(res.error){
-				statusText.text = "<color=red>Failed to upload file: "+res.errorDescription+"</color>";
+			if(res.error != null){
+				statusText.text = "<color=red>Failed to upload file: "+res.error.ErrorDescription+"</color>";
+				Debug.LogError("Error uploading text file: "+res.error.ErrorDescription);
 			}else{
 				statusText.text = "<color=green>File uploaded to "+uploadDropboxPath+"</color>";
 			}

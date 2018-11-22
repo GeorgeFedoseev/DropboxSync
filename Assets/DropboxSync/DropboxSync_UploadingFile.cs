@@ -52,11 +52,19 @@ namespace DBXSync {
 			var prms = new DropboxUploadFileRequestParams(dropboxPath);
 			MakeDropboxUploadRequest("https://content.dropboxapi.com/2/files/upload", bytes, prms,
 			onResponse: (fileMetadata) => {
-				onResult(new DropboxRequestResult<DBXFile>(fileMetadata));
+				_mainThreadQueueRunner.QueueOnMainThread(() => {
+					onResult(new DropboxRequestResult<DBXFile>(fileMetadata));	
+				});				
 			},
-			onProgress: onProgress,
+			onProgress: (progress) => {
+				_mainThreadQueueRunner.QueueOnMainThread(() => {
+					onProgress(progress);
+				});
+			},
 			onWebError: (webErrorStr) => {
-				onResult(DropboxRequestResult<DBXFile>.Error(webErrorStr));
+				_mainThreadQueueRunner.QueueOnMainThread(() => {
+					onResult(DropboxRequestResult<DBXFile>.Error(webErrorStr));
+				});					
 			});
 		}
 		

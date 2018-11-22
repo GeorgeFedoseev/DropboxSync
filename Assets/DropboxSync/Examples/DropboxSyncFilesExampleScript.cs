@@ -24,8 +24,8 @@ public class DropboxSyncFilesExampleScript : MonoBehaviour {
 
 		// TEXT
 		DropboxSync.Main.GetFile<string>("/DropboxSyncExampleFolder/earth.txt", (res) => {
-			if(res.error){
-				Debug.LogError("Error getting text string: "+res.errorDescription);
+			if(res.error != null){
+				Debug.LogError("Error getting text string: "+res.error.ErrorDescription);
 			}else{
 				Debug.Log("Received text string from Dropbox!");
 				var textStr = res.data;
@@ -35,8 +35,8 @@ public class DropboxSyncFilesExampleScript : MonoBehaviour {
 
 		// JSON OBJECT
 		DropboxSync.Main.GetFile<JsonObject>("/DropboxSyncExampleFolder/object.json", (res) => {
-			if(res.error){
-				Debug.LogError("Error getting JSON object: "+res.errorDescription);
+			if(res.error != null){
+				Debug.LogError("Error getting JSON object: "+res.error.ErrorDescription);
 			}else{
 				Debug.Log("Received JSON object from Dropbox!");
 				var jsonObject = res.data;
@@ -47,8 +47,8 @@ public class DropboxSyncFilesExampleScript : MonoBehaviour {
 		
 		// IMAGE
 		DropboxSync.Main.GetFile<Texture2D>("/DropboxSyncExampleFolder/image.jpg", (res) => {
-			if(res.error){
-				Debug.LogError("Error getting picture from Dropbox: "+res.errorDescription);
+			if(res.error != null){
+				Debug.LogError("Error getting picture from Dropbox: "+res.error.ErrorDescription);
 			}else{
 				Debug.Log("Received picture from Dropbox!");
 				var tex = res.data;
@@ -59,8 +59,8 @@ public class DropboxSyncFilesExampleScript : MonoBehaviour {
 
 		// VIDEO
 		DropboxSync.Main.GetFileAsLocalCachedPath("/DropboxSyncExampleFolder/video.mp4", (res) => {
-			if(res.error){
-				Debug.LogError("Error getting video from Dropbox: "+res.errorDescription);
+			if(res.error != null){
+				Debug.LogError("Error getting video from Dropbox: "+res.error.ErrorDescription);
 			}else{
 				Debug.Log("Received video from Dropbox!");
 				var filePathInCache = res.data;
@@ -71,8 +71,8 @@ public class DropboxSyncFilesExampleScript : MonoBehaviour {
 
 		// BYTES ARRAY
 		DropboxSync.Main.GetFileAsBytes("/DropboxSyncExampleFolder/image.jpg", (res) => {
-			if(res.error){
-				Debug.LogError("Failed to get file bytes: "+res.errorDescription);
+			if(res.error != null){
+				Debug.LogError("Failed to get file bytes: "+res.error.ErrorDescription);
 			}else{
 				var imageBytes = res.data;
 				Debug.Log("Got file as bytes array, length: "+imageBytes.Length.ToString()+" bytes");

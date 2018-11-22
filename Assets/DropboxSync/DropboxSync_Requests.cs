@@ -288,10 +288,12 @@ namespace DBXSync {
 									});
 								}
 							}else if(e.Cancelled){
+								Log("MakeDropboxUploadRequest -> canceled");
 								_mainThreadQueueRunner.QueueOnMainThread(() => {
 									onWebError(new DBXError("Download was cancelled.", DBXErrorType.UserCanceled));
 								});
 							}else{
+								Log("MakeDropboxUploadRequest -> no error");
 								//var respStr = Encoding.UTF8.GetString(e.Result);
 								var metadataJsonStr = Encoding.UTF8.GetString(e.Result);;
 								Log(metadataJsonStr);

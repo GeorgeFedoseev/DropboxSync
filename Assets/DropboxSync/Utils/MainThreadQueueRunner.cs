@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 public class MainThreadQueueRunner {
@@ -22,8 +23,13 @@ public class MainThreadQueueRunner {
 	}
 
 	public void QueueOnMainThread(Action a){
-			lock(_mainThreadQueuedActionsLock){
-				_mainThreadQueuedActions.Add(a);
-			}
+		if(!Thread.CurrentThread.IsBackground){
+			a();
+			return;
 		}
+
+		lock(_mainThreadQueuedActionsLock){
+			_mainThreadQueuedActions.Add(a);
+		}
+	}
 }
