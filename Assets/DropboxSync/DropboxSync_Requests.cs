@@ -38,7 +38,7 @@ namespace DBXSync {
 				}
 
 				try {
-					using (var client = new WebClient()){				
+					using (var client = new DBXWebClient()){				
 						client.Headers.Set("Authorization", "Bearer "+DropboxAccessToken);
 						client.Headers.Set("Content-Type", "application/json");
 						
@@ -130,7 +130,7 @@ namespace DBXSync {
 				}
 
 				try {
-					using (var client = new WebClient()){				
+					using (var client = new DBXWebClient()){				
 						client.Headers.Set("Authorization", "Bearer "+DropboxAccessToken);					
 						client.Headers.Set("Dropbox-API-Arg", jsonParameters);
 						
@@ -221,12 +221,14 @@ namespace DBXSync {
 				}
 
 				try {
-					using (var client = new WebClient()){			
+					using (var client = new DBXWebClient()){			
 						
 
 						client.Headers.Set("Authorization", "Bearer "+DropboxAccessToken);					
 						client.Headers.Set("Dropbox-API-Arg", jsonParameters);
 						client.Headers.Set("Content-Type", "application/octet-stream");
+
+						
 						
 						client.UploadProgressChanged += (s, e) => {
 							Log(string.Format("Upload {0} bytes out of {1} ({2}%)", e.BytesSent, e.TotalBytesToSend, e.ProgressPercentage));
@@ -300,6 +302,99 @@ namespace DBXSync {
 
 			
 		}
+
+		// void MakeDropboxUploadRequest(string url, byte[] dataToUpload, string jsonParameters, Action<DBXFile> onResponse, Action<float> onProgress, Action<string> onWebError){
+		// 	DropboxSyncUtils.ValidateAccessToken(DropboxAccessToken);
+
+
+		// 	DropboxSyncUtils.IsOnlineAsync((isOnline) => {
+		// 		if(!isOnline){
+		// 			onWebError("No internet connection");
+		// 			return;
+		// 		}
+
+		// 		try {
+		// 			using (var client = new DBXWebClient()){			
+						
+
+		// 				client.Headers.Set("Authorization", "Bearer "+DropboxAccessToken);					
+		// 				client.Headers.Set("Dropbox-API-Arg", jsonParameters);
+		// 				client.Headers.Set("Content-Type", "application/octet-stream");
+
+						
+						
+		// 				client.UploadProgressChanged += (s, e) => {
+		// 					Log(string.Format("Upload {0} bytes out of {1} ({2}%)", e.BytesSent, e.TotalBytesToSend, e.ProgressPercentage));
+
+		// 					if(onProgress != null){
+		// 						_mainThreadQueueRunner.QueueOnMainThread(() => {
+		// 							if(e.ProgressPercentage == 50){
+		// 								// waiting for Dropbox to reply
+		// 								onProgress(0.99f);
+		// 							}else{
+		// 								onProgress((float)e.BytesSent/e.TotalBytesToSend);
+		// 							}
+										
+		// 						});							
+		// 					}						
+		// 				};
+
+		// 				client.UploadDataCompleted += (s, e) => {
+		// 					Log("MakeDropboxUploadRequest -> UploadDataCompleted");
+		// 					if(e.Error != null){
+		// 						if(e.Error is WebException){
+		// 							var webex = e.Error as WebException;
+		// 							var stream = webex.Response.GetResponseStream();
+		// 							var reader = new StreamReader(stream);
+		// 							var responseStr = reader.ReadToEnd();
+		// 							LogWarning(responseStr);
+
+		// 							try{								
+		// 								var dict = JSON.FromJson<Dictionary<string, object>>(responseStr);
+		// 								var errorSummary = dict["error_summary"].ToString();	
+		// 								_mainThreadQueueRunner.QueueOnMainThread(() => {							
+		// 									onWebError(errorSummary);
+		// 								});
+		// 							}catch{
+		// 								_mainThreadQueueRunner.QueueOnMainThread(() => {
+		// 									onWebError(e.Error.Message);
+		// 								});
+		// 							}
+		// 						}else{
+		// 							_mainThreadQueueRunner.QueueOnMainThread(() => {
+		// 								Log("e.Error is "+e.Error);
+		// 								onWebError(e.Error.Message);
+		// 							});
+		// 						}
+		// 					}else if(e.Cancelled){
+		// 						_mainThreadQueueRunner.QueueOnMainThread(() => {
+		// 							onWebError("Download was cancelled.");
+		// 						});
+		// 					}else{
+		// 						//var respStr = Encoding.UTF8.GetString(e.Result);
+		// 						var metadataJsonStr = Encoding.UTF8.GetString(e.Result);;
+		// 						Log(metadataJsonStr);
+		// 						var dict = JSON.FromJson<Dictionary<string, object>>(metadataJsonStr);
+		// 						var fileMetadata = DBXFile.FromDropboxDictionary(dict);
+
+		// 						_mainThreadQueueRunner.QueueOnMainThread(() => {
+		// 							onResponse(fileMetadata);
+		// 						});							
+		// 					}
+		// 				};
+
+		// 				var uri = new Uri(url);
+		// 				client.UploadDataAsync(uri, "POST", dataToUpload);
+		// 			}
+		// 		} catch (WebException ex){
+		// 			_mainThreadQueueRunner.QueueOnMainThread(() => {
+		// 				onWebError(ex.Message);
+		// 			});
+		// 		}
+		// 	});
+
+			
+		// }
 		
 	}
 }

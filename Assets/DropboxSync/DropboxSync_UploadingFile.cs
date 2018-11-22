@@ -35,19 +35,29 @@ namespace DBXSync {
 				return;
 			}
 
-			UploadFile(dropboxPath, fileBytes, onResult, onProgress);			
+			var prms = new DropboxUploadFileRequestParams(dropboxPath);
+			MakeDropboxUploadRequest("https://content.dropboxapi.com/2/files/upload", fileBytes, prms,
+				onResponse: (fileMetadata) => {
+					onResult(new DropboxRequestResult<DBXFile>(fileMetadata));
+				},
+				onProgress: onProgress,
+				onWebError: (webErrorStr) => {
+					onResult(DropboxRequestResult<DBXFile>.Error(webErrorStr));
+			});		
 		}
 
 		public void UploadFile(string dropboxPath, byte[] bytes, Action<DropboxRequestResult<DBXFile>> onResult, Action<float> onProgress = null) {
-			var prms = new DropboxUploadFileRequestParams(dropboxPath);
-			MakeDropboxUploadRequest("https://content.dropboxapi.com/2/files/upload", bytes, prms,
-			onResponse: (fileMetadata) => {
-				onResult(new DropboxRequestResult<DBXFile>(fileMetadata));
-			},
-			onProgress: onProgress,
-			onWebError: (webErrorStr) => {
-				onResult(DropboxRequestResult<DBXFile>.Error(webErrorStr));
-			});
+			// var prms = new DropboxUploadFileRequestParams(dropboxPath);
+			// MakeDropboxUploadRequest("https://content.dropboxapi.com/2/files/upload", bytes, prms,
+			// onResponse: (fileMetadata) => {
+			// 	onResult(new DropboxRequestResult<DBXFile>(fileMetadata));
+			// },
+			// onProgress: onProgress,
+			// onWebError: (webErrorStr) => {
+			// 	onResult(DropboxRequestResult<DBXFile>.Error(webErrorStr));
+			// });
+
+			throw new NotImplementedException();
 		}
 		
 		

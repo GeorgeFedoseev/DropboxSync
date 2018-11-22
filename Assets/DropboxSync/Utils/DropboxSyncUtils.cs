@@ -81,7 +81,7 @@ namespace DBXSync.Utils {
 
         public static bool IsOnline(){
             try {
-                using (WebClient client = new WebClient()){
+                using (WebClient client = new DBXWebClient()){
                     using (client.OpenRead("http://www.google.com/")){
                         return true;
                     }
