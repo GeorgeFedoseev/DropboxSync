@@ -98,7 +98,6 @@ namespace DBXSync {
 
 			var prms = new DropboxCreateFolderRequestParams();
 			prms.path = path;
-			prms.autorename = false;
 
 			MakeDropboxRequest(CREATE_FOLDER_ENDPOINT, prms, (jsonStr) => {
 
@@ -119,7 +118,7 @@ namespace DBXSync {
 				});				
 			}, onProgress: (progress) => {}, (error) => {
 				if(error.ErrorDescription.Contains("path/conflict/folder")){
-					error.ErrorType = DBXErrorType.AlreadyExists;
+					error.ErrorType = DBXErrorType.RemotePathAlreadyExists;
 				}
 				_mainThreadQueueRunner.QueueOnMainThread(() => {
 					onResult(DropboxRequestResult<DBXFolder>.Error(error));

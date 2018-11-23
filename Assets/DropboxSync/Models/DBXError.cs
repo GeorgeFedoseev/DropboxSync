@@ -17,7 +17,7 @@ namespace DBXSync.Model {
         ParsingError,
         UserCanceled,
         NotSupported,
-        AlreadyExists
+        RemotePathAlreadyExists
 	}
 
     [Serializable]
@@ -26,6 +26,10 @@ namespace DBXSync.Model {
         public string ErrorDescription {
             get {
                 return _errorDescription;
+            }
+
+            set {
+                _errorDescription = value;
             }
         }
 
@@ -48,6 +52,10 @@ namespace DBXSync.Model {
 
         public static DBXErrorType DropboxAPIErrorSummaryToErrorType(string errorSummary){
             if(errorSummary.Contains("path/not_found")){
+                return DBXErrorType.RemotePathNotFound;
+            } else if(errorSummary.Contains("to/conflict/file")){
+                return DBXErrorType.RemotePathAlreadyExists;
+            }else if (errorSummary.Contains("from_lookup/not_found")){
                 return DBXErrorType.RemotePathNotFound;
             }
 

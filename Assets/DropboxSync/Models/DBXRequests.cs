@@ -17,7 +17,7 @@ namespace DBXSync.Model {
 	[Serializable]
 	public class DropboxCreateFolderRequestParams: DropboxRequestParams {
 		public string path;
-		public bool autorename;
+		public bool autorename = false;
 	}
 
 	[Serializable]
@@ -40,6 +40,7 @@ namespace DBXSync.Model {
 	}
 
 
+	// METADATA
 
 	[Serializable]
 	public class DropboxGetMetadataRequestParams : DropboxRequestParams {
@@ -53,7 +54,7 @@ namespace DBXSync.Model {
 		}
 	}
 
-
+	// DOWNLOAD FILE
 	[Serializable]
 	public class DropboxDownloadFileRequestParams : DropboxRequestParams {
 		public string path;
@@ -63,6 +64,7 @@ namespace DBXSync.Model {
 		}
 	}
 
+	// UPLOAD FILE
 	[Serializable]
 	public class DropboxUploadFileRequestParams : DropboxRequestParams {
 		public string path;
@@ -75,6 +77,18 @@ namespace DBXSync.Model {
 		}
 	}
 
+	// MOVE FILE
+	[Serializable]
+	public class DropboxMoveFileRequestParams: DropboxRequestParams {
+		public string from_path;
+		public string to_path;
+		public bool allow_shared_folder = false;
+		public bool autorename = false;
+		public bool allow_ownership_transfer = false;
+	}
+
+
+	// RESULTS
 
 	public class DropboxRequestResult<T> {
 		public T data;

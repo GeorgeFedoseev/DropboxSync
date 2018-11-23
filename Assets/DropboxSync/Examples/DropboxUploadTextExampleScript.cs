@@ -11,7 +11,7 @@ using System.Text;
 
 public class DropboxUploadTextExampleScript : MonoBehaviour {
 
-	string TEXT_FILE_PATH = "/DropboxSyncExampleFolder/new_dir/uploaded_text.txt";
+	string TEXT_FILE_PATH = "/DropboxSyncExampleFolder/uploaded_text.txt";
 
 	public InputField textToUploadInput;
 	public Text downloadedText;
@@ -46,7 +46,17 @@ public class DropboxUploadTextExampleScript : MonoBehaviour {
 		// 	}
 		// });
 
-	
+		// move file
+		var from_path = "/DropboxSyncExampleFolder/uploaded_text.txt";
+		var to_path = "/DropboxSyncExampleFolder/test_move/uploaded_text.txt";
+		DropboxSync.Main.MoveFile(from_path, to_path, (res) => {
+			if(res.error != null){
+				Debug.LogError("Failed to move file from "+from_path+" to "+to_path
+							+" : "+res.error.ErrorDescription+" "+res.error.ErrorType);
+			}else{
+				Debug.LogWarning("succesfully move file");
+			}
+		});
 
 
 		// TESTING>
