@@ -248,13 +248,16 @@ namespace DBXSync {
 
 							if(onProgress != null){
 								_mainThreadQueueRunner.QueueOnMainThread(() => {
-									if(e.ProgressPercentage == 50){
-										// waiting for Dropbox to reply
-										onProgress(0.99f);
+									var uploadProgress = (float)e.BytesSent/e.TotalBytesToSend;
+									
+									var SERVER_PROCESSING_PERCENTAG_VALUE = 0.99f;
+
+									if(uploadProgress > SERVER_PROCESSING_PERCENTAG_VALUE && e.ProgressPercentage < 100){
+										// waiting for server to process uploaded file
+										onProgress(SERVER_PROCESSING_PERCENTAG_VALUE);
 									}else{
-										onProgress((float)e.BytesSent/e.TotalBytesToSend);
+										onProgress(uploadProgress);
 									}
-										
 								});							
 							}						
 						};

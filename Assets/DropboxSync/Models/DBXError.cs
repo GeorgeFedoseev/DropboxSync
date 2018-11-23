@@ -2,7 +2,7 @@
 
 using System;
 
-namespace DBXSync.Model {
+namespace DBXSync {
 
     [Serializable]
 	public enum DBXErrorType {

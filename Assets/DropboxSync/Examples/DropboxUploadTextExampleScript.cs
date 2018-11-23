@@ -20,63 +20,16 @@ public class DropboxUploadTextExampleScript : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
-		// <TESTING
-
-		// create folder
-		// DropboxSync.Main.CreateFolder("/DropboxSyncExampleFolder/text_files", (res) => {
-		// 	if(res.error != null){
-		// 		Debug.LogError("Failed to create folder: "+res.error.ErrorDescription + " - "+res.error.ErrorType.ToString());
-		// 	}else{
-		// 		Debug.LogWarning("Folder created");
-		// 	}
-		// });
-
-
-		// get parent folders from path
-		// var p = "/adsada/dsfdsf/eeee.jpg/bbbb/mmmmmm";
-		// var path_folders = DBXSync.Utils.DropboxSyncUtils.GetPathFolders(p);
-		// path_folders.ForEach(x => {Debug.Log(x);});
-
-		// check if path exists
-		// DropboxSync.Main.PathExists("/DropboxSyncExampleFolder/uploaded_text.txt", (res) => {
-		// 	if(res.error != null){
-		// 		Debug.LogError("Failed to check if path exists: "+res.error.ErrorDescription);
-		// 	}else{
-		// 		Debug.LogWarning("Path exists: "+res.data.ToString());
-		// 	}
-		// });
-
-		// move file
-		// var from_path = "/DropboxSyncExampleFolder/uploaded_text.txt";
-		// var to_path = "/DropboxSyncExampleFolder/test_move/uploaded_text.txt";
-		// DropboxSync.Main.Move(from_path, to_path, (res) => {
-		// 	if(res.error != null){
-		// 		Debug.LogError("Failed to move from "+from_path+" to "+to_path
-		// 					+" : "+res.error.ErrorDescription+" "+res.error.ErrorType);
-		// 	}else{
-		// 		Debug.LogWarning("succesfully moved");
-		// 	}
-		// });
-
-		// delete file
-		var path_to_delete = "/DropboxSyncExampleFolder/uploaded_text.txt";
-		DropboxSync.Main.Delete(path_to_delete, (res) => {
-			if(res.error != null){
-				Debug.LogError("Failed to delete "+path_to_delete
-						+" : "+res.error.ErrorDescription+" "+res.error.ErrorType);
-			}else{
-				Debug.LogWarning("succesfully deleted file");
-			}
-		});
-
-
-		// TESTING>
-
 
 		// subscribe to remote file changes
 		DropboxSync.Main.GetFile<string>(TEXT_FILE_PATH, (res) => {
 			if(res.error != null){
-				Debug.LogError("Error getting text string: "+res.error.ErrorDescription);
+				if(res.error.ErrorType == DBXErrorType.RemotePathNotFound){
+					UpdateDownloadedText("<color=red>File "+TEXT_FILE_PATH+" doesn't exist on Dropbox.</color> Try uploading new.");
+				}else{
+					Debug.LogError("Error getting text string: "+res.error.ErrorDescription);
+					UpdateDownloadedText("Error: "+res.error.ErrorDescription);
+				}
 			}else{
 				Debug.Log("Received text string from Dropbox!");
 				var textStr = res.data;
@@ -90,12 +43,21 @@ public class DropboxUploadTextExampleScript : MonoBehaviour {
 
 
 	public void UploadTextButtonClicked(){
+		textToUploadInput.interactable = false;
+		uploadTextButton.interactable = false;
+
 		Debug.Log("Upload text "+textToUploadInput.text);
+		
 		DropboxSync.Main.UploadFile(TEXT_FILE_PATH, Encoding.UTF8.GetBytes(textToUploadInput.text), (res) => {
 			if(res.error != null){
 				Debug.LogError("Error uploading text file: "+res.error.ErrorDescription);
+				textToUploadInput.interactable = true;
+				uploadTextButton.interactable = true;
 			}else{
 				Debug.Log("Upload completed");
+				textToUploadInput.text = "";
+				textToUploadInput.interactable = true;
+				uploadTextButton.interactable = true;
 			}			
 		}, (progress) => {
 			Debug.Log("Upload progress: "+progress.ToString());
