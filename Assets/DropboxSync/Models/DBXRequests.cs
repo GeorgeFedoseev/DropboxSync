@@ -87,6 +87,12 @@ namespace DBXSync.Model {
 		public bool allow_ownership_transfer = false;
 	}
 
+	// DELETE PATH
+	[Serializable]
+	public class DropboxDeletePathRequestParams: DropboxRequestParams {
+		public string path;
+	}
+
 
 	// RESULTS
 

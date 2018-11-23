@@ -19,34 +19,50 @@ using System.Threading;
 namespace DBXSync {
 	public partial class DropboxSync: MonoBehaviour {
         
-        private static readonly string MOVE_FILE_ENDPOINT = "https://api.dropboxapi.com/2/files/move_v2";
+        private static readonly string MOVE_ENDPOINT = "https://api.dropboxapi.com/2/files/move_v2";
+        private static readonly string DELETE_ENDPOINT = "https://api.dropboxapi.com/2/files/delete_v2";
 	
 		// FILE OPERATIONS
 
-        public void MoveFile(string dropboxFromPath, string dropboxToPath,
-                                 Action<DropboxRequestResult<DBXFile>> onResult) {
+        public void Delete(string dropboxPath, Action<DropboxRequestResult<DBXItem>> onResult){
+            var prms = new DropboxDeletePathRequestParams();
+            prms.path = dropboxPath;
+
+
+
+        }
+
+        public void Move(string dropboxFromPath, string dropboxToPath,
+                                 Action<DropboxRequestResult<DBXItem>> onResult) {
 			
 
 			var prms = new DropboxMoveFileRequestParams();
 			prms.from_path = dropboxFromPath;
             prms.to_path = dropboxToPath;
 
-			MakeDropboxRequest(MOVE_FILE_ENDPOINT, prms, (jsonStr) => {
+			MakeDropboxRequest(MOVE_ENDPOINT, prms, (jsonStr) => {
 
-				DBXFile fileMetadata = null;
+				DBXItem metadata = null;
 
 				try {
 					var root = JSON.FromJson<Dictionary<string, object>>(jsonStr);
-					fileMetadata = DBXFile.FromDropboxDictionary(root["metadata"] as Dictionary<string, object>);
+                    var metadata_dict = root["metadata"] as Dictionary<string, object>;
+
+                    if(metadata_dict[".tag"].ToString() == "file"){
+                        metadata = DBXFile.FromDropboxDictionary(metadata_dict);
+                    }else if(metadata_dict[".tag"].ToString() == "folder"){ 
+                        metadata = DBXFolder.FromDropboxDictionary(metadata_dict);
+                    }
+					
 				}catch(Exception ex){
 					_mainThreadQueueRunner.QueueOnMainThread(() => {
-						onResult(DropboxRequestResult<DBXFile>.Error(new DBXError(ex.Message, DBXErrorType.ParsingError)));
+						onResult(DropboxRequestResult<DBXItem>.Error(new DBXError(ex.Message, DBXErrorType.ParsingError)));
 					});
 					return;
 				}							
 				
 				_mainThreadQueueRunner.QueueOnMainThread(() => {
-					onResult(new DropboxRequestResult<DBXFile>(fileMetadata));
+					onResult(new DropboxRequestResult<DBXItem>(metadata));
 				});				
 			}, onProgress: (progress) => {}, (error) => {
 				
@@ -54,7 +70,7 @@ namespace DBXSync {
                     if(error.ErrorType == DBXErrorType.RemotePathAlreadyExists){
                         error.ErrorDescription = "Can't move file: "+dropboxToPath+" already exists";
                     }
-					onResult(DropboxRequestResult<DBXFile>.Error(error));
+					onResult(DropboxRequestResult<DBXItem>.Error(error));
 				});
 			});
 		}
