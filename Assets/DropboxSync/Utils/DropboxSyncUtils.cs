@@ -120,6 +120,7 @@ namespace DBXSync.Utils {
         }
 
         public static string GetDropboxContentHashForFile(string filePath){
+            Debug.LogWarning("Calculate content hash");
             var hasher = new DropboxContentHasher();
             byte[] buf = new byte[1024];
             using (var file = File.OpenRead(filePath))
@@ -134,7 +135,7 @@ namespace DBXSync.Utils {
 
             hasher.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
             string hexHash = DropboxContentHasher.ToHex(hasher.Hash);
-            
+
             return hexHash;
         }
 

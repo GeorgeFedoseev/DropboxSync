@@ -151,12 +151,20 @@ namespace DBXSync {
 		}
 
 		public void GetFolderItems(string path, Action<DropboxRequestResult<List<DBXItem>>> onResult, Action<float> onProgress = null, bool recursive = false){
-			_GetFolderItemsFlat(path, onResult: (items) => {		
-				onResult(new DropboxRequestResult<List<DBXItem>>(items));
+			_GetFolderItemsFlat(path, onResult: (items) => {
+				_mainThreadQueueRunner.QueueOnMainThread(() => {
+					onResult(new DropboxRequestResult<List<DBXItem>>(items));	
+				});				
 			},
-			onProgress:onProgress,
+			onProgress: (progress) => {
+				_mainThreadQueueRunner.QueueOnMainThread(() => {
+					onProgress(progress);
+				});
+			},
 			onError: (errorStr) => {
-				onResult(DropboxRequestResult<List<DBXItem>>.Error(errorStr));
+				_mainThreadQueueRunner.QueueOnMainThread(() => {
+					onResult(DropboxRequestResult<List<DBXItem>>.Error(errorStr));
+				});
 			}, recursive: recursive);
 		}
 

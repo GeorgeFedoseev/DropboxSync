@@ -49,14 +49,14 @@ namespace DBXSync {
 								Log(string.Format("Downloaded {0} bytes out of {1}", e.BytesReceived, e.TotalBytesToReceive));
 								if(e.TotalBytesToReceive != -1){
 									// if download size in known from server
-									_mainThreadQueueRunner.QueueOnMainThread(() => {
+									// _mainThreadQueueRunner.QueueOnMainThread(() => {
 										onProgress((float)e.BytesReceived/e.TotalBytesToReceive);	
-									});
+									// });
 								}else{
 									// return progress is going but unknown
-									_mainThreadQueueRunner.QueueOnMainThread(() => {
+									// _mainThreadQueueRunner.QueueOnMainThread(() => {
 										onProgress(-1);
-									});
+									// });
 								}
 							}						
 						};
@@ -80,26 +80,26 @@ namespace DBXSync {
 										var dict = JSON.FromJson<Dictionary<string, object>>(responseStr);
 										var errorSummary = dict["error_summary"].ToString();								
 										
-										_mainThreadQueueRunner.QueueOnMainThread(() => {
+										// _mainThreadQueueRunner.QueueOnMainThread(() => {
 											onWebError(new DBXError(errorSummary, DBXError.DropboxAPIErrorSummaryToErrorType(errorSummary)));
-										});
+										// });
 									}catch{
-										_mainThreadQueueRunner.QueueOnMainThread(() => {
+										// _mainThreadQueueRunner.QueueOnMainThread(() => {
 											onWebError(new DBXError(e.Error.Message, DBXErrorType.ParsingError));
-										});
+										// });
 									}
 								}else{
-									_mainThreadQueueRunner.QueueOnMainThread(() => {
+									// _mainThreadQueueRunner.QueueOnMainThread(() => {
 										onWebError(new DBXError(e.Error.Message, DBXErrorType.Unknown));
-									});
+									// });
 								}
 
 							}else{
 								// no error
 								var respStr = Encoding.UTF8.GetString(e.Result);							
-								_mainThreadQueueRunner.QueueOnMainThread(() => {								
+								// _mainThreadQueueRunner.QueueOnMainThread(() => {								
 									onResponse(respStr);
-								});
+								// });
 							}
 						};
 
@@ -147,14 +147,14 @@ namespace DBXSync {
 								//Log(string.Format("Downloaded {0} bytes out of {1} ({2}%)", e.BytesReceived, e.TotalBytesToReceive, e.ProgressPercentage));
 								if(e.TotalBytesToReceive != -1){
 									// if download size in known from server
-									_mainThreadQueueRunner.QueueOnMainThread(() => {
+									// _mainThreadQueueRunner.QueueOnMainThread(() => {
 										onProgress((float)e.BytesReceived/e.TotalBytesToReceive);	
-									});
+									// });
 								}else{
 									// return progress is going but unknown
-									_mainThreadQueueRunner.QueueOnMainThread(() => {
+									// _mainThreadQueueRunner.QueueOnMainThread(() => {
 										onProgress(-1);
-									});
+									// });
 								}
 							}						
 						};
@@ -174,23 +174,23 @@ namespace DBXSync {
 									try{								
 										var dict = JSON.FromJson<Dictionary<string, object>>(responseStr);
 										var errorSummary = dict["error_summary"].ToString();	
-										_mainThreadQueueRunner.QueueOnMainThread(() => {							
+										// _mainThreadQueueRunner.QueueOnMainThread(() => {							
 											onWebError(new DBXError(errorSummary, DBXError.DropboxAPIErrorSummaryToErrorType(errorSummary)));
-										});
+										// });
 									}catch{
-										_mainThreadQueueRunner.QueueOnMainThread(() => {
+										// _mainThreadQueueRunner.QueueOnMainThread(() => {
 											onWebError(new DBXError(e.Error.Message, DBXErrorType.ParsingError));
-										});
+										// });
 									}
 								}else{
-									_mainThreadQueueRunner.QueueOnMainThread(() => {
+									// _mainThreadQueueRunner.QueueOnMainThread(() => {
 										onWebError(new DBXError(e.Error.Message, DBXErrorType.Unknown));
-									});
+									// });
 								}
 							}else if(e.Cancelled){
-								_mainThreadQueueRunner.QueueOnMainThread(() => {
+								// _mainThreadQueueRunner.QueueOnMainThread(() => {
 									onWebError(new DBXError("Download was cancelled.", DBXErrorType.UserCanceled));
-								});
+								// });
 							}else{
 								//var respStr = Encoding.UTF8.GetString(e.Result);
 								var metadataJsonStr = client.ResponseHeaders["Dropbox-API-Result"].ToString();
@@ -198,9 +198,9 @@ namespace DBXSync {
 								var dict = JSON.FromJson<Dictionary<string, object>>(metadataJsonStr);
 								var fileMetadata = DBXFile.FromDropboxDictionary(dict);
 
-								_mainThreadQueueRunner.QueueOnMainThread(() => {
+								// _mainThreadQueueRunner.QueueOnMainThread(() => {
 									onResponse(fileMetadata, e.Result);
-								});							
+								// });							
 							}
 						};
 
@@ -209,9 +209,9 @@ namespace DBXSync {
 						_activeWebClientsList.Add(client);
 					}
 				} catch (WebException ex){
-					_mainThreadQueueRunner.QueueOnMainThread(() => {
+					// _mainThreadQueueRunner.QueueOnMainThread(() => {
 						onWebError(new DBXError(ex.Message, DBXErrorType.Unknown));
-					});
+					// });
 				}
 			});
 		}
@@ -247,7 +247,7 @@ namespace DBXSync {
 							Log(string.Format("Upload {0} bytes out of {1} ({2}%)", e.BytesSent, e.TotalBytesToSend, e.ProgressPercentage));
 
 							if(onProgress != null){
-								_mainThreadQueueRunner.QueueOnMainThread(() => {
+								// _mainThreadQueueRunner.QueueOnMainThread(() => {
 									var uploadProgress = (float)e.BytesSent/e.TotalBytesToSend;
 									
 									var SERVER_PROCESSING_PERCENTAG_VALUE = 0.99f;
@@ -258,7 +258,7 @@ namespace DBXSync {
 									}else{
 										onProgress(uploadProgress);
 									}
-								});							
+								// });							
 							}						
 						};
 
@@ -277,25 +277,25 @@ namespace DBXSync {
 									try{								
 										var dict = JSON.FromJson<Dictionary<string, object>>(responseStr);
 										var errorSummary = dict["error_summary"].ToString();	
-										_mainThreadQueueRunner.QueueOnMainThread(() => {							
+										// _mainThreadQueueRunner.QueueOnMainThread(() => {							
 											onWebError(new DBXError(errorSummary, DBXErrorType.DropboxAPIError));
-										});
+										// });
 									}catch{
-										_mainThreadQueueRunner.QueueOnMainThread(() => {
+										// _mainThreadQueueRunner.QueueOnMainThread(() => {
 											onWebError(new DBXError(e.Error.Message, DBXErrorType.ParsingError));
-										});
+										// });
 									}
 								}else{
-									_mainThreadQueueRunner.QueueOnMainThread(() => {
+									// _mainThreadQueueRunner.QueueOnMainThread(() => {
 										Log("e.Error is "+e.Error);
 										onWebError(new DBXError(e.Error.Message, DBXErrorType.Unknown));
-									});
+									// });
 								}
 							}else if(e.Cancelled){
 								Log("MakeDropboxUploadRequest -> canceled");
-								_mainThreadQueueRunner.QueueOnMainThread(() => {
+								// _mainThreadQueueRunner.QueueOnMainThread(() => {
 									onWebError(new DBXError("Download was cancelled.", DBXErrorType.UserCanceled));
-								});
+								// });
 							}else{
 								Log("MakeDropboxUploadRequest -> no error");
 								//var respStr = Encoding.UTF8.GetString(e.Result);
@@ -304,9 +304,9 @@ namespace DBXSync {
 								var dict = JSON.FromJson<Dictionary<string, object>>(metadataJsonStr);
 								var fileMetadata = DBXFile.FromDropboxDictionary(dict);
 
-								_mainThreadQueueRunner.QueueOnMainThread(() => {
+								// _mainThreadQueueRunner.QueueOnMainThread(() => {
 									onResponse(fileMetadata);
-								});							
+								// });							
 							}
 						};
 
@@ -317,9 +317,9 @@ namespace DBXSync {
 						_activeWebClientsList.Add(client);
 					}
 				} catch (WebException ex){
-					_mainThreadQueueRunner.QueueOnMainThread(() => {
+					// _mainThreadQueueRunner.QueueOnMainThread(() => {
 						onWebError(new DBXError(ex.Message, DBXErrorType.Unknown));
-					});
+					// });
 				}
 			});
 
