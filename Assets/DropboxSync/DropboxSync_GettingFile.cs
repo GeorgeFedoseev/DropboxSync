@@ -117,7 +117,6 @@ namespace DBXSync {
 							new DBXError("File "+dropboxPath+" is removed on remote", DBXErrorType.RemotePathNotFound)
 						)
 					);
-					//onResult(new DropboxRequestResult<byte[]>(null));
 				}				
 			};
 
@@ -151,14 +150,18 @@ namespace DBXSync {
 						UpdateFileFromRemote(dropboxPath, onSuccess: () => {
 							Log("GetFile: state of dropbox file is "+dropboxPath+" is synced now");
 							// return updated cached result
-							returnCachedResult();
+							_mainThreadQueueRunner.QueueOnMainThread(() => {
+								returnCachedResult();
+							});
 
 							if(receiveUpdates){
 								subscribeToUpdatesAction();
 							}
 						}, onProgress: onProgress, onError: (error) => {
 							//Log("error");
-							onResult(DropboxRequestResult<byte[]>.Error(error));
+							_mainThreadQueueRunner.QueueOnMainThread(() => {
+								onResult(DropboxRequestResult<byte[]>.Error(error));
+							});
 
 							if(receiveUpdates){
 								subscribeToUpdatesAction();
@@ -186,10 +189,12 @@ namespace DBXSync {
 								subscribeToUpdatesAction();
 							}else{
 								// error
-								onResult(DropboxRequestResult<byte[]>.Error(
-											new DBXError("GetFile: No internet connection", DBXErrorType.NetworkProblem)
-										)
-								);	
+								_mainThreadQueueRunner.QueueOnMainThread(() => {
+									onResult(DropboxRequestResult<byte[]>.Error(
+												new DBXError("GetFile: No internet connection", DBXErrorType.NetworkProblem)
+											)
+									);	
+								});
 							}						
 						}
 					}
@@ -217,7 +222,7 @@ namespace DBXSync {
 
 
 
-		public void SyncFolderFromDropbox(string dropboxFolderPath, Action onSuccess, Action<float> onProgress, Action<DBXError> onError){
+		private void SyncFolderFromDropbox(string dropboxFolderPath, Action onSuccess, Action<float> onProgress, Action<DBXError> onError){
 			FolderGetRemoteChanges(dropboxFolderPath, onResult:(res) => {
 				if(res.error != null){
 					onError(res.error);
@@ -282,12 +287,15 @@ namespace DBXSync {
 				Log("FileGetRemoteChanges:onResult");
 				
 				if(fileChange.changeType == DBXFileChangeType.Modified || fileChange.changeType == DBXFileChangeType.Added){
+					Log("File was created or modified - download new version");
 					DownloadToCache(dropboxPath, onSuccess: onSuccess, onProgress: onProgress, onError: onError);
 				}else if(fileChange.changeType == DBXFileChangeType.Deleted){
+					Log("File was deleted on remote - delete locally from cache");
 					DeleteFileFromCache(dropboxPath);
 					onSuccess();
 				}else{
 					// no changes on remote
+					Log("No changes on remote");
 					if(!GetLocalMetadataForFile(dropboxPath).deletedOnRemote){
 						// check if file actually downloaded, not only metadata
 						if(IsFileCached(dropboxPath)){

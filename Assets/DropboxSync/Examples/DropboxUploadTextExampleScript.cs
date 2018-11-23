@@ -20,6 +20,8 @@ public class DropboxUploadTextExampleScript : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
+		
+
 
 		// subscribe to remote file changes
 		DropboxSync.Main.GetFile<string>(TEXT_FILE_PATH, (res) => {
@@ -31,7 +33,7 @@ public class DropboxUploadTextExampleScript : MonoBehaviour {
 					UpdateDownloadedText("Error: "+res.error.ErrorDescription);
 				}
 			}else{
-				Debug.Log("Received text string from Dropbox!");
+				Debug.Log("Received text \""+res.data+"\" from Dropbox!");
 				var textStr = res.data;
 				UpdateDownloadedText(textStr);
 			}
@@ -47,7 +49,7 @@ public class DropboxUploadTextExampleScript : MonoBehaviour {
 		uploadTextButton.interactable = false;
 
 		Debug.Log("Upload text "+textToUploadInput.text);
-		
+
 		DropboxSync.Main.UploadFile(TEXT_FILE_PATH, Encoding.UTF8.GetBytes(textToUploadInput.text), (res) => {
 			if(res.error != null){
 				Debug.LogError("Error uploading text file: "+res.error.ErrorDescription);

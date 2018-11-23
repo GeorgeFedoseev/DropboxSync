@@ -68,7 +68,8 @@ namespace DBXSync {
 			}, recursive:true, onProgress:null);
 		}
 
-		void FileGetRemoteChanges(string dropboxFilePath, Action<DBXFileChange> onResult, Action<DBXError> onError, bool saveChangesInfoLocally = false){
+		void FileGetRemoteChanges(string dropboxFilePath, Action<DBXFileChange> onResult,
+					 Action<DBXError> onError, bool saveChangesInfoLocally = false){
 			var localFilePath = GetPathInCache(dropboxFilePath);
 			var metadataFilePath = GetMetadataFilePath(dropboxFilePath);			
 
@@ -77,12 +78,12 @@ namespace DBXSync {
 			// request for metadata to get remote content hash
 			//Log("Getting metadata");
 			GetMetadata<DBXFile>(dropboxFilePath, onResult: (res) => {
-				Log("Got metadata for file "+dropboxFilePath);
+				Log("Got remote metadata for file "+dropboxFilePath);
 				DBXFileChange result = null;
 
 				if(res.error != null){
 					if (res.error.ErrorType == DBXErrorType.RemotePathNotFound){
-						//Log("file not found");
+						Log("file not found - file was deleted or moved");
 						// file was deleted or moved
 
 						// if we knew about this file before
@@ -103,22 +104,28 @@ namespace DBXSync {
 						return;
 					}									
 				}else{
-					//Log("Got metadata");
+					Log("Got metadata");
 					var remoteMedatadata = res.data;
 
 					if(localMetadata != null && !localMetadata.deletedOnRemote){
+						Log("local metadata file exists and we knew this file existed on remote");
+						Log("check if remote content has changed");
 						// get local content hash				
-						var local_content_hash = localMetadata.contentHash;
+						// var local_content_hash = localMetadata.contentHash;
+						var local_content_hash = DropboxSyncUtils.GetDropboxContentHashForFile(localFilePath);
 
 						var remote_content_hash = remoteMedatadata.contentHash;
 
 						if(local_content_hash != remote_content_hash){
+							Log("remote content hash has changed - file was modified");
 							result = new DBXFileChange(remoteMedatadata, DBXFileChangeType.Modified);
 						}else{
+							Log("remote content did not change");
 							result = new DBXFileChange(remoteMedatadata, DBXFileChangeType.None);						
 						}	
 					}else{						
 						// metadata file doesnt exist
+						Log("local metadata file doesnt exist - consider as new file added");
 						// TODO: check maybe file itself exists and right version, then just create metadata file - no need to redownload file itself
 						result = new DBXFileChange(remoteMedatadata, DBXFileChangeType.Added);
 					}
