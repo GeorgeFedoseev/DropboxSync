@@ -24,7 +24,7 @@ namespace DBXSync {
 		// GETTING FILE
 
 		public void GetFile<T>(string dropboxPath, Action<DropboxRequestResult<T>> onResult, Action<float> onProgress = null, bool useCachedFirst = false,
-		bool useCachedIfOffline = true, bool receiveUpdates = false) where T : class{
+			bool useCachedIfOffline = true, bool receiveUpdates = false) where T : class{
 			Action<DropboxRequestResult<byte[]>> onResultMiddle = null;
 
 			if(typeof(T) == typeof(string)){
@@ -33,9 +33,13 @@ namespace DBXSync {
 				// TEXT DATA
 				onResultMiddle = (res) => {		
 					if(res.error != null || res.data == null){
-						onResult(DropboxRequestResult<T>.Error(res.error));
+						_mainThreadQueueRunner.QueueOnMainThread(() => {
+							onResult(DropboxRequestResult<T>.Error(res.error));
+						});
 					}else{
-						onResult(new DropboxRequestResult<T>(DropboxSyncUtils.GetAutoDetectedEncodingStringFromBytes(res.data) as T));										
+						_mainThreadQueueRunner.QueueOnMainThread(() => {
+							onResult(new DropboxRequestResult<T>(DropboxSyncUtils.GetAutoDetectedEncodingStringFromBytes(res.data) as T));										
+						});
 					}
 				};				
 			}
@@ -45,11 +49,15 @@ namespace DBXSync {
 				// JSON OBJECT/ARRAY
 				onResultMiddle = (res) => {					
 					if(res.error != null){
-						onResult(DropboxRequestResult<T>.Error(res.error));
+						_mainThreadQueueRunner.QueueOnMainThread(() => {
+							onResult(DropboxRequestResult<T>.Error(res.error));
+						});
 					}else{
-						onResult(new DropboxRequestResult<T>(JSON.FromJson<T>(
- 							DropboxSyncUtils.GetAutoDetectedEncodingStringFromBytes(res.data)
-						)));
+						_mainThreadQueueRunner.QueueOnMainThread(() => {
+							onResult(new DropboxRequestResult<T>(JSON.FromJson<T>(
+								DropboxSyncUtils.GetAutoDetectedEncodingStringFromBytes(res.data)
+							)));
+						});
 					}
 				};	
 			}
@@ -58,19 +66,25 @@ namespace DBXSync {
 				// IMAGE DATA
 				onResultMiddle = (res) => {				
 					if(res.error != null){
-						onResult(DropboxRequestResult<T>.Error(res.error));
+						_mainThreadQueueRunner.QueueOnMainThread(() => {
+							onResult(DropboxRequestResult<T>.Error(res.error));
+						});
 					}else{
-						onResult(new DropboxRequestResult<T>(DropboxSyncUtils.LoadImageToTexture2D(res.data) as T));
+						_mainThreadQueueRunner.QueueOnMainThread(() => {
+							onResult(new DropboxRequestResult<T>(DropboxSyncUtils.LoadImageToTexture2D(res.data) as T));
+						});
 					}
 				};	
 			}
 			else{
-				onResult(DropboxRequestResult<T>.Error(
-							new DBXError(string.Format("Dont have a mapping byte[] -> {0}. Type {0} is not supported.", typeof(T).ToString()),
-										DBXErrorType.NotSupported
+				_mainThreadQueueRunner.QueueOnMainThread(() => {
+					onResult(DropboxRequestResult<T>.Error(
+								new DBXError(string.Format("Dont have a mapping byte[] -> {0}. Type {0} is not supported.", typeof(T).ToString()),
+											DBXErrorType.NotSupported
+								)
 							)
-						)
-				);
+					);
+				});
 				return;
 			}
 
@@ -78,15 +92,21 @@ namespace DBXSync {
 		}
 
 		public void GetFileAsLocalCachedPath(string dropboxPath, Action<DropboxRequestResult<string>> onResult, Action<float> onProgress = null, bool useCachedFirst = false,
-		bool useCachedIfOffline = true, bool receiveUpdates = false){
+			bool useCachedIfOffline = true, bool receiveUpdates = false){
 			Action<DropboxRequestResult<byte[]>> onResultMiddle = (res) => {					
 				if(res.error != null){
-					onResult(DropboxRequestResult<string>.Error(res.error));
+					_mainThreadQueueRunner.QueueOnMainThread(() => {
+						onResult(DropboxRequestResult<string>.Error(res.error));
+					});
 				}else{
 					if(res.data != null){
-						onResult(new DropboxRequestResult<string>(GetPathInCache(dropboxPath)));
+						_mainThreadQueueRunner.QueueOnMainThread(() => {
+							onResult(new DropboxRequestResult<string>(GetPathInCache(dropboxPath)));
+						});
 					}else{
-						onResult(new DropboxRequestResult<string>(null));
+						_mainThreadQueueRunner.QueueOnMainThread(() => {
+							onResult(new DropboxRequestResult<string>(null));
+						});
 					}					
 				}
 			};	
@@ -95,7 +115,7 @@ namespace DBXSync {
 		}
 
 		public void GetFileAsBytes(string dropboxPath, Action<DropboxRequestResult<byte[]>> onResult, Action<float> onProgress = null, bool useCachedFirst = false,
-		bool useCachedIfOffline = true, bool receiveUpdates = false){
+						bool useCachedIfOffline = true, bool receiveUpdates = false){
 			if(DropboxSyncUtils.IsBadDropboxPath(dropboxPath)){
 				onResult(DropboxRequestResult<byte[]>.Error(
 							new DBXError("Cant get file: bad path "+dropboxPath, DBXErrorType.BadRequest)							
@@ -109,14 +129,18 @@ namespace DBXSync {
 
 				if(File.Exists(cachedFilePath)){
 					var bytes = File.ReadAllBytes(cachedFilePath);
-					onResult(new DropboxRequestResult<byte[]>(bytes));
+					_mainThreadQueueRunner.QueueOnMainThread(() => {
+						onResult(new DropboxRequestResult<byte[]>(bytes));
+					});
 				}else{
 					Log("cache doesnt have file");
-					onResult(
-						DropboxRequestResult<byte[]>.Error(
-							new DBXError("File "+dropboxPath+" is removed on remote", DBXErrorType.RemotePathNotFound)
-						)
-					);
+					_mainThreadQueueRunner.QueueOnMainThread(() => {
+						onResult(
+							DropboxRequestResult<byte[]>.Error(
+								new DBXError("File "+dropboxPath+" is removed on remote", DBXErrorType.RemotePathNotFound)
+							)
+						);
+					});
 				}				
 			};
 
@@ -126,7 +150,9 @@ namespace DBXSync {
 						// return updated cached result
 						returnCachedResult();
 					}, onProgress: onProgress, onError: (error) => {
-						onResult(DropboxRequestResult<byte[]>.Error(error));
+						_mainThreadQueueRunner.QueueOnMainThread(() => {
+							onResult(DropboxRequestResult<byte[]>.Error(error));
+						});
 					});					
 				});
 			};
@@ -150,9 +176,9 @@ namespace DBXSync {
 						UpdateFileFromRemote(dropboxPath, onSuccess: () => {
 							Log("GetFile: state of dropbox file is "+dropboxPath+" is synced now");
 							// return updated cached result
-							_mainThreadQueueRunner.QueueOnMainThread(() => {
-								returnCachedResult();
-							});
+							
+							returnCachedResult();
+							
 
 							if(receiveUpdates){
 								subscribeToUpdatesAction();
@@ -172,9 +198,9 @@ namespace DBXSync {
 
 						if(useCachedIfOffline && IsFileCached(dropboxPath)){
 							Log("GetFile: cannot check for updates - using cached version");
-							_mainThreadQueueRunner.QueueOnMainThread(() => {
-								returnCachedResult();
-							});
+							
+							returnCachedResult();
+							
 							
 							if(receiveUpdates){
 								subscribeToUpdatesAction();

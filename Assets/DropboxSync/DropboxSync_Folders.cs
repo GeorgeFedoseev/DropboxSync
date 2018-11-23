@@ -25,50 +25,7 @@ namespace DBXSync {
 
 		// FOLDERS
 		
-		// private void CreateAllFoldersForPath(string dropboxPath, Action<DropboxRequestResult<List<DBXFolder>>> onResult){
-		// 	var result = new List<DBXFolder>();
-
-		// 	var foldersToCreate = DropboxSyncUtils.GetPathFolders(dropboxPath);
-
-		// 	// run in bg
-		// 	var thread = new Thread(() => {
-		// 		foreach(var f in foldersToCreate){
-		// 			DropboxRequestResult<DBXFolder> _folderCreateResult = null;
-
-		// 			GetMetadata<DBXFolder>(f, (res) => {
-		// 				if(res.error != null){
-		// 					if(res.error.ErrorType == DBXErrorType.RemotePathNotFound){
-		// 						// folder doesnt exist
-		// 						CreateFolder(f, (createRes) => {
-		// 							_folderCreateResult = createRes;
-		// 						});
-		// 					}else{
-		// 						// some other error
-		// 						_folderCreateResult = res;
-		// 					}
-							
-		// 				}else{
-		// 					// folder exists
-		// 					_folderCreateResult = res;
-		// 				}
-		// 			});
-
-		// 			while(_folderCreateResult == null) {Thread.Sleep(10);}
-
-		// 			if(_folderCreateResult.error != null){
-		// 				onResult(DropboxRequestResult<List<DBXFolder>>.Error(_folderCreateResult.error));
-		// 				return;
-		// 			}
-
-		// 			result.Add(_folderCreateResult.data);
-		// 		}
-
-		// 		onResult(new DropboxRequestResult<List<DBXFolder>>(result));
-		// 	});
-		// 	thread.IsBackground = true;
-		// 	thread.Start();
-		// }
-
+		
 		public void PathExists(string dropboxFolderPath, Action<DropboxRequestResult<bool>> onResult){
 			GetMetadata<DBXFolder>(dropboxFolderPath, (res) => {
 				if(res.error != null){
@@ -142,11 +99,19 @@ namespace DBXSync {
 				// squash flat results
 				rootFolder = BuildStructureFromFlat(rootFolder, items);
 
-				onResult(new DropboxRequestResult<DBXFolder>(rootFolder));
+				_mainThreadQueueRunner.QueueOnMainThread(() => {
+					onResult(new DropboxRequestResult<DBXFolder>(rootFolder));
+				});
 			},
-			onProgress:onProgress,
+			onProgress: (progress) => {
+				_mainThreadQueueRunner.QueueOnMainThread(() => {
+					onProgress(progress);
+				});
+			},
 			onError: (errorStr) => {
-				onResult(DropboxRequestResult<DBXFolder>.Error(errorStr));
+				_mainThreadQueueRunner.QueueOnMainThread(() => {
+					onResult(DropboxRequestResult<DBXFolder>.Error(errorStr));
+				});
 			}, recursive: true);
 		}
 

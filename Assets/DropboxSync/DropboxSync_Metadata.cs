@@ -23,25 +23,8 @@ namespace DBXSync {
 
 		// METADATA
 
-		// public void GetFileMetadata(string dropboxPath, Action<DropboxRequestResult<DBXFile>> onResult){
-		// 	var prms = new DropboxGetMetadataRequestParams(dropboxPath);
-
-		// 	Log("GetFileMetadata for "+dropboxPath);
-		// 	MakeDropboxRequest(METADATA_ENDPOINT, prms, 
-		// 	onResponse: (jsonStr) => {
-		// 		Log("GetFileMetadata onResponse");
-		// 		var dict = JSON.FromJson<Dictionary<string, object>>(jsonStr);				
-		// 		var fileMetadata = DBXFile.FromDropboxDictionary(dict);
-		// 		onResult(new DropboxRequestResult<DBXFile>(fileMetadata));
-		// 	},
-		// 	onProgress:null,
-		// 	onWebError: (errStr) => {
-		// 		Log("GetFileMetadata:onWebError");
-		// 		onResult(DropboxRequestResult<DBXFile>.Error(errStr));
-		// 	});
-		// }
-
-		public void GetMetadata<T>(string dropboxPath, Action<DropboxRequestResult<T>> onResult) where T: DBXItem {
+		
+		private void GetMetadata<T>(string dropboxPath, Action<DropboxRequestResult<T>> onResult) where T: DBXItem {
 			var prms = new DropboxGetMetadataRequestParams(dropboxPath);
 
 			Log("GetMetadata for "+dropboxPath);
