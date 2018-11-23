@@ -21,13 +21,18 @@ public class DropboxUploadTextExampleScript : MonoBehaviour {
 	void Start () {
 
 		// create folder
-		DropboxSync.Main.CreateFolder("/DropboxSyncExampleFolder/text_files", (res) => {
-			if(res.error != null){
-				Debug.LogError("Failed to create folder: "+res.error.ErrorDescription + " - "+res.error.ErrorType.ToString());
-			}else{
-				Debug.LogWarning("Folder created");
-			}
-		});
+		// DropboxSync.Main.CreateFolder("/DropboxSyncExampleFolder/text_files", (res) => {
+		// 	if(res.error != null){
+		// 		Debug.LogError("Failed to create folder: "+res.error.ErrorDescription + " - "+res.error.ErrorType.ToString());
+		// 	}else{
+		// 		Debug.LogWarning("Folder created");
+		// 	}
+		// });
+
+		var p = "/adsada/dsfdsf/eeee.jpg/bbbb/mmmmmm";
+		var path_folders = DBXSync.Utils.DropboxSyncUtils.GetPathFolders(p);
+		path_folders.ForEach(x => {Debug.Log(x);});
+
 
 		// subscribe to remote file changes
 		DropboxSync.Main.GetFile<string>(TEXT_FILE_PATH, (res) => {

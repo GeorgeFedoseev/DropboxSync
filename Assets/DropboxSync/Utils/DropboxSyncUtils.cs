@@ -1,6 +1,8 @@
 
 
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -14,6 +16,24 @@ namespace DBXSync.Utils {
 			var components = strPath.Split(new char[] {'/'}, StringSplitOptions.RemoveEmptyEntries);
 			return ("/"+string.Join("/", components)).ToLower();
 		}
+
+        public static List<string> GetPathFolders(string dropboxPath){
+            var result = new List<string>();
+
+            dropboxPath = NormalizePath(dropboxPath);
+            var components = dropboxPath.Split(new char[] {'/'}, StringSplitOptions.RemoveEmptyEntries).ToList();
+
+            var build_components = new List<string>();
+            foreach(var c in components){
+                build_components.Add(c);
+                var p = ("/"+string.Join("/", build_components)).ToLower();
+                if(!(  Path.HasExtension(p) && c == components.Last()  )){
+                    result.Add(p);
+                }
+            }
+
+            return result;
+        }
 
         public static void ValidateAccessToken(string accessToken){
             if(DropboxSyncUtils.IsBadAccessToken(accessToken)){
