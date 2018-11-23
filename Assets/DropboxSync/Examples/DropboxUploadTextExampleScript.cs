@@ -11,7 +11,7 @@ using System.Text;
 
 public class DropboxUploadTextExampleScript : MonoBehaviour {
 
-	string TEXT_FILE_PATH = "/DropboxSyncExampleFolder/uploaded_text.txt";
+	string TEXT_FILE_PATH = "/DropboxSyncExampleFolder/new_dir/uploaded_text.txt";
 
 	public InputField textToUploadInput;
 	public Text downloadedText;
@@ -46,15 +46,7 @@ public class DropboxUploadTextExampleScript : MonoBehaviour {
 		// 	}
 		// });
 
-		// create all folder for path
-		var p = "/adsada/dsfdsf/eeee.jpg/bbbb/mmmmmm/kiii.png";
-		DropboxSync.Main.CreateAllFoldersForPath(p, (res) => {
-			if(res.error != null){
-				Debug.LogError("Error when creating all folders for path");
-			}else{
-				Debug.LogWarning("All folders for path created");
-			}
-		});
+	
 
 
 		// TESTING>
