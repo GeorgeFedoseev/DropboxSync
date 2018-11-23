@@ -12,6 +12,14 @@ namespace DBXSync.Model {
 
 	}
 
+
+	// FOLDER REQUESTS
+	[Serializable]
+	public class DropboxCreateFolderRequestParams: DropboxRequestParams {
+		public string path;
+		public bool autorename;
+	}
+
 	[Serializable]
 	public class DropboxListFolderRequestParams : DropboxRequestParams {
 		public string path;

@@ -20,6 +20,15 @@ public class DropboxUploadTextExampleScript : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
+		// create folder
+		DropboxSync.Main.CreateFolder("/DropboxSyncExampleFolder/text_files", (res) => {
+			if(res.error != null){
+				Debug.LogError("Failed to create folder: "+res.error.ErrorDescription + " - "+res.error.ErrorType.ToString());
+			}else{
+				Debug.LogWarning("Folder created");
+			}
+		});
+
 		// subscribe to remote file changes
 		DropboxSync.Main.GetFile<string>(TEXT_FILE_PATH, (res) => {
 			if(res.error != null){

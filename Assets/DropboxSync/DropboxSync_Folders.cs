@@ -21,11 +21,40 @@ namespace DBXSync {
 
 		private static readonly string LIST_FOLDER_ENDPOINT = "https://api.dropboxapi.com/2/files/list_folder";
 		private static readonly string LIST_FOLDER_CONTINUE_ENDPOINT = "https://api.dropboxapi.com/2/files/list_folder/continue";
+		private static readonly string CREATE_FOLDER_ENDPOINT = "https://api.dropboxapi.com/2/files/create_folder_v2";
 
+		// FOLDERS
 
-		// GETTING FOLDER STRUCTURE
+		public void CreateFolder(string dropboxFolderPath, Action<DropboxRequestResult<DBXFolder>> onResult) {
+			var path = DropboxSyncUtils.NormalizePath(dropboxFolderPath);
 
-		public void GetFolderStructure(string dropboxFolderPath, Action<DropboxRequestResult<DBXFolder>> onResult, Action<float> onProgress = null){
+			var prms = new DropboxCreateFolderRequestParams();
+			prms.path = path;
+			prms.autorename = false;
+
+			MakeDropboxRequest(CREATE_FOLDER_ENDPOINT, prms, (jsonStr) => {
+
+				DBXFolder folderMetadata = null;
+
+				try {
+					var root = JSON.FromJson<Dictionary<string, object>>(jsonStr);
+					folderMetadata = DBXFolder.FromDropboxDictionary(root["metadata"] as Dictionary<string, object>);
+				}catch(Exception ex){
+					onResult(DropboxRequestResult<DBXFolder>.Error(new DBXError(ex.Message, DBXErrorType.ParsingError)));
+					return;
+				}							
+				
+				onResult(new DropboxRequestResult<DBXFolder>(folderMetadata));
+			}, onProgress: (progress) => {}, (error) => {
+				if(error.ErrorDescription.Contains("path/conflict/folder")){
+					error.ErrorType = DBXErrorType.AlreadyExists;
+				}
+				onResult(DropboxRequestResult<DBXFolder>.Error(error));
+			});
+		}
+
+		public void GetFolderStructure(string dropboxFolderPath, Action<DropboxRequestResult<DBXFolder>> onResult,
+						 Action<float> onProgress = null){
 			var path = DropboxSyncUtils.NormalizePath(dropboxFolderPath);
 
 			_GetFolderItemsFlat(path, onResult: (items) => {
