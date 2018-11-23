@@ -49,16 +49,25 @@ public class DropboxUploadTextExampleScript : MonoBehaviour {
 		// move file
 		// var from_path = "/DropboxSyncExampleFolder/uploaded_text.txt";
 		// var to_path = "/DropboxSyncExampleFolder/test_move/uploaded_text.txt";
-		// DropboxSync.Main.MoveFile(from_path, to_path, (res) => {
+		// DropboxSync.Main.Move(from_path, to_path, (res) => {
 		// 	if(res.error != null){
-		// 		Debug.LogError("Failed to move file from "+from_path+" to "+to_path
+		// 		Debug.LogError("Failed to move from "+from_path+" to "+to_path
 		// 					+" : "+res.error.ErrorDescription+" "+res.error.ErrorType);
 		// 	}else{
-		// 		Debug.LogWarning("succesfully move file");
+		// 		Debug.LogWarning("succesfully moved");
 		// 	}
 		// });
 
 		// delete file
+		var path_to_delete = "/DropboxSyncExampleFolder/uploaded_text.txt";
+		DropboxSync.Main.Delete(path_to_delete, (res) => {
+			if(res.error != null){
+				Debug.LogError("Failed to delete "+path_to_delete
+						+" : "+res.error.ErrorDescription+" "+res.error.ErrorType);
+			}else{
+				Debug.LogWarning("succesfully deleted file");
+			}
+		});
 
 
 		// TESTING>

@@ -28,7 +28,36 @@ namespace DBXSync {
             var prms = new DropboxDeletePathRequestParams();
             prms.path = dropboxPath;
 
+            MakeDropboxRequest(DELETE_ENDPOINT, prms, (jsonStr) => {
 
+				DBXItem metadata = null;
+
+				try {
+					var root = JSON.FromJson<Dictionary<string, object>>(jsonStr);
+                    var metadata_dict = root["metadata"] as Dictionary<string, object>;
+
+                    if(metadata_dict[".tag"].ToString() == "file"){
+                        metadata = DBXFile.FromDropboxDictionary(metadata_dict);
+                    }else if(metadata_dict[".tag"].ToString() == "folder"){ 
+                        metadata = DBXFolder.FromDropboxDictionary(metadata_dict);
+                    }
+					
+				}catch(Exception ex){
+					_mainThreadQueueRunner.QueueOnMainThread(() => {
+						onResult(DropboxRequestResult<DBXItem>.Error(new DBXError(ex.Message, DBXErrorType.ParsingError)));
+					});
+					return;
+				}							
+				
+				_mainThreadQueueRunner.QueueOnMainThread(() => {
+					onResult(new DropboxRequestResult<DBXItem>(metadata));
+				});				
+			}, onProgress: (progress) => {}, (error) => {
+				
+				_mainThreadQueueRunner.QueueOnMainThread(() => {
+					onResult(DropboxRequestResult<DBXItem>.Error(error));
+				});
+			});
 
         }
 

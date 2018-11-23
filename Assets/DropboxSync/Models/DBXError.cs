@@ -51,12 +51,10 @@ namespace DBXSync.Model {
 
 
         public static DBXErrorType DropboxAPIErrorSummaryToErrorType(string errorSummary){
-            if(errorSummary.Contains("path/not_found")){
+            if(errorSummary.Contains("not_found")){
                 return DBXErrorType.RemotePathNotFound;
             } else if(errorSummary.Contains("to/conflict/file")){
                 return DBXErrorType.RemotePathAlreadyExists;
-            }else if (errorSummary.Contains("from_lookup/not_found")){
-                return DBXErrorType.RemotePathNotFound;
             }
 
             return DBXErrorType.DropboxAPIError;
