@@ -20,6 +20,8 @@ public class DropboxUploadTextExampleScript : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
+		// <TESTING
+
 		// create folder
 		// DropboxSync.Main.CreateFolder("/DropboxSyncExampleFolder/text_files", (res) => {
 		// 	if(res.error != null){
@@ -29,9 +31,23 @@ public class DropboxUploadTextExampleScript : MonoBehaviour {
 		// 	}
 		// });
 
-		var p = "/adsada/dsfdsf/eeee.jpg/bbbb/mmmmmm";
-		var path_folders = DBXSync.Utils.DropboxSyncUtils.GetPathFolders(p);
-		path_folders.ForEach(x => {Debug.Log(x);});
+
+		// get parent folders from path
+		// var p = "/adsada/dsfdsf/eeee.jpg/bbbb/mmmmmm";
+		// var path_folders = DBXSync.Utils.DropboxSyncUtils.GetPathFolders(p);
+		// path_folders.ForEach(x => {Debug.Log(x);});
+
+		// check if path exists
+		DropboxSync.Main.PathExists("/DropboxSyncExampleFolder/uploaded_text.txt", (res) => {
+			if(res.error != null){
+				Debug.LogError("Failed to check if path exists: "+res.error.ErrorDescription);
+			}else{
+				Debug.LogWarning("Path exists: "+res.data.ToString());
+			}
+		});
+
+
+		// TESTING>
 
 
 		// subscribe to remote file changes

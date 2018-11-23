@@ -25,8 +25,33 @@ namespace DBXSync {
 
 		// FOLDERS
 		
-		private void CreateFoldersForPath(string dropboxPath, Action<DropboxRequestResult<DBXFolder>> onResult){
-			
+		private void CreateAllFoldersForPath(string dropboxPath, Action<DropboxRequestResult<DBXFolder>> onResult){
+			var folders = DropboxSyncUtils.GetPathFolders(dropboxPath);
+
+		}
+
+		public void PathExists(string dropboxFolderPath, Action<DropboxRequestResult<bool>> onResult){
+			GetMetadata<DBXFolder>(dropboxFolderPath, (res) => {
+				if(res.error != null){
+					if(res.error.ErrorType == DBXErrorType.RemotePathNotFound){
+						// path not found
+						_mainThreadQueueRunner.QueueOnMainThread(() => {
+							onResult(new DropboxRequestResult<bool>(false));
+						});
+					}else{
+						// some other error
+						_mainThreadQueueRunner.QueueOnMainThread(() => {
+							onResult(DropboxRequestResult<bool>.Error(res.error));
+						});
+					}					
+				}else{
+					// path exists
+					_mainThreadQueueRunner.QueueOnMainThread(() => {
+						onResult(new DropboxRequestResult<bool>(true));
+					});					
+				}
+			});
+
 		}
 
 		public void CreateFolder(string dropboxFolderPath, Action<DropboxRequestResult<DBXFolder>> onResult) {

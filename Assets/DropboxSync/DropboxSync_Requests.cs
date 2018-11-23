@@ -79,8 +79,9 @@ namespace DBXSync {
 																									
 										var dict = JSON.FromJson<Dictionary<string, object>>(responseStr);
 										var errorSummary = dict["error_summary"].ToString();								
+										
 										_mainThreadQueueRunner.QueueOnMainThread(() => {
-											onWebError(new DBXError(errorSummary, DBXErrorType.DropboxAPIError));
+											onWebError(new DBXError(errorSummary, DBXError.DropboxAPIErrorSummaryToErrorType(errorSummary)));
 										});
 									}catch{
 										_mainThreadQueueRunner.QueueOnMainThread(() => {
@@ -174,7 +175,7 @@ namespace DBXSync {
 										var dict = JSON.FromJson<Dictionary<string, object>>(responseStr);
 										var errorSummary = dict["error_summary"].ToString();	
 										_mainThreadQueueRunner.QueueOnMainThread(() => {							
-											onWebError(new DBXError(errorSummary, DBXErrorType.DropboxAPIError));
+											onWebError(new DBXError(errorSummary, DBXError.DropboxAPIErrorSummaryToErrorType(errorSummary)));
 										});
 									}catch{
 										_mainThreadQueueRunner.QueueOnMainThread(() => {

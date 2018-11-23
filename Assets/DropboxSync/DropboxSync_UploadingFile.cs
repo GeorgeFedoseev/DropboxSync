@@ -27,7 +27,7 @@ namespace DBXSync {
 		{
 			if(!File.Exists(localFilePath)){
 				onResult(DropboxRequestResult<DBXFile>.Error(
-							new DBXError("Local file "+localFilePath+" does not exist.", DBXErrorType.FileNotFound)
+							new DBXError("Local file "+localFilePath+" does not exist.", DBXErrorType.LocalPathNotFound)
 						)
 				);
 				return;

@@ -114,7 +114,7 @@ namespace DBXSync {
 					Log("cache doesnt have file");
 					onResult(
 						DropboxRequestResult<byte[]>.Error(
-							new DBXError("File "+dropboxPath+" is removed on remote", DBXErrorType.FileNotFound)
+							new DBXError("File "+dropboxPath+" is removed on remote", DBXErrorType.RemotePathNotFound)
 						)
 					);
 					//onResult(new DropboxRequestResult<byte[]>(null));

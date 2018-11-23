@@ -8,7 +8,8 @@ namespace DBXSync.Model {
 	public enum DBXErrorType {
 		Unknown,
 		NotAuthorized,
-		FileNotFound,
+		RemotePathNotFound,
+        LocalPathNotFound,
 		BadRequest,
 		LocalFileSystemError,
         NetworkProblem,
@@ -42,6 +43,15 @@ namespace DBXSync.Model {
         public DBXError(string errorDescription, DBXErrorType errorType){
             _errorDescription = errorDescription;
             _errorType = errorType;
+        }
+
+
+        public static DBXErrorType DropboxAPIErrorSummaryToErrorType(string errorSummary){
+            if(errorSummary.Contains("path/not_found")){
+                return DBXErrorType.RemotePathNotFound;
+            }
+
+            return DBXErrorType.DropboxAPIError;
         }
     }
 }

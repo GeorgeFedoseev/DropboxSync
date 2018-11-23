@@ -76,12 +76,12 @@ namespace DBXSync {
 				
 			// request for metadata to get remote content hash
 			//Log("Getting metadata");
-			GetFileMetadata(dropboxFilePath, onResult: (res) => {
+			GetMetadata<DBXFile>(dropboxFilePath, onResult: (res) => {
 				Log("Got metadata for file "+dropboxFilePath);
 				DBXFileChange result = null;
 
 				if(res.error != null){
-					if (res.error.ErrorType == DBXErrorType.FileNotFound){
+					if (res.error.ErrorType == DBXErrorType.RemotePathNotFound){
 						//Log("file not found");
 						// file was deleted or moved
 

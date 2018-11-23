@@ -23,21 +23,45 @@ namespace DBXSync {
 
 		// METADATA
 
-		public void GetFileMetadata(string dropboxPath, Action<DropboxRequestResult<DBXFile>> onResult){
+		// public void GetFileMetadata(string dropboxPath, Action<DropboxRequestResult<DBXFile>> onResult){
+		// 	var prms = new DropboxGetMetadataRequestParams(dropboxPath);
+
+		// 	Log("GetFileMetadata for "+dropboxPath);
+		// 	MakeDropboxRequest(METADATA_ENDPOINT, prms, 
+		// 	onResponse: (jsonStr) => {
+		// 		Log("GetFileMetadata onResponse");
+		// 		var dict = JSON.FromJson<Dictionary<string, object>>(jsonStr);				
+		// 		var fileMetadata = DBXFile.FromDropboxDictionary(dict);
+		// 		onResult(new DropboxRequestResult<DBXFile>(fileMetadata));
+		// 	},
+		// 	onProgress:null,
+		// 	onWebError: (errStr) => {
+		// 		Log("GetFileMetadata:onWebError");
+		// 		onResult(DropboxRequestResult<DBXFile>.Error(errStr));
+		// 	});
+		// }
+
+		public void GetMetadata<T>(string dropboxPath, Action<DropboxRequestResult<T>> onResult) where T: DBXItem {
 			var prms = new DropboxGetMetadataRequestParams(dropboxPath);
 
-			Log("GetFileMetadata for "+dropboxPath);
+			Log("GetMetadata for "+dropboxPath);
 			MakeDropboxRequest(METADATA_ENDPOINT, prms, 
 			onResponse: (jsonStr) => {
-				Log("GetFileMetadata onResponse");
+				Log("GetMetadata onResponse");
 				var dict = JSON.FromJson<Dictionary<string, object>>(jsonStr);				
-				var fileMetadata = DBXFile.FromDropboxDictionary(dict);
-				onResult(new DropboxRequestResult<DBXFile>(fileMetadata));
+
+				if(typeof(T) == typeof(DBXFolder)){
+					var folderMetadata = DBXFolder.FromDropboxDictionary(dict);
+					onResult(new DropboxRequestResult<T>(folderMetadata as T));
+				}else if(typeof(T) == typeof(DBXFile)){
+					var fileMetadata = DBXFile.FromDropboxDictionary(dict);
+					onResult(new DropboxRequestResult<T>(fileMetadata as T));
+				}
 			},
 			onProgress:null,
-			onWebError: (errStr) => {
-				Log("GetFileMetadata:onWebError");
-				onResult(DropboxRequestResult<DBXFile>.Error(errStr));
+			onWebError: (error) => {
+				Log("GetMetadata:onWebError");
+				onResult(DropboxRequestResult<T>.Error(error));
 			});
 		}
 
