@@ -36,6 +36,7 @@ public class DropboxUploadFileExampleScript : MonoBehaviour {
 	}
 
 	void UploadFile(){
+		uploadButton.interactable = false;
 		var localFilePath = localFileInput.text;
 		var uploadDropboxPath = Path.Combine("/DropboxSyncExampleFolder/", Path.GetFileName(localFilePath));
 
@@ -45,8 +46,10 @@ public class DropboxUploadFileExampleScript : MonoBehaviour {
 			if(res.error != null){
 				statusText.text = "<color=red>Failed to upload file: "+res.error.ErrorDescription+"</color>";
 				Debug.LogError("Error uploading file: "+res.error.ErrorDescription);
+				uploadButton.interactable = true;
 			}else{
 				statusText.text = "<color=green>File uploaded to "+uploadDropboxPath+"</color>";
+				uploadButton.interactable = true;
 			}
 		}, (progress) => {
 			statusText.text = "Uploading file... "+Mathf.RoundToInt(progress*100)+"%";
