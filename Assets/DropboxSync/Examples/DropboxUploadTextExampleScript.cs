@@ -38,11 +38,21 @@ public class DropboxUploadTextExampleScript : MonoBehaviour {
 		// path_folders.ForEach(x => {Debug.Log(x);});
 
 		// check if path exists
-		DropboxSync.Main.PathExists("/DropboxSyncExampleFolder/uploaded_text.txt", (res) => {
+		// DropboxSync.Main.PathExists("/DropboxSyncExampleFolder/uploaded_text.txt", (res) => {
+		// 	if(res.error != null){
+		// 		Debug.LogError("Failed to check if path exists: "+res.error.ErrorDescription);
+		// 	}else{
+		// 		Debug.LogWarning("Path exists: "+res.data.ToString());
+		// 	}
+		// });
+
+		// create all folder for path
+		var p = "/adsada/dsfdsf/eeee.jpg/bbbb/mmmmmm/kiii.png";
+		DropboxSync.Main.CreateAllFoldersForPath(p, (res) => {
 			if(res.error != null){
-				Debug.LogError("Failed to check if path exists: "+res.error.ErrorDescription);
+				Debug.LogError("Error when creating all folders for path");
 			}else{
-				Debug.LogWarning("Path exists: "+res.data.ToString());
+				Debug.LogWarning("All folders for path created");
 			}
 		});
 

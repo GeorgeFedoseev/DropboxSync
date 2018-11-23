@@ -25,9 +25,48 @@ namespace DBXSync {
 
 		// FOLDERS
 		
-		private void CreateAllFoldersForPath(string dropboxPath, Action<DropboxRequestResult<DBXFolder>> onResult){
-			var folders = DropboxSyncUtils.GetPathFolders(dropboxPath);
+		private void CreateAllFoldersForPath(string dropboxPath, Action<DropboxRequestResult<List<DBXFolder>>> onResult){
+			var result = new List<DBXFolder>();
 
+			var foldersToCreate = DropboxSyncUtils.GetPathFolders(dropboxPath);
+
+			// run in bg
+			var thread = new Thread(() => {
+				foreach(var f in foldersToCreate){
+					DropboxRequestResult<DBXFolder> _folderCreateResult = null;
+
+					GetMetadata<DBXFolder>(f, (res) => {
+						if(res.error != null){
+							if(res.error.ErrorType == DBXErrorType.RemotePathNotFound){
+								// folder doesnt exist
+								CreateFolder(f, (createRes) => {
+									_folderCreateResult = createRes;
+								});
+							}else{
+								// some other error
+								_folderCreateResult = res;
+							}
+							
+						}else{
+							// folder exists
+							_folderCreateResult = res;
+						}
+					});
+
+					while(_folderCreateResult == null) {Thread.Sleep(10);}
+
+					if(_folderCreateResult.error != null){
+						onResult(DropboxRequestResult<List<DBXFolder>>.Error(_folderCreateResult.error));
+						return;
+					}
+
+					result.Add(_folderCreateResult.data);
+				}
+
+				onResult(new DropboxRequestResult<List<DBXFolder>>(result));
+			});
+			thread.IsBackground = true;
+			thread.Start();
 		}
 
 		public void PathExists(string dropboxFolderPath, Action<DropboxRequestResult<bool>> onResult){

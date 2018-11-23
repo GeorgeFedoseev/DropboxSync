@@ -25,6 +25,8 @@ namespace DBXSync {
 		public void UploadFile(string dropboxPath, string localFilePath, Action<DropboxRequestResult<DBXFile>> onResult,
 									 Action<float> onProgress = null) 
 		{
+
+			// chec if specified local file path exists
 			if(!File.Exists(localFilePath)){
 				onResult(DropboxRequestResult<DBXFile>.Error(
 							new DBXError("Local file "+localFilePath+" does not exist.", DBXErrorType.LocalPathNotFound)
@@ -33,6 +35,8 @@ namespace DBXSync {
 				return;
 			}
 
+
+			// read file bytes
 			byte[] fileBytes = null;
 			try{
 				fileBytes = File.ReadAllBytes(localFilePath);
@@ -44,6 +48,8 @@ namespace DBXSync {
 				return;
 			}
 
+
+			// upload that bytes
 			UploadFile(dropboxPath, fileBytes, onResult, onProgress);
 		}
 
