@@ -7,7 +7,7 @@ using UnityEngine.UI;
 using DBXSync;
 using DBXSync.Model;
 
-public class DropboxSyncFoldersExampleScript : MonoBehaviour {
+public class DropboxSyncFileExplorerExampleScript : MonoBehaviour {
 
 	public Button goUpButton;
 

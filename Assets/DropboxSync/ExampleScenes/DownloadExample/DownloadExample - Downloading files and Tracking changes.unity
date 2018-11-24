@@ -831,7 +831,7 @@ GameObject:
   - component: {fileID: 1686903681}
   - component: {fileID: 1686903680}
   m_Layer: 0
-  m_Name: DropboxSyncFilesExampleScript
+  m_Name: DropboxSyncDownloadExampleScript
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

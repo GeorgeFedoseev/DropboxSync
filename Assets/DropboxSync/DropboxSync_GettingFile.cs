@@ -149,7 +149,11 @@ namespace DBXSync {
 					UpdateFileFromRemote(dropboxPath, onSuccess: () => {							
 						// return updated cached result
 						returnCachedResult();
-					}, onProgress: onProgress, onError: (error) => {
+					}, onProgress: (progress) => {
+						_mainThreadQueueRunner.QueueOnMainThread(() => {
+							onProgress(progress);
+						});
+					}, onError: (error) => {
 						_mainThreadQueueRunner.QueueOnMainThread(() => {
 							onResult(DropboxRequestResult<byte[]>.Error(error));
 						});
@@ -183,7 +187,11 @@ namespace DBXSync {
 							if(receiveUpdates){
 								subscribeToUpdatesAction();
 							}
-						}, onProgress: onProgress, onError: (error) => {
+						}, onProgress: (progress) => {
+							_mainThreadQueueRunner.QueueOnMainThread(() => {
+								onProgress(progress);
+							});
+						}, onError: (error) => {
 							//Log("error");
 							_mainThreadQueueRunner.QueueOnMainThread(() => {
 								onResult(DropboxRequestResult<byte[]>.Error(error));
