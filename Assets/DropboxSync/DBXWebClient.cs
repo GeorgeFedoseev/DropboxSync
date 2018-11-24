@@ -5,16 +5,16 @@ using System;
 using System.Net;
 
 public class DBXWebClient: WebClient {
-  //  public int Timeout = 20000;
+    public int Timeout = 15000;
 
    
 
     protected override WebRequest GetWebRequest(Uri uri)
     {
         var lWebRequest = base.GetWebRequest(uri);
-       // lWebRequest.Timeout = Timeout;      
 
-      //  ((HttpWebRequest)lWebRequest).ReadWriteTimeout = Timeout;
+        lWebRequest.Timeout = Timeout;      
+        ((HttpWebRequest)lWebRequest).ReadWriteTimeout = Timeout;
 
         // fixes as per http://vikeed.blogspot.com/2011/03/uploading-large-files-using-http-put-in.html
         // fix for OutOfMemory

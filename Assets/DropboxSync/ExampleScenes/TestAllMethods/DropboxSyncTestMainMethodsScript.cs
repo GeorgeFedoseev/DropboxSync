@@ -13,11 +13,12 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-public class DropboxSyncTestAllMethodsScript : MonoBehaviour {
+public class DropboxSyncTestMainMethodsScript : MonoBehaviour {
 
 	private static readonly string TEST_UPLOAD_DIRECTORY = "/DropboxSyncExampleFolder/DropboxSyncTests";
 	private static readonly string TEST_UPLOAD_TXT_FILE = "/DropboxSyncExampleFolder/DropboxSyncTests/test.txt";
 	private static readonly string TEST_UPLOAD_TXT_FILE_MOVED = "/DropboxSyncExampleFolder/DropboxSyncTests/test_moved.txt";
+	private static readonly string TEST_CREATE_FOLDER = "/DropboxSyncExampleFolder/DropboxSyncTests/test_folder/test/abc";
 	private static string EXPECTED_TEXT_CONTENTS = "test me";
 
 	public Text outputText;
@@ -41,8 +42,13 @@ public class DropboxSyncTestAllMethodsScript : MonoBehaviour {
 
 		// add tests - order is important		
 		_testActions.Add(TestUploadFile);
+		
 		_testActions.Add(TestMoveFile);
 		_testActions.Add(TestDownloadFile);
+		_testActions.Add(TestDeleteFile);
+		_testActions.Add(TestCreateNestedFolder);
+
+		
 
 		// clean after testing
 		_testActions.Add(CleanForTests);
@@ -67,11 +73,13 @@ public class DropboxSyncTestAllMethodsScript : MonoBehaviour {
 			var error = ta();
 			if(error != null){
 				LogError(error);
-				break;
+				return;
 			}else{
 				LogSuccess();
 			}
 		}
+
+		Log("All tests finished succesfully.");
 	}
 
 
@@ -125,6 +133,9 @@ public class DropboxSyncTestAllMethodsScript : MonoBehaviour {
 		return error;
 	}
 
+
+	
+
 	string TestMoveFile(){
 		Log("TestMoveFile...");
 
@@ -177,6 +188,77 @@ public class DropboxSyncTestAllMethodsScript : MonoBehaviour {
 					error = "Unexpected file contents.";
 				}	
 				done = true;
+			}
+		});
+
+		while(!done){Thread.Sleep(10);}
+
+		return error;
+	}
+
+	string TestDeleteFile(){
+		Log("TestDeleteFile...");
+
+		bool done = false;
+		string error = null;
+		
+		DropboxSync.Main.Delete(TEST_UPLOAD_TXT_FILE_MOVED, (res) => {			
+
+			if(res.error != null){
+				error = res.error.ErrorDescription;
+				done = true;
+			}else{
+				// check if file exists at new location
+				DropboxSync.Main.PathExists(TEST_UPLOAD_TXT_FILE_MOVED, (res_check) => {
+					if(res_check.error != null){
+						error = "Failed to check if file exists: "+res_check.error.ErrorDescription;
+						done = true;
+					}else{
+						if(res_check.data){
+							// file exists
+							error = "File wasn't removed.";
+						}
+						done = true;
+					}
+				});
+
+				
+			}
+		});
+
+		while(!done){Thread.Sleep(10);}
+
+		return error;
+	}
+
+	string TestCreateNestedFolder(){
+		Log("TestCreateNestedFolder...");
+
+		bool done = false;
+		string error = null;
+		
+		DropboxSync.Main.CreateFolder(TEST_CREATE_FOLDER, (res) => {			
+
+			if(res.error != null){
+				error = res.error.ErrorDescription;
+				done = true;
+			}else{
+				// check if created folder exists
+				DropboxSync.Main.PathExists(TEST_CREATE_FOLDER, (res_check) => {
+					if(res_check.error != null){
+						error = "Failed to check if new folder exists: "+res_check.error.ErrorDescription;
+						done = true;
+					}else{
+						if(res_check.data){
+							// folder exists							
+						}else{
+							error = "New folder not found at location.";
+						}
+						done = true;
+					}
+				});
+
+				
 			}
 		});
 

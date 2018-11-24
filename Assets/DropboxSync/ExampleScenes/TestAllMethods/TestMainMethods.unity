@@ -383,7 +383,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: DropboxUploadTextExample - Uploading text string as file
+  m_Text: TestMainMethods
 --- !u!222 &1460150599
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -504,7 +504,7 @@ GameObject:
   - component: {fileID: 1686903681}
   - component: {fileID: 1686903680}
   m_Layer: 0
-  m_Name: DropboxSyncTestAllMethodsScript
+  m_Name: DropboxSyncTestMainMethodsScript
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -569,9 +569,9 @@ RectTransform:
   m_Father: {fileID: 1483534173}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -18.3, y: 305}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 375, y: -84.600006}
   m_SizeDelta: {x: 677.4, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1979002900
