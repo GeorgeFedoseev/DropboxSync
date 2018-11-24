@@ -1,4 +1,4 @@
-﻿// DropboxSync v1.1
+﻿// DropboxSync v2.0
 // Created by George Fedoseev 2018
 
 using System;
@@ -20,9 +20,9 @@ namespace DBXSync {
 
 	public partial class DropboxSync : MonoBehaviour {
 		// <CONSTS
-		static float CHECK_REMOTE_UPDATES_INTERVAL_SECONDS = 7;
-		static DropboxSyncLogLevel LOG_LEVEL = DropboxSyncLogLevel.Debug;
-
+		static readonly string DROPBOX_SYNC_VERSION = "2.0";
+		static readonly float CHECK_REMOTE_UPDATES_INTERVAL_SECONDS = 7;
+		static readonly DropboxSyncLogLevel LOG_LEVEL = DropboxSyncLogLevel.Debug;
 		// CONSTS>
 
 

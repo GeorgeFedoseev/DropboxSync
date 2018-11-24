@@ -1,3 +1,6 @@
+// DropboxSync v2.0
+// Created by George Fedoseev 2018
+
 using System;
 
 namespace DBXSync.Model {

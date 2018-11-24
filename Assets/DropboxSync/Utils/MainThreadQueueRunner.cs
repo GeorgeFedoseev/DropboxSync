@@ -1,4 +1,7 @@
-﻿using System;
+﻿// DropboxSync v2.0
+// Created by George Fedoseev 2018
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
