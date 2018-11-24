@@ -71,17 +71,19 @@ namespace DBXSync {
 		void FileGetRemoteChanges(string dropboxFilePath, Action<DBXFileChange> onResult,
 					 Action<DBXError> onError, bool saveChangesInfoLocally = false){
 			var localFilePath = GetPathInCache(dropboxFilePath);
-			var metadataFilePath = GetMetadataFilePath(dropboxFilePath);			
+			var localFileExists = File.Exists(localFilePath)			;
 
+			var metadataFilePath = GetMetadataFilePath(dropboxFilePath);
 			var localMetadata = GetLocalMetadataForFile(dropboxFilePath);
 				
 			// request for metadata to get remote content hash
 			//Log("Getting metadata");
 			GetMetadata<DBXFile>(dropboxFilePath, onResult: (res) => {
-				Log("Got remote metadata for file "+dropboxFilePath);
+				
 				DBXFileChange result = null;
 
 				if(res.error != null){
+					Log("Failed to get remote metadata for file "+dropboxFilePath);
 					if (res.error.ErrorType == DBXErrorType.RemotePathNotFound){
 						Log("file not found - file was deleted or moved");
 						// file was deleted or moved
@@ -104,7 +106,7 @@ namespace DBXSync {
 						return;
 					}									
 				}else{
-					Log("Got metadata");
+					Log("Got remote metadata for file "+dropboxFilePath);
 					var remoteMedatadata = res.data;
 
 					if(localMetadata != null && !localMetadata.deletedOnRemote){
@@ -112,7 +114,12 @@ namespace DBXSync {
 						Log("check if remote content has changed");
 						// get local content hash				
 						// var local_content_hash = localMetadata.contentHash;
-						var local_content_hash = DropboxSyncUtils.GetDropboxContentHashForFile(localFilePath);
+						string local_content_hash = null;
+						if(localFileExists){
+							local_content_hash = DropboxSyncUtils.GetDropboxContentHashForFile(localFilePath);
+						}else{
+							local_content_hash = localMetadata.contentHash;
+						}			
 
 						var remote_content_hash = remoteMedatadata.contentHash;
 

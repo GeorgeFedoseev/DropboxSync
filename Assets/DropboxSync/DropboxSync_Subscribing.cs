@@ -42,8 +42,12 @@ namespace DBXSync {
 								cb(new List<DBXFileChange>(){fileChange});
 							}
 						}						
-					}, (errorStr) => {
-						LogError("Failed to check file changes: "+errorStr);
+					}, (error) => {
+						if(error.ErrorType != DBXErrorType.UserCancelled){
+							LogError("Failed to check file changes: "+error.ErrorDescription);
+						}else{
+							LogWarning("File changes check cancellled by user");
+						}					
 					}, saveChangesInfoLocally: true);
 					break;
 					case DBXItemType.Folder:
@@ -56,7 +60,11 @@ namespace DBXSync {
 							}
 								
 						}else{
-							LogError("Failed to check folder changes: "+res.error.ErrorDescription);
+							if(res.error.ErrorType != DBXErrorType.UserCancelled){
+								LogError("Failed to check folder changes: "+res.error.ErrorDescription);
+							}else{
+								LogWarning("Folder changes check canceled by user");
+							}
 						}
 					}, saveChangesInfoLocally: true);
 					break;

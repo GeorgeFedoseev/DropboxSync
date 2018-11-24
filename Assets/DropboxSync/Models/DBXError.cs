@@ -16,7 +16,7 @@ namespace DBXSync {
         NetworkProblem,
         DropboxAPIError,
         ParsingError,
-        UserCanceled,
+        UserCancelled,
         NotSupported,
         RemotePathAlreadyExists
 	}

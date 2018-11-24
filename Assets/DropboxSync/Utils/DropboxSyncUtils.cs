@@ -27,7 +27,7 @@ namespace DBXSync.Utils {
             var build_components = new List<string>();
             foreach(var c in components){
                 build_components.Add(c);
-                var p = ("/"+string.Join("/", build_components)).ToLower();
+                var p = ("/"+string.Join("/", build_components.ToArray())).ToLower();
                 if(!(  Path.HasExtension(p) && c == components.Last()  )){
                     result.Add(p);
                 }
@@ -134,7 +134,7 @@ namespace DBXSync.Utils {
                 }
             }
 
-            hasher.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+            hasher.TransformFinalBlock(new byte[0], 0, 0);
             string hexHash = DropboxContentHasher.ToHex(hasher.Hash);
 
             return hexHash;

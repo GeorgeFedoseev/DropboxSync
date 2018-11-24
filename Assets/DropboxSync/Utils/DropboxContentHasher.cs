@@ -71,7 +71,7 @@ public class DropboxContentHasher : HashAlgorithm
         if (blockPos > 0) {
             FinishBlock();
         }
-        overallHasher.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+        overallHasher.TransformFinalBlock(new byte[0], 0, 0);
         return overallHasher.Hash;
     }
 
@@ -84,7 +84,7 @@ public class DropboxContentHasher : HashAlgorithm
 
     private void FinishBlock()
     {
-        blockHasher.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+        blockHasher.TransformFinalBlock(new byte[0], 0, 0);
         byte[] blockHash = blockHasher.Hash;
         blockHasher.Initialize();
 

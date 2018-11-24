@@ -66,10 +66,11 @@ namespace DBXSync {
 							_activeWebClientsList.Remove(client);					
 
 							if(e.Error != null){
+								Log("MakeDropboxRequest -> UploadDataCompleted -> Error");
 								//LogError("MakeDropboxRequest -> UploadDataCompleted -> Error "+e.Error.Message);
 								
 								if(e.Error is WebException){
-									
+									Log("MakeDropboxRequest -> UploadDataCompleted -> Error -> WebException");
 									var webex = e.Error as WebException;
 
 									try{
@@ -83,22 +84,25 @@ namespace DBXSync {
 										// _mainThreadQueueRunner.QueueOnMainThread(() => {
 											onWebError(new DBXError(errorSummary, DBXError.DropboxAPIErrorSummaryToErrorType(errorSummary)));
 										// });
-									}catch{
+									}catch (Exception ex){
+										Log("MakeDropboxRequest -> UploadDataCompleted -> Error -> WebException -> try get summary -> Exception: "+ex.Message);
 										// _mainThreadQueueRunner.QueueOnMainThread(() => {
 											onWebError(new DBXError(e.Error.Message, DBXErrorType.ParsingError));
 										// });
 									}
 								}else{
 									// _mainThreadQueueRunner.QueueOnMainThread(() => {
-										Log("e.Error is something else");
+										Log("MakeDropboxRequest -> UploadDataCompleted -> Error -> not WebException");
 										if(e.Error != null){
-											onWebError(new DBXError(e.Error.Message, DBXErrorType.Unknown));
+											onWebError(new DBXError(e.Error.Message + "\n"+e.Error.StackTrace, DBXErrorType.Unknown));
 										}else{
 											onWebError(new DBXError("Unknown error", DBXErrorType.Unknown));
 										}
 									// });
 								}
 
+							}else if(e.Cancelled){
+								onWebError(new DBXError("User canceled request", DBXErrorType.UserCancelled));
 							}else{
 								// no error
 								var respStr = Encoding.UTF8.GetString(e.Result);							
@@ -201,7 +205,7 @@ namespace DBXSync {
 								}
 							}else if(e.Cancelled){
 								// _mainThreadQueueRunner.QueueOnMainThread(() => {
-									onWebError(new DBXError("Download was cancelled.", DBXErrorType.UserCanceled));
+									onWebError(new DBXError("Download was cancelled.", DBXErrorType.UserCancelled));
 								// });
 							}else{
 								//var respStr = Encoding.UTF8.GetString(e.Result);
@@ -314,7 +318,7 @@ namespace DBXSync {
 							}else if(e.Cancelled){
 								Log("MakeDropboxUploadRequest -> canceled");
 								// _mainThreadQueueRunner.QueueOnMainThread(() => {
-									onWebError(new DBXError("Download was cancelled.", DBXErrorType.UserCanceled));
+									onWebError(new DBXError("Download was cancelled.", DBXErrorType.UserCancelled));
 								// });
 							}else{
 								Log("MakeDropboxUploadRequest -> no error");

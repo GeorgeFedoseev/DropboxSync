@@ -52,7 +52,7 @@ namespace DBXSync {
 				_mainThreadQueueRunner.QueueOnMainThread(() => {
 					onResult(new DropboxRequestResult<DBXItem>(metadata));
 				});				
-			}, onProgress: (progress) => {}, (error) => {
+			}, onProgress: (progress) => {}, onWebError: (error) => {
 				
 				_mainThreadQueueRunner.QueueOnMainThread(() => {
 					onResult(DropboxRequestResult<DBXItem>.Error(error));
@@ -93,7 +93,7 @@ namespace DBXSync {
 				_mainThreadQueueRunner.QueueOnMainThread(() => {
 					onResult(new DropboxRequestResult<DBXItem>(metadata));
 				});				
-			}, onProgress: (progress) => {}, (error) => {
+			}, onProgress: (progress) => {}, onWebError: (error) => {
 				
 				_mainThreadQueueRunner.QueueOnMainThread(() => {
                     if(error.ErrorType == DBXErrorType.RemotePathAlreadyExists){

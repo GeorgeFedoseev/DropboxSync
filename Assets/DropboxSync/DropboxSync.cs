@@ -98,6 +98,7 @@ namespace DBXSync {
 			};
 
 			_mainThreadQueueRunner = new MainThreadQueueRunner();
+			_mainThreadQueueRunner.InitFromMainThread();
 
 			// trust all certificates
 			// TODO: do something smarter instead of this

@@ -11,8 +11,16 @@ public class MainThreadQueueRunner {
 
 	private object _mainThreadQueuedActionsLock = new object();
 	private List<Action> _mainThreadQueuedActions = new List<Action>();
+
+	private Thread _unityThread = null;
+
+	public void InitFromMainThread(){
+		_unityThread = Thread.CurrentThread;
+	}
+
 	
 	public void PerformQueuedTasks () {
+		// Debug.LogWarning(string.Format("PerformQueuedTasks, isMainThread: {0}", Thread.CurrentThread == _unityThread));
 	
 		lock(_mainThreadQueuedActionsLock){				
 			foreach(var a in _mainThreadQueuedActions){
@@ -26,7 +34,9 @@ public class MainThreadQueueRunner {
 	}
 
 	public void QueueOnMainThread(Action a){
-		if(!Thread.CurrentThread.IsBackground){
+		// Debug.LogWarning(string.Format("QueueOnMainThread, isMainThread: {0}", Thread.CurrentThread == _unityThread));
+
+		if(Thread.CurrentThread == _unityThread){
 			a();
 			return;
 		}

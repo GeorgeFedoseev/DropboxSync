@@ -73,7 +73,7 @@ namespace DBXSync {
 				_mainThreadQueueRunner.QueueOnMainThread(() => {
 					onResult(new DropboxRequestResult<DBXFolder>(folderMetadata));
 				});				
-			}, onProgress: (progress) => {}, (error) => {
+			}, onProgress: (progress) => {}, onWebError: (error) => {
 				if(error.ErrorDescription.Contains("path/conflict/folder")){
 					error.ErrorType = DBXErrorType.RemotePathAlreadyExists;
 				}
