@@ -38,7 +38,7 @@ namespace DBXSync.Utils {
 
         public static void ValidateAccessToken(string accessToken){
             if(DropboxSyncUtils.IsBadAccessToken(accessToken)){
-                throw new Exception("Bad Dropbox access token. Please specify valid access token.");					
+                throw new Exception("Bad Dropbox access token. Please specify a valid access token.");					
             }
         }
 
