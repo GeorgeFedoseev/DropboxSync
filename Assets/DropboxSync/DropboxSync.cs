@@ -74,7 +74,11 @@ namespace DBXSync {
 			if(Time.unscaledTime - _lastTimeCheckedForSubscribedItemsChanges > CHECK_REMOTE_UPDATES_INTERVAL_SECONDS){									
 				DropboxSyncUtils.IsOnlineAsync((isOnline) => {
 					if(isOnline){
-						CheckChangesForSubscribedItems();
+						try {
+							CheckChangesForSubscribedItems();
+						}catch(Exception ex){
+							Debug.LogException(ex);
+						}						
 					}
 				});
 								

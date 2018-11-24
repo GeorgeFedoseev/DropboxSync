@@ -69,17 +69,22 @@ public class DropboxSyncTestMainMethodsScript : MonoBehaviour {
 	// METHODS
 
 	void RunAllTestsOnBackgroundThreadWorker(){
-		foreach(var ta in _testActions){
-			var error = ta();
-			if(error != null){
-				LogError(error);
-				return;
-			}else{
-				LogSuccess();
+		try {
+			foreach(var ta in _testActions){
+				var error = ta();
+				if(error != null){
+					LogError(error);
+					return;
+				}else{
+					LogSuccess();
+				}
 			}
-		}
 
-		Log("All tests finished succesfully.");
+			Log("All tests finished succesfully.");
+		}catch(Exception ex){
+			Debug.LogException(ex);
+		}
+		
 	}
 
 

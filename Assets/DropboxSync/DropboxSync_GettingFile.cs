@@ -176,66 +176,71 @@ namespace DBXSync {
 				// now check if we online
 				
 				DropboxSyncUtils.IsOnlineAsync((isOnline) => {
-					if(isOnline){
-						Log("GetFile: internet available");
-						// check if have updates and load them
-						UpdateFileFromRemote(dropboxPath, onSuccess: () => {
-							Log("GetFile: state of dropbox file is "+dropboxPath+" is synced now");
-							// return updated cached result
-							
-							returnCachedResult();
-							
+					try {
+						if(isOnline){
+							Log("GetFile: internet available");
+							// check if have updates and load them
+							UpdateFileFromRemote(dropboxPath, onSuccess: () => {
+								Log("GetFile: state of dropbox file is "+dropboxPath+" is synced now");
+								// return updated cached result
+								
+								returnCachedResult();
+								
 
-							if(receiveUpdates){
-								subscribeToUpdatesAction();
-							}
-						}, onProgress: (progress) => {
-							if(onProgress != null){
-								_mainThreadQueueRunner.QueueOnMainThread(() => {					
-									onProgress(progress);
-								});
-							}
-						}, onError: (error) => {
-							//Log("error");
-							_mainThreadQueueRunner.QueueOnMainThread(() => {
-								onResult(DropboxRequestResult<byte[]>.Error(error));
-							});
-
-							if(receiveUpdates){
-								subscribeToUpdatesAction();
-							}
-						});
-					}else{
-						Log("GetFile: internet not available");
-
-						if(useCachedIfOffline && IsFileCached(dropboxPath)){
-							Log("GetFile: cannot check for updates - using cached version");
-							
-							returnCachedResult();
-							
-							
-							if(receiveUpdates){
-								subscribeToUpdatesAction();
-							}
-						}else{
-							if(receiveUpdates){
-								// try again when internet recovers
-								_internetConnectionWatcher.SubscribeToInternetConnectionRecoverOnce(() => {
-									GetFileAsBytes(dropboxPath, onResult, onProgress, useCachedFirst, useCachedIfOffline, receiveUpdates);								
-								});
-
-								subscribeToUpdatesAction();
-							}else{
-								// error
+								if(receiveUpdates){
+									subscribeToUpdatesAction();
+								}
+							}, onProgress: (progress) => {
+								if(onProgress != null){
+									_mainThreadQueueRunner.QueueOnMainThread(() => {					
+										onProgress(progress);
+									});
+								}
+							}, onError: (error) => {
+								//Log("error");
 								_mainThreadQueueRunner.QueueOnMainThread(() => {
-									onResult(DropboxRequestResult<byte[]>.Error(
-												new DBXError("GetFile: No internet connection", DBXErrorType.NetworkProblem)
-											)
-									);	
+									onResult(DropboxRequestResult<byte[]>.Error(error));
 								});
-							}						
+
+								if(receiveUpdates){
+									subscribeToUpdatesAction();
+								}
+							});
+						}else{
+							Log("GetFile: internet not available");
+
+							if(useCachedIfOffline && IsFileCached(dropboxPath)){
+								Log("GetFile: cannot check for updates - using cached version");
+								
+								returnCachedResult();
+								
+								
+								if(receiveUpdates){
+									subscribeToUpdatesAction();
+								}
+							}else{
+								if(receiveUpdates){
+									// try again when internet recovers
+									_internetConnectionWatcher.SubscribeToInternetConnectionRecoverOnce(() => {
+										GetFileAsBytes(dropboxPath, onResult, onProgress, useCachedFirst, useCachedIfOffline, receiveUpdates);								
+									});
+
+									subscribeToUpdatesAction();
+								}else{
+									// error
+									_mainThreadQueueRunner.QueueOnMainThread(() => {
+										onResult(DropboxRequestResult<byte[]>.Error(
+													new DBXError("GetFile: No internet connection", DBXErrorType.NetworkProblem)
+												)
+										);	
+									});
+								}						
+							}
 						}
+					}catch(Exception ex){
+						Debug.LogException(ex);
 					}
+					
 				});
 				
 				
