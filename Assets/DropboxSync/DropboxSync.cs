@@ -105,7 +105,9 @@ namespace DBXSync {
 		void OnDestroy(){
 			// cancel unfinished downloads/uploads
 			foreach(var wc in _activeWebClientsList){
-				wc.CancelAsync();
+				if(wc != null){
+					wc.CancelAsync();
+				}				
 			}
 		}
 
