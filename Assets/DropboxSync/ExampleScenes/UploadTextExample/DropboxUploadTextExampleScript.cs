@@ -14,7 +14,9 @@ using System.Text;
 
 public class DropboxUploadTextExampleScript : MonoBehaviour {
 
-	string TEXT_FILE_PATH = "/DropboxSyncExampleFolder/uploaded_text.txt";
+	string TEXT_FILE_UPLOAD_PATH = "/DropboxSyncExampleFolder/uploaded_text.txt";
+
+	public Text inputLabelText, outputLabelText;
 
 	public InputField textToUploadInput;
 	public Text downloadedText;
@@ -23,14 +25,14 @@ public class DropboxUploadTextExampleScript : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
-		
-
+		inputLabelText.text = string.Format("Enter text to upload to <b>{0}</b>:", TEXT_FILE_UPLOAD_PATH);
+		outputLabelText.text = string.Format("Remote Dropbox file: <b>{0}</b> contents (updated from Dropbox):", TEXT_FILE_UPLOAD_PATH);
 
 		// subscribe to remote file changes
-		DropboxSync.Main.GetFile<string>(TEXT_FILE_PATH, (res) => {
+		DropboxSync.Main.GetFile<string>(TEXT_FILE_UPLOAD_PATH, (res) => {
 			if(res.error != null){
 				if(res.error.ErrorType == DBXErrorType.RemotePathNotFound){
-					UpdateDownloadedText("<color=red>File "+TEXT_FILE_PATH+" doesn't exist on Dropbox.</color> Try uploading new.");
+					UpdateDownloadedText("<color=red>File "+TEXT_FILE_UPLOAD_PATH+" doesn't exist on Dropbox.</color> Try uploading new.");
 				}else{
 					Debug.LogError("Error getting text string: "+res.error.ErrorDescription);
 					UpdateDownloadedText("Error: "+res.error.ErrorDescription);
@@ -53,7 +55,7 @@ public class DropboxUploadTextExampleScript : MonoBehaviour {
 
 		Debug.Log("Upload text "+textToUploadInput.text);
 
-		DropboxSync.Main.UploadFile(TEXT_FILE_PATH, Encoding.UTF8.GetBytes(textToUploadInput.text), (res) => {
+		DropboxSync.Main.UploadFile(TEXT_FILE_UPLOAD_PATH, Encoding.UTF8.GetBytes(textToUploadInput.text), (res) => {
 			if(res.error != null){
 				Debug.LogError("Error uploading text file: "+res.error.ErrorDescription);
 				textToUploadInput.interactable = true;

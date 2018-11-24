@@ -150,9 +150,11 @@ namespace DBXSync {
 						// return updated cached result
 						returnCachedResult();
 					}, onProgress: (progress) => {
-						_mainThreadQueueRunner.QueueOnMainThread(() => {
-							onProgress(progress);
-						});
+						if(onProgress != null){
+							_mainThreadQueueRunner.QueueOnMainThread(() => {					
+								onProgress(progress);
+							});
+						}	
 					}, onError: (error) => {
 						_mainThreadQueueRunner.QueueOnMainThread(() => {
 							onResult(DropboxRequestResult<byte[]>.Error(error));
@@ -188,9 +190,11 @@ namespace DBXSync {
 								subscribeToUpdatesAction();
 							}
 						}, onProgress: (progress) => {
-							_mainThreadQueueRunner.QueueOnMainThread(() => {
-								onProgress(progress);
-							});
+							if(onProgress != null){
+								_mainThreadQueueRunner.QueueOnMainThread(() => {					
+									onProgress(progress);
+								});
+							}
 						}, onError: (error) => {
 							//Log("error");
 							_mainThreadQueueRunner.QueueOnMainThread(() => {

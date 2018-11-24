@@ -104,9 +104,11 @@ namespace DBXSync {
 				});
 			},
 			onProgress: (progress) => {
-				_mainThreadQueueRunner.QueueOnMainThread(() => {
-					onProgress(progress);
-				});
+				if(onProgress != null){
+					_mainThreadQueueRunner.QueueOnMainThread(() => {					
+						onProgress(progress);
+					});
+				}
 			},
 			onError: (errorStr) => {
 				_mainThreadQueueRunner.QueueOnMainThread(() => {
@@ -122,9 +124,11 @@ namespace DBXSync {
 				});				
 			},
 			onProgress: (progress) => {
-				_mainThreadQueueRunner.QueueOnMainThread(() => {
-					onProgress(progress);
-				});
+				if(onProgress != null){
+					_mainThreadQueueRunner.QueueOnMainThread(() => {					
+						onProgress(progress);
+					});
+				}
 			},
 			onError: (errorStr) => {
 				_mainThreadQueueRunner.QueueOnMainThread(() => {
