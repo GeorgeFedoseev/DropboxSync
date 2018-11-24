@@ -27,15 +27,18 @@ namespace DBXSync {
 
 
 		// SINGLETONE
+		private static DropboxSync _instance;
 		public static DropboxSync Main {
 			get {
-				var instance = FindObjectOfType<DropboxSync>();
-				if(instance != null){
-					return instance;
-				}else{
-					Debug.LogError("DropboxSync script wasn't found on the scene.");
-					return null;
+				if(_instance == null){
+					_instance = FindObjectOfType<DropboxSync>();
+					if(_instance != null){						
+					}else{
+						Debug.LogError("DropboxSync script wasn't found on the scene.");						
+					}
 				}
+
+				return _instance;				
 			}
 		}
 
