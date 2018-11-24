@@ -90,7 +90,12 @@ namespace DBXSync {
 									}
 								}else{
 									// _mainThreadQueueRunner.QueueOnMainThread(() => {
-										onWebError(new DBXError(e.Error.Message, DBXErrorType.Unknown));
+										Log("e.Error is something else");
+										if(e.Error != null){
+											onWebError(new DBXError(e.Error.Message, DBXErrorType.Unknown));
+										}else{
+											onWebError(new DBXError("Unknown error", DBXErrorType.Unknown));
+										}
 									// });
 								}
 
@@ -160,6 +165,8 @@ namespace DBXSync {
 						};
 
 						
+
+						
 						client.DownloadDataCompleted += (s, e) => {
 							_activeWebClientsList.Remove(client);
 
@@ -184,7 +191,12 @@ namespace DBXSync {
 									}
 								}else{
 									// _mainThreadQueueRunner.QueueOnMainThread(() => {
-										onWebError(new DBXError(e.Error.Message, DBXErrorType.Unknown));
+										Log("e.Error is something else");
+										if(e.Error != null){
+											onWebError(new DBXError(e.Error.Message, DBXErrorType.Unknown));
+										}else{
+											onWebError(new DBXError("Unknown error", DBXErrorType.Unknown));
+										}
 									// });
 								}
 							}else if(e.Cancelled){
@@ -267,7 +279,10 @@ namespace DBXSync {
 							_activeWebClientsList.Remove(client);
 
 							if(e.Error != null){
+								Log("MakeDropboxUploadRequest -> UploadDataCompleted -> with error");
+
 								if(e.Error is WebException){
+									Log("MakeDropboxUploadRequest -> UploadDataCompleted -> with error -> WebException");
 									var webex = e.Error as WebException;
 									var stream = webex.Response.GetResponseStream();
 									var reader = new StreamReader(stream);
@@ -287,8 +302,13 @@ namespace DBXSync {
 									}
 								}else{
 									// _mainThreadQueueRunner.QueueOnMainThread(() => {
-										Log("e.Error is "+e.Error);
-										onWebError(new DBXError(e.Error.Message, DBXErrorType.Unknown));
+										Log("e.Error is something else");
+										if(e.Error != null){
+											onWebError(new DBXError(e.Error.Message, DBXErrorType.Unknown));
+										}else{
+											onWebError(new DBXError("Unknown error", DBXErrorType.Unknown));
+										}
+										
 									// });
 								}
 							}else if(e.Cancelled){
