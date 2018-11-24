@@ -23,6 +23,7 @@ namespace DBXSync {
 
 		// GETTING FILE
 
+		
 		public void GetFile<T>(string dropboxPath, Action<DropboxRequestResult<T>> onResult, Action<float> onProgress = null, bool useCachedFirst = false,
 			bool useCachedIfOffline = true, bool receiveUpdates = false) where T : class{
 			Action<DropboxRequestResult<byte[]>> onResultMiddle = null;

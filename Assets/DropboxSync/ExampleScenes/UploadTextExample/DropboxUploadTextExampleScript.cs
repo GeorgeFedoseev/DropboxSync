@@ -25,6 +25,7 @@ public class DropboxUploadTextExampleScript : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
+
 		inputLabelText.text = string.Format("Enter text to upload to <b>{0}</b>:", TEXT_FILE_UPLOAD_PATH);
 		outputLabelText.text = string.Format("Remote Dropbox file: <b>{0}</b> contents (updated from Dropbox):", TEXT_FILE_UPLOAD_PATH);
 

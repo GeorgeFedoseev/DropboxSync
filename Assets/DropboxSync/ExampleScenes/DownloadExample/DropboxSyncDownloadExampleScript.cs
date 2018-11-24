@@ -31,6 +31,8 @@ public class DropboxSyncDownloadExampleScript : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
+		
+
 		// TEXT
 		DropboxSync.Main.GetFile<string>(EXAMPLE_TXT_PATH, (res) => {
 			if(res.error != null){
