@@ -85,6 +85,8 @@ namespace DBXSync {
 		// METHODS
 
 		void Initialize(){
+			Debug.Log(string.Format("DropboxSync v{0}", DROPBOX_SYNC_VERSION));
+
 			_PersistentDataPath = Application.persistentDataPath;	
 
 			_internetConnectionWatcher = new InternetConnectionWatcher();
