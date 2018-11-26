@@ -30,7 +30,7 @@ namespace DBXSync {
 				Action<string> onResponse, Action<float> onProgress, Action<DBXError> onWebError){
 			Log("MakeDropboxRequest url: "+url);
 
-			DropboxSyncUtils.ValidateAccessToken(DropboxAccessToken);
+			
 		
 
 			DropboxSyncUtils.IsOnlineAsync((isOnline) => {
@@ -137,7 +137,7 @@ namespace DBXSync {
 
 		void MakeDropboxDownloadRequest(string url, string jsonParameters, 
 							Action<DBXFile, byte[]> onResponse, Action<float> onProgress, Action<DBXError> onWebError){
-			DropboxSyncUtils.ValidateAccessToken(DropboxAccessToken);
+			
 
 			DropboxSyncUtils.IsOnlineAsync((isOnline) => {
 				if(!isOnline){
@@ -240,7 +240,7 @@ namespace DBXSync {
 
 		void MakeDropboxUploadRequest(string url, byte[] dataToUpload, string jsonParameters,
 												 Action<DBXFile> onResponse, Action<float> onProgress, Action<DBXError> onWebError){
-			DropboxSyncUtils.ValidateAccessToken(DropboxAccessToken);
+			
 
 
 			DropboxSyncUtils.IsOnlineAsync((isOnline) => {
