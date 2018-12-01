@@ -23,7 +23,15 @@ namespace DBXSync {
 
 		// GETTING FILE
 
-		
+		/// <summary>
+		/// Asynchronously retrieves file from Dropbox and tries to produce object of specified type T.
+		/// </summary>
+		/// <param name="dropboxPath">Path to file on Dropbox or inside of Dropbox App folder (depending on accessToken type). Should start with "/". Example: /DropboxSyncExampleFolder/image.jpg</param>
+		/// <param name="onResult">Result callback</param>
+		/// <param name="onProgress">Callback function that receives progress as float from 0 to 1.</param>
+		/// <param name="useCachedFirst">If True then first tries to get data from cache, if not cached then downloads.</param>
+		/// <param name="useCachedIfOffline">If True and there's no Internet connection then retrieves file from cache if cached, otherwise produces error.</param>
+		/// <param name="receiveUpdates">If True, then when there are remote updates on Dropbox, callback function onResult will be triggered again with updated version of the file.</param>
 		public void GetFile<T>(string dropboxPath, Action<DropboxRequestResult<T>> onResult, Action<float> onProgress = null, bool useCachedFirst = false,
 			bool useCachedIfOffline = true, bool receiveUpdates = false) where T : class{
 			Action<DropboxRequestResult<byte[]>> onResultMiddle = null;
@@ -92,6 +100,16 @@ namespace DBXSync {
 			GetFileAsBytes(dropboxPath, onResultMiddle, onProgress, useCachedFirst, useCachedIfOffline, receiveUpdates);
 		}
 
+
+		/// <summary>
+		/// Asynchronously retrieves file from Dropbox and returns path to local filesystem cached copy.f
+		/// </summary>
+		/// <param name="dropboxPath">Path to file on Dropbox or inside of Dropbox App folder (depending on accessToken type). Should start with "/". Example: /DropboxSyncExampleFolder/image.jpg</param>
+		/// <param name="onResult">Result callback</param>
+		/// <param name="onProgress">Callback function that receives progress as float from 0 to 1.</param>
+		/// <param name="useCachedFirst">If True then first tries to get data from cache, if not cached then downloads.</param>
+		/// <param name="useCachedIfOffline">If True and there's no Internet connection then retrieves file from cache if cached, otherwise produces error.</param>
+		/// <param name="receiveUpdates">If True, then when there are remote updates on Dropbox, callback function onResult will be triggered again with updated version of the file.</param>
 		public void GetFileAsLocalCachedPath(string dropboxPath, Action<DropboxRequestResult<string>> onResult, Action<float> onProgress = null, bool useCachedFirst = false,
 			bool useCachedIfOffline = true, bool receiveUpdates = false){
 			Action<DropboxRequestResult<byte[]>> onResultMiddle = (res) => {					
@@ -115,6 +133,15 @@ namespace DBXSync {
 			GetFileAsBytes(dropboxPath, onResultMiddle, onProgress, useCachedFirst, useCachedIfOffline, receiveUpdates);
 		}
 
+		/// <summary>
+		/// Asynchronously retrieves file from Dropbox as byte[]
+		/// </summary>
+		/// <param name="dropboxPath">Path to file on Dropbox or inside of Dropbox App folder (depending on accessToken type). Should start with "/". Example: /DropboxSyncExampleFolder/image.jpg</param>
+		/// <param name="onResult">Result callback</param>
+		/// <param name="onProgress">Callback function that receives progress as float from 0 to 1.</param>
+		/// <param name="useCachedFirst">If True then first tries to get data from cache, if not cached then downloads.</param>
+		/// <param name="useCachedIfOffline">If True and there's no Internet connection then retrieves file from cache if cached, otherwise produces error.</param>
+		/// <param name="receiveUpdates">If true , then when there are remote updates on Dropbox, callback function onResult will be triggered again with updated version of the file.</param>
 		public void GetFileAsBytes(string dropboxPath, Action<DropboxRequestResult<byte[]>> onResult, Action<float> onProgress = null, bool useCachedFirst = false,
 						bool useCachedIfOffline = true, bool receiveUpdates = false){
 			if(DropboxSyncUtils.IsBadDropboxPath(dropboxPath)){
