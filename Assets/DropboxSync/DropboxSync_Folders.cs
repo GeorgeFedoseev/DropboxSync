@@ -25,7 +25,11 @@ namespace DBXSync {
 
 		// FOLDERS
 		
-		
+		/// <summary>
+		/// Checks if dropbox path (file or folder) exists.
+		/// </summary>
+		/// <param name="dropboxFolderPath">Path to file or folder on Dropbox or inside of Dropbox App folder (depending on accessToken type). Should start with "/". Example:/DropboxSyncExampleFolder/image.jpg</param>
+		/// <param name="onResult">Result callback containing bool that indicates existance on the item.</param>
 		public void PathExists(string dropboxFolderPath, Action<DropboxRequestResult<bool>> onResult){
 			GetMetadata<DBXFolder>(dropboxFolderPath, (res) => {
 				if(res.error != null){
@@ -50,6 +54,11 @@ namespace DBXSync {
 
 		}
 
+		/// <summary>
+		/// Creates folder using path specified
+		/// </summary>
+		/// <param name="dropboxFolderPath">Path of folder to creates</param>
+		/// <param name="onResult">Result callback that contains metadata of the created folder.</param>
 		public void CreateFolder(string dropboxFolderPath, Action<DropboxRequestResult<DBXFolder>> onResult) {
 			var path = DropboxSyncUtils.NormalizePath(dropboxFolderPath);
 
@@ -83,6 +92,12 @@ namespace DBXSync {
 			});
 		}
 
+		/// <summary>
+		/// Retrieves structure of dropbox folders and files inside specified folder.
+		/// </summary>
+		/// <param name="dropboxFolderPath">Dropbox folder path</param>
+		/// <param name="onResult">Callback function that receives result containing DBXFolder with all child nodes inside.</param>
+		/// <param name="onProgress">Callback fnction that receives float from 0 to 1 intdicating the progress.</param>
 		public void GetFolderStructure(string dropboxFolderPath, Action<DropboxRequestResult<DBXFolder>> onResult,
 						 Action<float> onProgress = null){
 			var path = DropboxSyncUtils.NormalizePath(dropboxFolderPath);
@@ -117,6 +132,13 @@ namespace DBXSync {
 			}, recursive: true);
 		}
 
+		/// <summary>
+		/// Gets files and folders inside specified folder as a list without structure.
+		/// </summary>
+		/// <param name="path">Path to folder</param>
+		/// <param name="onResult">Vallback function that receives result containing list of DBXItems</param>
+		/// <param name="onProgress">Callback fnction that receives float from 0 to 1 intdicating the progress.</param>
+		/// <param name="recursive">If True then gets all items recursively.</param>
 		public void GetFolderItems(string path, Action<DropboxRequestResult<List<DBXItem>>> onResult, Action<float> onProgress = null, bool recursive = false){
 			_GetFolderItemsFlat(path, onResult: (items) => {
 				_mainThreadQueueRunner.QueueOnMainThread(() => {

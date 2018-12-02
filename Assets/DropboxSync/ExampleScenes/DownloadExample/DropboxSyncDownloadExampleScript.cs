@@ -30,7 +30,6 @@ public class DropboxSyncDownloadExampleScript : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-
 		
 
 		// TEXT

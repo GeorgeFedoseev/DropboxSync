@@ -22,6 +22,14 @@ namespace DBXSync {
 
 		// UPLOADING FILE
 
+
+		/// <summary>
+		/// Uploads file from specified filepath in local filesystem to Dropbox
+		/// </summary>
+		/// <param name="dropboxPath">Dropbox path where to upload file. Example: /my_text.txt</param>
+		/// <param name="localFilePath">Full file path in local filesystem. Example: C:\my_text.txt</param>
+		/// <param name="onResult">Result callback that receives created remote file metadata</param>
+		/// <param name="onProgress">Upload progress callback that receives float from 0 to 1</param>
 		public void UploadFile(string dropboxPath, string localFilePath, Action<DropboxRequestResult<DBXFile>> onResult,
 									 Action<float> onProgress = null) 
 		{
@@ -53,6 +61,14 @@ namespace DBXSync {
 			UploadFile(dropboxPath, fileBytes, onResult, onProgress);
 		}
 
+
+		/// <summary>
+		/// Uploads byte[] to specified Dropbox path
+		/// </summary>
+		/// <param name="dropboxPath">Dropbox path where to upload file. Example: /my_text.txt</param>
+		/// <param name="bytes">Bytes array containing file data</param>
+		/// <param name="onResult">Result callback that receives created remote file metadata</param>
+		/// <param name="onProgress">Upload progress callback that receives float from 0 to 1</param>
 		public void UploadFile(string dropboxPath, byte[] bytes, Action<DropboxRequestResult<DBXFile>> onResult,
 										 Action<float> onProgress = null) 
 		{

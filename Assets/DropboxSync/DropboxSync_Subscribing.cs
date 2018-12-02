@@ -21,6 +21,7 @@ namespace DBXSync {
 
 		// SUBSCRIBING TO CHANGES
 
+		
 		Dictionary<DBXItem, List<Action<List<DBXFileChange>>>> OnChangeCallbacksDict = new Dictionary<DBXItem, List<Action<List<DBXFileChange>>>>();
 		void CheckChangesForSubscribedItems(){
 			if(OnChangeCallbacksDict.Count == 0){
@@ -74,13 +75,40 @@ namespace DBXSync {
 			}
 		}
 
+		/// <summary>
+		/// Subscribes to file changes on Dropbox.
+		/// Callback fires once, when change is being registered and changed file checksum is cached in local metadata.
+		/// If change was made not during app runtime, callback fires as soon as app is running and checking for updates.
+		/// Update interval can be changed using `DBXChangeForChangesIntervalSeconds` (default values if 5 seconds).
+		/// </summary>
+		/// <param name="dropboxFilePath">
+		///  Path to file on Dropbox or inside Dropbox App (depending on accessToken type).
+		///  Should start with "/". Example: /DropboxSyncExampleFolder/image.jpg
+		/// </param>
+		/// <param name="onChange">
+		/// Callback function that receives `DBXFileChange` that contains `changeType` and `DBXFile` (updated file metadata).
+		/// </param>
 		public void SubscribeToFileChanges(string dropboxFilePath, Action<DBXFileChange> onChange){
 			var item = new DBXFile(dropboxFilePath);
 			SubscribeToChanges(item, (changes) => {
 				onChange(changes[0]);
 			});
 		}
-
+		
+		/// <summary>
+		/// Subscribes to file changes on Dropbox in specified folder (and recursively to all subfolders and their files).
+		/// Callback fires once, when change is being registered and changed file checksum is cached in local metadata.
+		/// If change was made not during app runtime, callback fires as soon as app is running and checking for updates.
+		/// Update interval can be changed using `DBXChangeForChangesIntervalSeconds` (default values if 5 seconds).
+		/// </summary>
+		/// <param name="dropboxFolderPath">
+		/// Path to folder on Dropbox or inside Dropbox App (depending on accessToken type). 
+		/// Should start with "/". Example: /DropboxSyncExampleFolder
+		/// </param>
+		/// <param name="onChange">
+		/// Callback function that receives list consisting of file changes.
+		/// Each file change contains `changeType` and `DBXFile` (updated file metadata).
+		/// </param>
 		public void SubscribeToFolderChanges(string dropboxFolderPath, Action<List<DBXFileChange>> onChange){
 			var item = new DBXFolder(dropboxFolderPath);
 			SubscribeToChanges(item, onChange);
@@ -95,7 +123,10 @@ namespace DBXSync {
 			OnChangeCallbacksDict[item].Add(onChange);			
 		}
 			
-
+		/// <summary>
+		/// Unsubscribes all subscribers from changes on specified dropbox path
+		/// </summary>
+		/// <param name="dropboxPath">Path from which to unsubscribe</param>
 		public void UnsubscribeAllFromChangesForPath(string dropboxPath){
 			dropboxPath = DropboxSyncUtils.NormalizePath(dropboxPath);
 
@@ -105,6 +136,12 @@ namespace DBXSync {
 			}
 		}
 
+
+		/// <summary>
+		/// Unsubscribe specific callback from changes on specified dropbox path
+		/// </summary>
+		/// <param name="dropboxPath">>Path from which to unsubscribe</param>
+		/// <param name="onChange">Callback reference</param>
 		public void UnsubscribeFromChanges(string dropboxPath, Action<List<DBXFileChange>> onChange){
 			dropboxPath = DropboxSyncUtils.NormalizePath(dropboxPath);
 

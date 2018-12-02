@@ -90,7 +90,6 @@ namespace DBXSync {
 
 		void Initialize(){
 			
-
 			Debug.Log(string.Format("DropboxSync v{0}", DROPBOX_SYNC_VERSION));
 
 			_PersistentDataPath = Application.persistentDataPath;	
