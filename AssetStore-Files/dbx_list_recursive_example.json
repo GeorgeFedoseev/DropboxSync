@@ -1,0 +1,25 @@
+{
+  "entries": [
+    {
+      ".tag": "folder",
+      "name": "test",
+      "path_lower": "/test",
+      "path_display": "/test",
+      "id": "id:zzTlFOtJIbcAAAAAAAAEww"
+    },
+    {
+      ".tag": "file",
+      "name": "photo-1471110338536-858caa3dbe45.jpeg",
+      "path_lower": "/test/photo-1471110338536-858caa3dbe45.jpeg",
+      "path_display": "/test/photo-1471110338536-858caa3dbe45.jpeg",
+      "id": "id:zzTlFOtJIbcAAAAAAAAEwQ",
+      "client_modified": "2018-05-12T16:26:39Z",
+      "server_modified": "2018-05-12T16:51:59Z",
+      "rev": "4b76f9660",
+      "size": 2544241,
+      "content_hash": "f1c9b271a0bd1852408666b7b79f56ecaabdd004c8e0799f30a15aefe65789c8"
+    }
+  ],
+  "cursor": "AAHM3w3Sg4PLZwh8pvF8Je7kAJeQ0dVNLbJq7qdZg6ebYWfjNW73iqPuUznKOF-3-qQI5BYNizzJ4-zPRI78tp5mO3hN8Y8IIwFYzCgcbDiEeEp0_eofNOWnFAwI1mB8GKWsKTMQ9GjfhldxJ060XdeP",
+  "has_more": false
+}

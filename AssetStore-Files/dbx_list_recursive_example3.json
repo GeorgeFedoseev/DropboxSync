@@ -1,0 +1,20 @@
+{
+  "entries": [
+    {
+      ".tag": "folder",
+      "name": "Folder with Spaces",
+      "path_lower": "/folder with spaces",
+      "path_display": "/Folder with Spaces",
+      "id": "id:d4epX5SaNTAAAAAAAAAADg"
+    },
+    {
+      ".tag": "folder",
+      "name": "Second Level Depth Folder",
+      "path_lower": "/folder with spaces/second level depth folder",
+      "path_display": "/Folder with Spaces/Second Level Depth Folder",
+      "id": "id:d4epX5SaNTAAAAAAAAAADw"
+    }
+  ],
+  "cursor": "AAFmcNLgC4qmgCUVyCQb50Mnl8pXD3CnKjpHOr6mSU5LNFJGnttswSzScNYth_Bp4qzdgDb9PjkUt_V4I32TGdO3XGGXbFR5ofFdc2JMIXy_4WifP6owW-mrfVQuorFFFxvu7AjsuW8qYJOHR1VIk5v2ehlw0kHg8S-lGfwCi57T5zWJveY8-kdQgq-qt4Zlhq6lG5UUe2WwabuHtwdVmIoh",
+  "has_more": false
+}

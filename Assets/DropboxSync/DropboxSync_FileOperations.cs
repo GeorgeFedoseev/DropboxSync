@@ -28,7 +28,7 @@ namespace DBXSync {
 		/// Deletes file or folder on Dropbox
 		/// </summary>
 		/// <param name="dropboxPath">Path to file or folder on Dropbox or inside of Dropbox App folder (depending on accessToken type). Should start with "/". Example:/DropboxSyncExampleFolder/image.jpg</param>
-		/// <param name="onResult">Callback function that receives DropboxRequestResult with DBXItem metadata of deleted file or folder.</param>
+		/// <param name="onResult">Callback function that receives DropboxRequestResult with DBXItem metadata of deleted file or folder</param>
         public void Delete(string dropboxPath, Action<DropboxRequestResult<DBXItem>> onResult){
             var prms = new DropboxDeletePathRequestParams();
             prms.path = dropboxPath;
@@ -67,7 +67,7 @@ namespace DBXSync {
         }
 
 		/// <summary>
-		/// Moves file or folder from dropboFromPath to dropboxToPath
+		/// Moves file or folder from dropboxFromPath to dropboxToPath
 		/// </summary>
 		/// <param name="dropboxFromPath">From path</param>
 		/// <param name="dropboxToPath">To path</param>

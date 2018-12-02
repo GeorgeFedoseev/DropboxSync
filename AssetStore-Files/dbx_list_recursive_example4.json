@@ -1,0 +1,87 @@
+{
+  "entries": [
+    {
+      ".tag": "folder",
+      "name": "HelloThereFolder",
+      "path_lower": "/hellotherefolder",
+      "path_display": "/HelloThereFolder",
+      "id": "id:d4epX5SaNTAAAAAAAAAACw"
+    },
+    {
+      ".tag": "folder",
+      "name": "Folder with Spaces",
+      "path_lower": "/folder with spaces",
+      "path_display": "/Folder with Spaces",
+      "id": "id:d4epX5SaNTAAAAAAAAAADg"
+    },
+    {
+      ".tag": "folder",
+      "name": "Second Level Depth Folder",
+      "path_lower": "/folder with spaces/second level depth folder",
+      "path_display": "/Folder with Spaces/Second Level Depth Folder",
+      "id": "id:d4epX5SaNTAAAAAAAAAADw"
+    },
+    {
+      ".tag": "file",
+      "name": "Get Started with Dropbox Paper.url",
+      "path_lower": "/get started with dropbox paper.url",
+      "path_display": "/Get Started with Dropbox Paper.url",
+      "id": "id:d4epX5SaNTAAAAAAAAAABg",
+      "client_modified": "2018-05-19T12:36:06Z",
+      "server_modified": "2018-05-19T12:36:06Z",
+      "rev": "1bb991230",
+      "size": 240,
+      "content_hash": "f40c1228343d7e2a632281c986dbb7af3491b9b63ddfd0eb10fee2c913f6cfa7"
+    },
+    {
+      ".tag": "file",
+      "name": "Get Started with Dropbox.pdf",
+      "path_lower": "/get started with dropbox.pdf",
+      "path_display": "/Get Started with Dropbox.pdf",
+      "id": "id:d4epX5SaNTAAAAAAAAAABQ",
+      "client_modified": "2018-05-19T12:36:06Z",
+      "server_modified": "2018-05-19T12:36:06Z",
+      "rev": "2bb991230",
+      "size": 1102331,
+      "content_hash": "f7ad488deb7d81790340ecd676fe6e47f0a6064fb99b982685b752d58611c1cb"
+    },
+    {
+      ".tag": "file",
+      "name": "Meydanprojectsmap_scaled.jpg",
+      "path_lower": "/meydanprojectsmap_scaled.jpg",
+      "path_display": "/Meydanprojectsmap_scaled.jpg",
+      "id": "id:d4epX5SaNTAAAAAAAAAACg",
+      "client_modified": "2018-05-19T12:46:14Z",
+      "server_modified": "2018-05-19T12:46:14Z",
+      "rev": "3bb991230",
+      "size": 132288,
+      "content_hash": "5bdf9bfd85bec5ba5a459ede97f37fa8d12f52d180a785ffed8c86087d5c366a"
+    },
+    {
+      ".tag": "file",
+      "name": "130FPOU7PM9IYLJXTNA1X.mp4",
+      "path_lower": "/hellotherefolder/130fpou7pm9iyljxtna1x.mp4",
+      "path_display": "/HelloThereFolder/130FPOU7PM9IYLJXTNA1X.mp4",
+      "id": "id:d4epX5SaNTAAAAAAAAAADQ",
+      "client_modified": "2018-05-19T13:04:21Z",
+      "server_modified": "2018-05-19T13:04:21Z",
+      "rev": "6bb991230",
+      "size": 340965515,
+      "content_hash": "d54b13a64504f463ec1b010d8fcbe6303ea8e8636f152df883c6987884882492"
+    },
+    {
+      ".tag": "file",
+      "name": "fatezer.mp3",
+      "path_lower": "/hellotherefolder/fatezer.mp3",
+      "path_display": "/HelloThereFolder/fatezer.mp3",
+      "id": "id:d4epX5SaNTAAAAAAAAAADA",
+      "client_modified": "2018-05-19T12:47:26Z",
+      "server_modified": "2018-05-19T13:04:23Z",
+      "rev": "8bb991230",
+      "size": 8108964,
+      "content_hash": "19034084f4b7a69e091e91a2db7028b9941528ad7505603238d2ae6f31e174cb"
+    }
+  ],
+  "cursor": "AAEx4PDu8D8LfVsM2o96Zgv46GONoGb8aBKe7NwZgJgss5vtCgbL6JVYF-esTMRtzKdVaXz9gbzEdoDEP0Mvu_bwbnAWxBuYPHQiJyigFtV0guDLj4zc7byJ1ApPC0xkfXFSmDSwRccIN2WB6QzPKFQi8RqpqAG4ykn2_eZDBrcznA",
+  "has_more": false
+}

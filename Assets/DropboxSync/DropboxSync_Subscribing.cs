@@ -124,10 +124,10 @@ namespace DBXSync {
 		}
 			
 		/// <summary>
-		/// Unsubscribes all subscribers from changes on specified dropbox path
+		/// Unsubscribes all subscribers from changes on specified Dropbox path
 		/// </summary>
 		/// <param name="dropboxPath">Path from which to unsubscribe</param>
-		public void UnsubscribeAllFromChangesForPath(string dropboxPath){
+		public void UnsubscribeAllFromChangesOnPath(string dropboxPath){
 			dropboxPath = DropboxSyncUtils.NormalizePath(dropboxPath);
 
 			var removeKeys = OnChangeCallbacksDict.Where(p => p.Key.path == dropboxPath).Select(p => p.Key).ToList();
@@ -138,11 +138,11 @@ namespace DBXSync {
 
 
 		/// <summary>
-		/// Unsubscribe specific callback from changes on specified dropbox path
+		/// Unsubscribe specific callback from changes on specified Dropbox path
 		/// </summary>
-		/// <param name="dropboxPath">>Path from which to unsubscribe</param>
+		/// <param name="dropboxPath">Path from which to unsubscribe</param>
 		/// <param name="onChange">Callback reference</param>
-		public void UnsubscribeFromChanges(string dropboxPath, Action<List<DBXFileChange>> onChange){
+		public void UnsubscribeFromChangesOnPath(string dropboxPath, Action<List<DBXFileChange>> onChange){
 			dropboxPath = DropboxSyncUtils.NormalizePath(dropboxPath);
 
 			var item = OnChangeCallbacksDict.Where(p => p.Key.path == dropboxPath).Select(p => p.Key).FirstOrDefault();

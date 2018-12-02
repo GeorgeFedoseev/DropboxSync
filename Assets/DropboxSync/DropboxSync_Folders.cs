@@ -26,12 +26,12 @@ namespace DBXSync {
 		// FOLDERS
 		
 		/// <summary>
-		/// Checks if dropbox path (file or folder) exists.
+		/// Checks if dropbox path (file or folder) exists
 		/// </summary>
-		/// <param name="dropboxFolderPath">Path to file or folder on Dropbox or inside of Dropbox App folder (depending on accessToken type). Should start with "/". Example:/DropboxSyncExampleFolder/image.jpg</param>
-		/// <param name="onResult">Result callback containing bool that indicates existance on the item.</param>
-		public void PathExists(string dropboxFolderPath, Action<DropboxRequestResult<bool>> onResult){
-			GetMetadata<DBXFolder>(dropboxFolderPath, (res) => {
+		/// <param name="dropboxPath">Path to file or folder on Dropbox or inside of Dropbox App folder (depending on accessToken type). Should start with "/". Example:/DropboxSyncExampleFolder/image.jpg</param>
+		/// <param name="onResult">Result callback containing bool that indicates existance on the item</param>
+		public void PathExists(string dropboxPath, Action<DropboxRequestResult<bool>> onResult){
+			GetMetadata<DBXFolder>(dropboxPath, (res) => {
 				if(res.error != null){
 					if(res.error.ErrorType == DBXErrorType.RemotePathNotFound){
 						// path not found
@@ -57,8 +57,8 @@ namespace DBXSync {
 		/// <summary>
 		/// Creates folder using path specified
 		/// </summary>
-		/// <param name="dropboxFolderPath">Path of folder to creates</param>
-		/// <param name="onResult">Result callback that contains metadata of the created folder.</param>
+		/// <param name="dropboxFolderPath">Path of folder to create</param>
+		/// <param name="onResult">Result callback that contains metadata of the created folder</param>
 		public void CreateFolder(string dropboxFolderPath, Action<DropboxRequestResult<DBXFolder>> onResult) {
 			var path = DropboxSyncUtils.NormalizePath(dropboxFolderPath);
 

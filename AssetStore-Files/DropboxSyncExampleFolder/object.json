@@ -1,0 +1,5 @@
+{
+    "name": "Earth",
+    "radius_km": 6371,
+    "moons": ["Moon"] 
+}
