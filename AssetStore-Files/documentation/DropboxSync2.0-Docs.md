@@ -1,5 +1,5 @@
-# <a href="/" style="text-decoration:none; color: black;"><img style="vertical-align:middle" src="http://georgefedoseev.com/dropbox-sync/assets/rounded-corners-122x128.png" width=50/>&nbsp;&nbsp;George Fedoseev</a>
-# DropboxSync <a href="/dropbox-sync">`Tutorial`</a>`Documentation`
+# <a href="http://georgefedoseev.com/" style="text-decoration:none; color: black;"><img style="vertical-align:middle" src="http://georgefedoseev.com/dropbox-sync/assets/rounded-corners-122x128.png" width=50/>&nbsp;&nbsp;George Fedoseev</a>
+# DropboxSync v2.0 <a href="/dropbox-sync">`Tutorial`</a>`Documentation`
 ![Logo](http://georgefedoseev.com/dropbox-sync/assets/DropboxSync_Large.png?nocache=1)
 
 ### Contents
@@ -507,6 +507,5 @@ DropboxSync.Main.CreateFolder("/folder/test/nested", (res) => {
 });
 
 ```
-
 
 

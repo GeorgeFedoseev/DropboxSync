@@ -6,11 +6,12 @@
 
 
 
-# <a href="/" style="text-decoration:none; color: black;"><img style="vertical-align:middle" src="http://georgefedoseev.com/dropbox-sync/assets/rounded-corners-122x128.png" width=50/>&nbsp;&nbsp;George Fedoseev</a>
+# <a href="http://georgefedoseev.com/" style="text-decoration:none; color: black;"><img style="vertical-align:middle" src="http://georgefedoseev.com/dropbox-sync/assets/rounded-corners-122x128.png" width=50/>&nbsp;&nbsp;George Fedoseev</a>
 
 
 
-# DropboxSync `Tutorial`<a href="/dropbox-sync/documentation.html">`Documentation`</a>
+# DropboxSync v2.0 `Tutorial`<a href="/dropbox-sync/documentation.html">`Documentation`</a>
+
 ![Logo](http://georgefedoseev.com/dropbox-sync/assets/DropboxSync_Large.png?nocache=1)
 
 ### Contents
