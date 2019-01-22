@@ -82,14 +82,14 @@ public class DropboxSyncDownloadExampleScript : MonoBehaviour {
 
 
 		// BYTES ARRAY
-		DropboxSync.Main.GetFileAsBytes(EXAMPLE_IMAGE_PATH, (res) => {
-			if(res.error != null){
-				Debug.LogError("Failed to get file bytes: "+res.error.ErrorDescription);
-			}else{
-				var imageBytes = res.data;
-				Debug.Log("Got file as bytes array, length: "+imageBytes.Length.ToString()+" bytes");
-			}
-		}, receiveUpdates:true);		
+		// DropboxSync.Main.GetFileAsBytes(EXAMPLE_IMAGE_PATH, (res) => {
+		// 	if(res.error != null){
+		// 		Debug.LogError("Failed to get file bytes: "+res.error.ErrorDescription);
+		// 	}else{
+		// 		var imageBytes = res.data;
+		// 		Debug.Log("Got file as bytes array, length: "+imageBytes.Length.ToString()+" bytes");
+		// 	}
+		// }, receiveUpdates:true);		
 		
 	}
 
