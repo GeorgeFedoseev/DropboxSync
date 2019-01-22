@@ -112,25 +112,131 @@ namespace DBXSync {
 		/// <param name="receiveUpdates">If True, then when there are remote updates on Dropbox, callback function onResult will be triggered again with updated version of the file.</param>
 		public void GetFileAsLocalCachedPath(string dropboxPath, Action<DropboxRequestResult<string>> onResult, Action<float> onProgress = null, bool useCachedFirst = false,
 			bool useCachedIfOffline = true, bool receiveUpdates = false){
-			Action<DropboxRequestResult<byte[]>> onResultMiddle = (res) => {					
-				if(res.error != null){
+			if(DropboxSyncUtils.IsBadDropboxPath(dropboxPath)){
+				onResult(DropboxRequestResult<string>.Error(
+							new DBXError("Cant get file: bad path "+dropboxPath, DBXErrorType.BadRequest)							
+						)
+				);
+				return;
+			}
+
+			Action returnCachedResult = () => {
+				var cachedFilePath = GetPathInCache(dropboxPath);
+
+				if(File.Exists(cachedFilePath)){					
 					_mainThreadQueueRunner.QueueOnMainThread(() => {
-						onResult(DropboxRequestResult<string>.Error(res.error));
+						onResult(new DropboxRequestResult<string>(cachedFilePath));
 					});
 				}else{
-					if(res.data != null){
-						_mainThreadQueueRunner.QueueOnMainThread(() => {
-							onResult(new DropboxRequestResult<string>(GetPathInCache(dropboxPath)));
-						});
-					}else{
-						_mainThreadQueueRunner.QueueOnMainThread(() => {
-							onResult(new DropboxRequestResult<string>(null));
-						});
-					}					
-				}
-			};	
+					Log("cache doesnt have file");
+					_mainThreadQueueRunner.QueueOnMainThread(() => {
+						onResult(
+							DropboxRequestResult<string>.Error(
+								new DBXError("File "+dropboxPath+" is removed on remote", DBXErrorType.RemotePathNotFound)
+							)
+						);
+					});
+				}				
+			};
 
-			GetFileAsBytes(dropboxPath, onResultMiddle, onProgress, useCachedFirst, useCachedIfOffline, receiveUpdates);
+			Action subscribeToUpdatesAction = () => {
+				SubscribeToFileChanges(dropboxPath, (fileChange) => {					
+					UpdateFileFromRemote(dropboxPath, onSuccess: () => {							
+						// return updated cached result
+						returnCachedResult();
+					}, onProgress: (progress) => {
+						if(onProgress != null){
+							_mainThreadQueueRunner.QueueOnMainThread(() => {					
+								onProgress(progress);
+							});
+						}	
+					}, onError: (error) => {
+						_mainThreadQueueRunner.QueueOnMainThread(() => {
+							onResult(DropboxRequestResult<string>.Error(error));
+						});
+					});					
+				});
+			};
+
+			// maybe no need to do any remote requests
+			if((useCachedFirst) && IsFileCached(dropboxPath)){	
+				Log("GetFile: using cached version");			
+				returnCachedResult();
+
+				if(receiveUpdates){
+					subscribeToUpdatesAction();
+				}
+			}else{
+				//Log("GetFile: check if online");
+				// now check if we online
+				
+				DropboxSyncUtils.IsOnlineAsync((isOnline) => {
+					try {
+						if(isOnline){
+							Log("GetFile: internet available");
+							// check if have updates and load them
+							UpdateFileFromRemote(dropboxPath, onSuccess: () => {
+								Log("GetFile: state of dropbox file is "+dropboxPath+" is synced now");
+								// return updated cached result
+								
+								returnCachedResult();
+								
+
+								if(receiveUpdates){
+									subscribeToUpdatesAction();
+								}
+							}, onProgress: (progress) => {
+								if(onProgress != null){
+									_mainThreadQueueRunner.QueueOnMainThread(() => {					
+										onProgress(progress);
+									});
+								}
+							}, onError: (error) => {
+								//Log("error");
+								_mainThreadQueueRunner.QueueOnMainThread(() => {
+									onResult(DropboxRequestResult<string>.Error(error));
+								});
+
+								if(receiveUpdates){
+									subscribeToUpdatesAction();
+								}
+							});
+						}else{
+							Log("GetFile: internet not available");
+
+							if(useCachedIfOffline && IsFileCached(dropboxPath)){
+								Log("GetFile: cannot check for updates - using cached version");
+								
+								returnCachedResult();								
+								
+								if(receiveUpdates){
+									subscribeToUpdatesAction();
+								}
+								
+							}else{
+								if(receiveUpdates){
+									// try again when internet recovers
+									_internetConnectionWatcher.SubscribeToInternetConnectionRecoverOnce(() => {
+										GetFileAsLocalCachedPath(dropboxPath, onResult, onProgress, useCachedFirst, useCachedIfOffline, receiveUpdates);								
+									});
+
+								}else{
+									// error
+									_mainThreadQueueRunner.QueueOnMainThread(() => {
+										onResult(DropboxRequestResult<string>.Error(
+													new DBXError("GetFile: No internet connection", DBXErrorType.NetworkProblem)
+												)
+										);	
+									});
+								}						
+							}
+						}
+					}catch(Exception ex){
+						Debug.LogException(ex);
+					}
+					
+				});				
+			}			
 		}
 
 		/// <summary>
@@ -240,12 +346,12 @@ namespace DBXSync {
 							if(useCachedIfOffline && IsFileCached(dropboxPath)){
 								Log("GetFile: cannot check for updates - using cached version");
 								
-								returnCachedResult();
-								
+								returnCachedResult();								
 								
 								if(receiveUpdates){
 									subscribeToUpdatesAction();
 								}
+
 							}else{
 								if(receiveUpdates){
 									// try again when internet recovers
@@ -253,7 +359,6 @@ namespace DBXSync {
 										GetFileAsBytes(dropboxPath, onResult, onProgress, useCachedFirst, useCachedIfOffline, receiveUpdates);								
 									});
 
-									subscribeToUpdatesAction();
 								}else{
 									// error
 									_mainThreadQueueRunner.QueueOnMainThread(() => {
@@ -269,25 +374,11 @@ namespace DBXSync {
 						Debug.LogException(ex);
 					}
 					
-				});
-				
-				
-			}
-
-			
+				});				
+			}			
 		}
 
-		void DownloadFileBytes(string dropboxPath, Action<DropboxFileDownloadRequestResult<byte[]>> onResult, Action<float> onProgress = null){
-			var prms = new DropboxDownloadFileRequestParams(dropboxPath);
-			MakeDropboxDownloadRequest(DOWNLOAD_FILE_ENDPOINT, prms,
-			onResponse: (fileMetadata, data) => {
-				onResult(new DropboxFileDownloadRequestResult<byte[]>(data, fileMetadata));
-			},
-			onProgress: onProgress,
-			onWebError: (webErrorStr) => {
-				onResult(DropboxFileDownloadRequestResult<byte[]>.Error(webErrorStr));
-			});
-		}
+
 
 		
 

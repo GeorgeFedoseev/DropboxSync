@@ -39,28 +39,26 @@ namespace DBXSync {
 		}
 
 		void DownloadToCache (string dropboxPath, Action onSuccess, Action<float> onProgress, Action<DBXError> onError){
-				Log("DownloadToCache");
-				DownloadFileBytes(dropboxPath, (res) => {
-					if(res.error != null){
-						onError(res.error);						
-					}else{
-						var localFilePath = GetPathInCache(dropboxPath);
-						//Log("Cache folder path: "+CacheFolderPathForToken	);
-						//Log("Local cached file path: "+localFilePath);
+				Log("DownloadToCache "+dropboxPath);
 
-						// make sure containing directory exists
-						var fileDirectoryPath = Path.GetDirectoryName(localFilePath);
-						//Log("Local cached directory path: "+fileDirectoryPath);
-						Directory.CreateDirectory(fileDirectoryPath);
+				var filePathInCache = GetPathInCache(dropboxPath);
+				var localFilePath = GetPathInCache(dropboxPath);
+				// make sure containing directory exists
+				var fileDirectoryPath = Path.GetDirectoryName(localFilePath);				
+				Directory.CreateDirectory(fileDirectoryPath);
 
-						File.WriteAllBytes(localFilePath, res.data);						
+				var prms = new DropboxDownloadFileRequestParams(dropboxPath);
 
+				MakeDropboxDownloadRequest(DOWNLOAD_FILE_ENDPOINT, filePathInCache, prms,
+					onResponse: (fileMetadata) => {			
 						// write metadata
-						SaveFileMetadata(res.fileMetadata);
+						SaveFileMetadata(fileMetadata);
 
 						onSuccess();
-					}
-				}, onProgress: onProgress);
+					},
+					onProgress: onProgress,
+					onWebError: onError
+				);				
 		}
 
 		bool IsFileCached(string dropboxPath){

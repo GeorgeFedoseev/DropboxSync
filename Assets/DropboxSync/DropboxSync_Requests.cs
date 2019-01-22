@@ -130,14 +130,15 @@ namespace DBXSync {
 
 
 		// DOWNLOAD BYTES
-		void MakeDropboxDownloadRequest<T>(string url, T parametersObject, 
-				Action<DBXFile, byte[]> onResponse, Action<float> onProgress, Action<DBXError> onWebError) where T : DropboxRequestParams{
-			MakeDropboxDownloadRequest(url, JsonUtility.ToJson(parametersObject), onResponse, onProgress, onWebError);
+		void MakeDropboxDownloadRequest<T>(string url, string filePath, T parametersObject, 
+				Action<DBXFile> onResponse, Action<float> onProgress, Action<DBXError> onWebError) where T : DropboxRequestParams{
+			MakeDropboxDownloadRequest(url, filePath, JsonUtility.ToJson(parametersObject), onResponse, onProgress, onWebError);
 		}
 
-		void MakeDropboxDownloadRequest(string url, string jsonParameters, 
-							Action<DBXFile, byte[]> onResponse, Action<float> onProgress, Action<DBXError> onWebError){
+		void MakeDropboxDownloadRequest(string url, string filePath, string jsonParameters, 
+							Action<DBXFile> onResponse, Action<float> onProgress, Action<DBXError> onWebError){
 			
+			Log("MakeDropboxDownloadRequest "+url);
 
 			DropboxSyncUtils.IsOnlineAsync((isOnline) => {
 				if(!isOnline){
@@ -171,7 +172,8 @@ namespace DBXSync {
 						
 
 						
-						client.DownloadDataCompleted += (s, e) => {
+						client.DownloadFileCompleted += (s, e) => {
+							LogWarning("DownloadFileCompleted");
 							_activeWebClientsList.Remove(client);
 
 							if(e.Error != null){
@@ -215,13 +217,16 @@ namespace DBXSync {
 								var fileMetadata = DBXFile.FromDropboxDictionary(dict);
 
 								// _mainThreadQueueRunner.QueueOnMainThread(() => {
-									onResponse(fileMetadata, e.Result);
+									onResponse(fileMetadata);
 								// });							
 							}
 						};
 
+						
+
 						var uri = new Uri(url);
-						client.DownloadDataAsync(uri);
+						// client.DownloadDataAsync(uri);		
+						client.DownloadFileAsync(uri, filePath);
 						_activeWebClientsList.Add(client);
 					}
 				} catch (WebException ex){
@@ -338,6 +343,7 @@ namespace DBXSync {
 
 						// don't use UploadFile (https://stackoverflow.com/questions/18539807/how-to-remove-multipart-form-databoundary-from-webclient-uploadfile)
 						client.UploadDataAsync(uri, "POST", dataToUpload);
+						
 						_activeWebClientsList.Add(client);
 					}
 				} catch (WebException ex){
