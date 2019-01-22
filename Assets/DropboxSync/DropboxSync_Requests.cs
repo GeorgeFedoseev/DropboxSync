@@ -173,7 +173,7 @@ namespace DBXSync {
 
 						
 						client.DownloadFileCompleted += (s, e) => {
-							LogWarning("DownloadFileCompleted");
+							Log("DownloadFileCompleted "+filePath);
 							_activeWebClientsList.Remove(client);
 
 							if(e.Error != null){
@@ -296,7 +296,7 @@ namespace DBXSync {
 									var stream = webex.Response.GetResponseStream();
 									var reader = new StreamReader(stream);
 									var responseStr = reader.ReadToEnd();
-									LogWarning(responseStr);
+									// LogWarning(responseStr);
 
 									try{								
 										var dict = JSON.FromJson<Dictionary<string, object>>(responseStr);
