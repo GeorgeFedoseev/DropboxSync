@@ -1,5 +1,5 @@
-﻿// DropboxSync v2.0
-// Created by George Fedoseev 2018
+﻿// DropboxSync v2.1
+// Created by George Fedoseev 2018-2019
 
 using System;
 using System.Collections;

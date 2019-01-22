@@ -1,5 +1,5 @@
-﻿// DropboxSync v2.0
-// Created by George Fedoseev 2018
+﻿// DropboxSync v2.1
+// Created by George Fedoseev 2018-2019
 
 using System;
 using System.Collections;
@@ -30,8 +30,11 @@ public class DropboxSyncTestMainMethodsScript : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		Debug.Log("init DropboxSync from the main thread");
 		// init DropboxSync from the main thread
 		var _ = DropboxSync.Main;
+
+		Debug.Log("init DropboxSync from the main thread: DONE");
 
 		outputText.text = "";
 
@@ -53,10 +56,11 @@ public class DropboxSyncTestMainMethodsScript : MonoBehaviour {
 		// clean after testing
 		_testActions.Add(CleanForTests);
 		
-
+		Debug.Log("start background thread");
 		_backgroundThread = new Thread(RunAllTestsOnBackgroundThreadWorker);
-		_backgroundThread.IsBackground = true;
+		//_backgroundThread.IsBackground = true;
 		_backgroundThread.Start();	
+		Debug.Log("start background thread: DONE");
 
 				
 	}
@@ -69,6 +73,7 @@ public class DropboxSyncTestMainMethodsScript : MonoBehaviour {
 	// METHODS
 
 	void RunAllTestsOnBackgroundThreadWorker(){
+		Debug.Log("RunAllTestsOnBackgroundThreadWorker - start");
 		try {
 			foreach(var ta in _testActions){
 				var error = ta();
@@ -85,6 +90,7 @@ public class DropboxSyncTestMainMethodsScript : MonoBehaviour {
 			Debug.LogException(ex);
 		}
 		
+		Debug.Log("RunAllTestsOnBackgroundThreadWorker - exit");
 	}
 
 

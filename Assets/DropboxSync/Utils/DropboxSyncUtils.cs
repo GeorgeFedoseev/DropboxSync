@@ -1,5 +1,5 @@
-// DropboxSync v2.0
-// Created by George Fedoseev 2018
+// DropboxSync v2.1
+// Created by George Fedoseev 2018-2019
 
 using System;
 using System.Collections.Generic;
@@ -103,7 +103,7 @@ namespace DBXSync.Utils {
         public static bool IsOnline(){
             try {
                 using (WebClient client = new DBXWebClient()){
-                    using (client.OpenRead("http://www.google.com/")){
+                    using (client.OpenRead("http://dropbox.com/")){
                         return true;
                     }
                 }
