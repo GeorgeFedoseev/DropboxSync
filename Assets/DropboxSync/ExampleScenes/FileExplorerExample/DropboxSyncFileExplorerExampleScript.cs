@@ -9,6 +9,7 @@ using System.Linq;
 using UnityEngine.UI;
 using DBXSync;
 using DBXSync.Model;
+using System.IO;
 
 public class DropboxSyncFileExplorerExampleScript : MonoBehaviour {
 
@@ -87,11 +88,13 @@ public class DropboxSyncFileExplorerExampleScript : MonoBehaviour {
 					_go.GetComponentInChildren<Text>().text = _item.name;
 					_go.GetComponentInChildren<Button>().onClick.AddListener(() => {
 						DisplayFileStatus("Downloading file "+_item.path+"...");
-						DropboxSync.Main.GetFileAsBytes(_item.path, (res) => {
+						DropboxSync.Main.GetFileAsLocalCachedPath(_item.path, (res) => {
 							if(res.error != null){
 								DisplayFileStatus("Failed to download "+_item.path+" to cache: "+res.error.ErrorDescription);
 							}else{
-								DisplayFileStatus("Downloaded "+_item.path+" to cache.\nTotal: "+res.data.Length.ToString()+" bytes");
+								var localPath = res.data;
+								var fileSize = new FileInfo(localPath).Length;
+								DisplayFileStatus("Downloaded "+_item.path+" to cache.\nTotal: "+fileSize+" bytes");
 							}
 						}, (progress) => {
 							DisplayFileStatus("Downloading "+_item.path+"... "+(progress*100).ToString()+"%");

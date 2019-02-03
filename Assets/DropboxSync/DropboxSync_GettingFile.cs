@@ -17,9 +17,7 @@ using System.IO;
 using System.Threading;
 
 namespace DBXSync {
-	public partial class DropboxSync: MonoBehaviour {
-
-		private static readonly string DOWNLOAD_FILE_ENDPOINT = "https://content.dropboxapi.com/2/files/download";
+	public partial class DropboxSync: MonoBehaviour {		
 
 		// GETTING FILE
 

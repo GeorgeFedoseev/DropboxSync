@@ -115,11 +115,11 @@ namespace DBXSync {
 						// get local content hash				
 						// var local_content_hash = localMetadata.contentHash;
 						string local_content_hash = null;
-						if(localFileExists){
-							local_content_hash = DropboxSyncUtils.GetDropboxContentHashForFile(localFilePath);
-						}else{
+						// if(localFileExists){
+						// 	local_content_hash = DropboxSyncUtils.GetDropboxContentHashForFile(localFilePath);
+						// }else{
 							local_content_hash = localMetadata.contentHash;
-						}			
+						// }			
 
 						var remote_content_hash = remoteMedatadata.contentHash;
 

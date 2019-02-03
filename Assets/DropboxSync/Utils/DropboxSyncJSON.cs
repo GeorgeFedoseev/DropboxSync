@@ -482,8 +482,8 @@ namespace DBXSync {
                 }
                 else
                 {
-                    int result;
-                    int.TryParse(json, out result);
+                    long result;
+                    long.TryParse(json, out result);
                     return result;
                 }
             }

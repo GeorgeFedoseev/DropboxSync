@@ -19,9 +19,7 @@ using System.Threading;
 namespace DBXSync {
 	public partial class DropboxSync: MonoBehaviour {
 
-		private static readonly string LIST_FOLDER_ENDPOINT = "https://api.dropboxapi.com/2/files/list_folder";
-		private static readonly string LIST_FOLDER_CONTINUE_ENDPOINT = "https://api.dropboxapi.com/2/files/list_folder/continue";
-		private static readonly string CREATE_FOLDER_ENDPOINT = "https://api.dropboxapi.com/2/files/create_folder_v2";
+		
 
 		// FOLDERS
 		
@@ -65,7 +63,7 @@ namespace DBXSync {
 			var prms = new DropboxCreateFolderRequestParams();
 			prms.path = path;
 
-			MakeDropboxRequest(CREATE_FOLDER_ENDPOINT, prms, (jsonStr) => {
+			MakeDropboxRequest(Const.CREATE_FOLDER_ENDPOINT, prms, (jsonStr) => {
 
 				DBXFolder folderMetadata = null;
 
@@ -190,11 +188,11 @@ namespace DBXSync {
 			if(requestCursor == null){
 				// first request
 				currentResults = new List<DBXItem>();
-				url = LIST_FOLDER_ENDPOINT;
+				url = Const.LIST_FOLDER_ENDPOINT;
 				prms = new DropboxListFolderRequestParams{path=folderPath, recursive=recursive};
 			}else{
 				// have cursor to continue list
-				url = LIST_FOLDER_CONTINUE_ENDPOINT;
+				url = Const.LIST_FOLDER_CONTINUE_ENDPOINT;
 				prms = new DropboxContinueWithCursorRequestParams(requestCursor);
 			}
 			

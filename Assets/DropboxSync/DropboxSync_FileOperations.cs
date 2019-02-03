@@ -19,8 +19,7 @@ using System.Threading;
 namespace DBXSync {
 	public partial class DropboxSync: MonoBehaviour {
         
-        private static readonly string MOVE_ENDPOINT = "https://api.dropboxapi.com/2/files/move_v2";
-        private static readonly string DELETE_ENDPOINT = "https://api.dropboxapi.com/2/files/delete_v2";
+        
 	
 		// FILE OPERATIONS
 
@@ -33,7 +32,7 @@ namespace DBXSync {
             var prms = new DropboxDeletePathRequestParams();
             prms.path = dropboxPath;
 
-            MakeDropboxRequest(DELETE_ENDPOINT, prms, (jsonStr) => {
+            MakeDropboxRequest(Const.DELETE_ENDPOINT, prms, (jsonStr) => {
 
 				DBXItem metadata = null;
 
@@ -80,7 +79,7 @@ namespace DBXSync {
 			prms.from_path = dropboxFromPath;
             prms.to_path = dropboxToPath;
 
-			MakeDropboxRequest(MOVE_ENDPOINT, prms, (jsonStr) => {
+			MakeDropboxRequest(Const.MOVE_ENDPOINT, prms, (jsonStr) => {
 
 				DBXItem metadata = null;
 

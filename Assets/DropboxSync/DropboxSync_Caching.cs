@@ -19,6 +19,8 @@ using System.Threading;
 namespace DBXSync {
 	public partial class DropboxSync: MonoBehaviour {
 
+		private DBXChunkedDownloader _chunkedDownloader;
+
 		// CACHING 
 
 		string CacheFolderPathForToken {
@@ -40,25 +42,30 @@ namespace DBXSync {
 
 		void DownloadToCache (string dropboxPath, Action onSuccess, Action<float> onProgress, Action<DBXError> onError){
 				Log("DownloadToCache "+dropboxPath);
+				
+				var targetLocalPath = GetPathInCache(dropboxPath);
 
-				var filePathInCache = GetPathInCache(dropboxPath);
-				var localFilePath = GetPathInCache(dropboxPath);
-				// make sure containing directory exists
-				var fileDirectoryPath = Path.GetDirectoryName(localFilePath);				
-				Directory.CreateDirectory(fileDirectoryPath);
+				_chunkedDownloader = new DBXChunkedDownloader(dropboxPath, targetLocalPath, DropboxAccessToken);
+				_chunkedDownloader.OnSuccess += (fileMetadata) => {
+					// write metadata
+					SaveFileMetadata(fileMetadata);
+					onSuccess();
+				};
+				_chunkedDownloader.OnProgress += onProgress;
+				_chunkedDownloader.OnError += onError;
 
-				var prms = new DropboxDownloadFileRequestParams(dropboxPath);
+				_chunkedDownloader.Run();
+				
+				// MakeDropboxDownloadRequest(DOWNLOAD_FILE_ENDPOINT, filePathInCache, prms,
+				// 	onResponse: (fileMetadata) => {			
+				// 		// write metadata
+				// 		SaveFileMetadata(fileMetadata);
 
-				MakeDropboxDownloadRequest(DOWNLOAD_FILE_ENDPOINT, filePathInCache, prms,
-					onResponse: (fileMetadata) => {			
-						// write metadata
-						SaveFileMetadata(fileMetadata);
-
-						onSuccess();
-					},
-					onProgress: onProgress,
-					onWebError: onError
-				);				
+				// 		onSuccess();
+				// 	},
+				// 	onProgress: onProgress,
+				// 	onWebError: onError
+				// );				
 		}
 
 		bool IsFileCached(string dropboxPath){

@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using DBXSync.Utils;
+using UnityEngine;
 
 namespace DBXSync.Model {
 
@@ -35,7 +36,6 @@ namespace DBXSync.Model {
 
 
         public static DBXFile FromDropboxDictionary(Dictionary<string, object> obj){
-            
             return new DBXFile() {
                 id = obj["id"] as string,
                 name = obj["name"] as string,           
