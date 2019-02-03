@@ -810,7 +810,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6e58b23c8a844a6f825316a97d52120, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DropboxAccessToken: FuJ1_y96vrQAAAAAAAAbxwCbOJglYPcA7J7cp0-CQALvQGCh10IrjBcxmB5R-UJK
+  DropboxAccessToken: <your-access-token>
 --- !u!4 &996569776
 Transform:
   m_ObjectHideFlags: 0
@@ -1868,7 +1868,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1342368262}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.9999999
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
