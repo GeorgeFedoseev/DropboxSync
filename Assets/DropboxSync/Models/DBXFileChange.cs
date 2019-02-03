@@ -1,4 +1,4 @@
-// DropboxSync v2.1
+// DropboxSync v2.1.1
 // Created by George Fedoseev 2018-2019
 
 namespace DBXSync.Model {
