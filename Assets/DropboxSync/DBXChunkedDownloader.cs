@@ -43,7 +43,7 @@ namespace DBXSync {
 
         public void Run(){
             if(_workerThread != null){
-                throw new Exception("Download was already strted before");
+                throw new Exception("Download was already started before");
             }
 
             //Debug.Log("ChunkedDownloader: Run");
@@ -126,6 +126,7 @@ namespace DBXSync {
 
                 }catch(Exception ex){
                     OnError(new DBXError(ex.Message, DBXErrorType.NetworkProblem));
+                    return;
                 }                
             }
             
