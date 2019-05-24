@@ -11,10 +11,17 @@ namespace DBXSync {
         private DropboxSyncConfiguration _config;
 
         private Queue<IFileTransfer> _transferQueue = new Queue<IFileTransfer> ();
+        public int CurrentQueuedTransfersNumber => _transferQueue.Count;
+
         private List<IFileTransfer> _currentTransfers = new List<IFileTransfer> ();
+        public int CurrentTransferNumber => _currentTransfers.Count;
         
         private List<IFileTransfer> _failedTransfers = new List<IFileTransfer> ();
+        public int FailedTransfersNumber => _failedTransfers.Count;
+
         private List<IFileTransfer> _completedTransfers = new List<IFileTransfer> ();
+        public int CompletedTransferNumber => _completedTransfers.Count;
+
         private object _transfersLock = new object ();
 
         private Thread _backgroundThread;
@@ -56,7 +63,7 @@ namespace DBXSync {
             }
         }
 
-        // METHODS
+        // METHODS        
 
         public async Task<FileMetadata> DownloadFileAsync (string dropboxPath, string localPath, IProgress<int> progressCallback) {
             var completionSource = new TaskCompletionSource<FileMetadata> ();
