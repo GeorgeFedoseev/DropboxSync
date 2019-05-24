@@ -20,6 +20,14 @@ namespace DBXSync {
             return true;
         }
 
+
+        public static string FixDropboxJSONString(string jsonStr) {
+            
+            jsonStr = jsonStr.Replace("\".tag\"", "\"tag\"");
+
+            return jsonStr;
+        }
+
     }
 
 }

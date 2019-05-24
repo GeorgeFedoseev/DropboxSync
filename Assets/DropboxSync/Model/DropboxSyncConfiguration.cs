@@ -7,7 +7,7 @@ namespace DBXSync {
         public string cacheDirecoryPath;
 
         public void FillDefaultsAndValidate(){
-            if(Utils.IsAccessTokenValid(accessToken)) {
+            if(!Utils.IsAccessTokenValid(accessToken)) {
                 throw new InvalidConfigurationException($"Dropbox accessToken is not valid ('{accessToken}')");
             }
 
