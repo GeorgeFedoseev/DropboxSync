@@ -31,6 +31,8 @@ public class DropboxSync : MonoBehaviour {
     void Awake(){
         // set configuration based on inspector values
         SetConfiguration(new DropboxSyncConfiguration { accessToken = _dropboxAccessToken});
+
+        // DropboxReachability.Main.Initialize(_configuration.dropboxReachabilityCheckIntervalMilliseconds);
     }
 
 
@@ -38,8 +40,11 @@ public class DropboxSync : MonoBehaviour {
 
     public void SetConfiguration(DropboxSyncConfiguration config){
         _configuration = config;
-        _configuration.FillDefaultsAndValidate();
+        _configuration.FillDefaultsAndValidate();        
+
+        // DropboxReachability.Main.SetPingInterval(_configuration.dropboxReachabilityCheckIntervalMilliseconds);
     }
+    
 
     public async Task<FileMetadata> GetFileMetadataAsync(string dropboxFilePath){
         var request = new GetFileMetadataRequest(new GetMetadataRequestParameters {
@@ -47,6 +52,13 @@ public class DropboxSync : MonoBehaviour {
         }, _configuration);
 
         return (await request.ExecuteAsync()).GetMetadata();
+    }
+
+    // EVENTS
+
+    void OnApplicationQuit(){
+        print("OnApplicationQuit()");
+        // DropboxReachability.Main.Dispose();
     }
 
 

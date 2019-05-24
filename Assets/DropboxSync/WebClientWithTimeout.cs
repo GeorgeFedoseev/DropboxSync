@@ -3,7 +3,8 @@ using System.Net;
 
 
 namespace DBXSync {
-    public class DBXWebClient: WebClient {
+
+    public class WebClientWithTimeout: WebClient {
         public int Timeout = 15000;   
 
         protected override WebRequest GetWebRequest(Uri uri) {

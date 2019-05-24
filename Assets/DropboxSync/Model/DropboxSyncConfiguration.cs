@@ -6,6 +6,8 @@ namespace DBXSync {
         public string accessToken;
         public string cacheDirecoryPath;
 
+        // public int dropboxReachabilityCheckIntervalMilliseconds = 5000;
+
         public void FillDefaultsAndValidate(){
             if(!Utils.IsAccessTokenValid(accessToken)) {
                 throw new InvalidConfigurationException($"Dropbox accessToken is not valid ('{accessToken}')");

@@ -5,19 +5,19 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
+  - enabled: 0
+    path: 
+    guid: 00000000000000000000000000000000
+  - enabled: 0
+    path: 
+    guid: 00000000000000000000000000000000
+  - enabled: 0
+    path: 
+    guid: 00000000000000000000000000000000
+  - enabled: 0
+    path: 
+    guid: 00000000000000000000000000000000
   - enabled: 1
-    path: Assets/DropboxSync/ExampleScenes/FileExplorerExample/FileExplorerExample
-      - List directories and navigate.unity
-    guid: 41c16739219d84310bf4542c39014503
-  - enabled: 1
-    path: Assets/DropboxSync/ExampleScenes/TestMainMethods/TestMainMethods.unity
-    guid: eedc0e18912b7ca48bc7f8400b2c5be4
-  - enabled: 1
-    path: Assets/DropboxSync/ExampleScenes/UploadTextExample/UploadTextExample - Uploading
-      text string as file.unity
-    guid: 145e63d9d4268274f9807b93102ed935
-  - enabled: 1
-    path: Assets/DropboxSync/ExampleScenes/DownloadExample/DownloadExample - Downloading
-      files and Tracking changes.unity
-    guid: ab25381e907934dbfaf94ed9827ecb24
+    path: Assets/DropboxSync/Examples/DropboxReachabilityTest/DropboxReachabilityTest.unity
+    guid: 5cddfb2263f2544ae9c9f18650ed6eac
   m_configObjects: {}

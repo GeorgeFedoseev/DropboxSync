@@ -20,7 +20,7 @@ namespace DBXSync {
 
 
         public async Task<RESP_T> ExecuteAsync(IProgress<int> progress = null){
-            using (var client = new DBXWebClient()){
+            using (var client = new WebClientWithTimeout()){
                 client.Headers.Set("Authorization", $"Bearer {_config.accessToken}");
 				client.Headers.Set("Content-Type", "application/json");
 
