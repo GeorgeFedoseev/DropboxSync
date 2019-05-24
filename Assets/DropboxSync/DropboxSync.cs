@@ -27,13 +27,21 @@ public class DropboxSync : MonoBehaviour {
     private string _dropboxAccessToken;
 
     private DropboxSyncConfiguration _configuration;
+    private TransferManager _transferManger;
+    public TransferManager TransferManager {
+        get {
+            return _transferManger;
+        }
+    }
 
 
-    void Awake(){
+    void Awake(){        
         // set configuration based on inspector values
         SetConfiguration(new DropboxSyncConfiguration { accessToken = _dropboxAccessToken});
 
         // DropboxReachability.Main.Initialize(_configuration.dropboxReachabilityCheckIntervalMilliseconds);
+
+        _transferManger = new TransferManager(_configuration);
     }
 
 
@@ -55,16 +63,14 @@ public class DropboxSync : MonoBehaviour {
         return (await request.ExecuteAsync()).GetMetadata();
     }
 
-    public async Task<FileMetadata> DownloadFileAsync(string dropboxPath, string localPath, IProgress<int> progress){
-        var downloadTask = new DownloadFileTransfer(dropboxPath, localPath, _configuration).ExecuteAsync(progress);
-        return await downloadTask;
-    }
+    
 
     // EVENTS
 
     void OnApplicationQuit(){
         print("OnApplicationQuit()");
         // DropboxReachability.Main.Dispose();
+        _transferManger.Dispose();
     }
 
 

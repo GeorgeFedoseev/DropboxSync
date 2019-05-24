@@ -11,20 +11,27 @@ namespace DBXSync {
         public string DropboxPath => _dropboxPath;
         public string LocalPath => _localTargetPath;
         public int Progress => _progress; 
+        public IProgress<int> ProgressCallback => _progressCallback;
+        public TaskCompletionSource<FileMetadata> CompletionSource => _completionSource;
 
         private string _dropboxPath;
         private string _localTargetPath;
         private DropboxSyncConfiguration _config;
         private int _progress;
+        private IProgress<int> _progressCallback;
+        private TaskCompletionSource<FileMetadata> _completionSource;
 
-        public DownloadFileTransfer (string dropboxPath, string localTargetPath, DropboxSyncConfiguration config) {
+        public DownloadFileTransfer (string dropboxPath, string localTargetPath, IProgress<int> progressCallback, 
+                                    TaskCompletionSource<FileMetadata> completionSource, DropboxSyncConfiguration config) {
             // TODO: validate paths
             _dropboxPath = dropboxPath;
             _localTargetPath = localTargetPath;
+            _progressCallback = progressCallback;
+            _completionSource = completionSource;
             _config = config;
         }
 
-        public async Task<FileMetadata> ExecuteAsync (IProgress<int> progress) {
+        public async Task<FileMetadata> ExecuteAsync () {
 
             Utils.EnsurePathFoldersExist (_localTargetPath);
 
@@ -51,7 +58,7 @@ namespace DBXSync {
                 //Debug.LogWarning("Total chunks: "+totalChunks.ToString());                
 
                 Parallel.ForEach (Utils.LongRange (0, totalChunks),
-                    new ParallelOptions () { MaxDegreeOfParallelism = _config.downloadThreadNum }, (start) => {
+                    new ParallelOptions () { MaxDegreeOfParallelism = _config.downloadChunckedThreadNum }, (start) => {
 
                         HttpWebRequest request = (HttpWebRequest) WebRequest.Create (Endpoints.DOWNLOAD_FILE_ENDPOINT);
 
@@ -81,7 +88,7 @@ namespace DBXSync {
                                         file.Write (buffer, 0, bytesRead);
                                         totalBytesRead += bytesRead;
                                         _progress = (int)(totalBytesRead * 100 / fileSize);
-                                        progress.Report (_progress);
+                                        _progressCallback.Report (_progress);
                                     }
                                 }
 
