@@ -41,12 +41,12 @@ public class DropboxSync : MonoBehaviour {
         _configuration.FillDefaultsAndValidate();
     }
 
-    public async Task<GetFileMetadataResponse> GetFileMetadataAsync(string dropboxFilePath){
+    public async Task<FileMetadata> GetFileMetadataAsync(string dropboxFilePath){
         var request = new GetFileMetadataRequest(new GetMetadataRequestParameters {
             path = dropboxFilePath
         }, _configuration);
 
-        return await request.ExecuteAsync();
+        return (await request.ExecuteAsync()).GetMetadata();
     }
 
 

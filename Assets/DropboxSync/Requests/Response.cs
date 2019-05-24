@@ -1,13 +1,9 @@
 namespace DBXSync {
 
     [System.Serializable]
-    public class Response {
+    public class Response : JSONSerializableObject {
         public string error_summary;
-        public DropboxErrorType error;
-
-        public override string ToString() {
-            return UnityEngine.JsonUtility.ToJson(this);
-        }
+        public ErrorType error;
     }
 
 }

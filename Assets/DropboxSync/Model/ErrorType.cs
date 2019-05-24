@@ -1,7 +1,7 @@
 namespace DBXSync {
 
     [System.Serializable]
-    public class DropboxErrorType {
+    public class ErrorType : JSONSerializableObject {
         public string tag;
     }
 }
