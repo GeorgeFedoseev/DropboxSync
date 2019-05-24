@@ -91,7 +91,7 @@ namespace DBXSync {
                 });                
             }
 
-            // return from background thread
+            // return to the Unity thread
             await new WaitForUpdate();
 
             return latestMetadata;

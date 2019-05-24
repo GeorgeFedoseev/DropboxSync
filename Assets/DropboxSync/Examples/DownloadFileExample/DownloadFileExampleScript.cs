@@ -8,7 +8,7 @@ public class DownloadFileExampleScript : MonoBehaviour
     // Start is called before the first frame update
     async void Start()
     {
-        var metadata = await DropboxSync.Main.DownloadFileAsync("/DropboxSyncExampleFolder/video.mp4", "/Users/gosha/Desktop/video.mp4", 
+        var metadata = await DropboxSync.Main.DownloadFileAsync("/DropboxSyncExampleFolder/video.mp4", "/Users/gosha/Desktop/boo/video.mp4", 
                     new Progress<int>((progress) => {
                         Debug.Log($"Downloading: {progress}%");
                     }));

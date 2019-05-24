@@ -3,6 +3,9 @@ using System;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
+using System.Linq;
+using System.IO;
 
 namespace DBXSync {
 
@@ -33,7 +36,25 @@ namespace DBXSync {
                 var parametersJSONString = UnityEngine.JsonUtility.ToJson(_parameters);
                 var paramatersBytes = Encoding.Default.GetBytes(parametersJSONString);
 
-                var responseBytes = await client.UploadDataTaskAsync(new System.Uri(_endpoint), "POST", paramatersBytes);                ;
+                byte[] responseBytes = null; 
+                try {
+                    responseBytes = await client.UploadDataTaskAsync(new System.Uri(_endpoint), "POST", paramatersBytes);
+                }catch (WebException ex){                   
+                    
+                    try {
+                        var errorResponseString = new StreamReader(ex.Response.GetResponseStream()).ReadToEnd();
+                        var errorResponse = JsonUtility.FromJson<Response>(errorResponseString);
+
+                        if(!string.IsNullOrEmpty(errorResponse.error_summary)){
+                            throw new DropboxAPIException($"error: {errorResponse.error_summary}; request parameters: {_parameters}; endpoint: {_endpoint}" );
+                        }else{
+                            throw ex;
+                        }
+                    } catch {
+                        // throw original
+                        throw ex;
+                    }                    
+                }               
 
                 var responseString = Encoding.UTF8.GetString(responseBytes);
                 responseString = Utils.FixDropboxJSONString(responseString);
