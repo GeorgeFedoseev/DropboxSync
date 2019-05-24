@@ -6,6 +6,10 @@ namespace DBXSync {
         public string accessToken;
         public string cacheDirecoryPath;
 
+        // downloading
+        public long downloadChunkSizeBytes = 10000000;
+        public int downloadThreadNum = 4;
+
         // public int dropboxReachabilityCheckIntervalMilliseconds = 5000;
 
         public void FillDefaultsAndValidate(){

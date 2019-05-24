@@ -1,5 +1,7 @@
 namespace DBXSync {
 
     [System.Serializable]
-    public class RequestParameters {}
+    public class RequestParameters : JSONSerializableObject {
+
+    }
 }

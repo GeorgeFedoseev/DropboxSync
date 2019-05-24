@@ -1,5 +1,8 @@
 
 
+using System.Collections.Generic;
+using System.IO;
+
 namespace DBXSync {
 
     public static class Utils {
@@ -26,6 +29,21 @@ namespace DBXSync {
             jsonStr = jsonStr.Replace("\".tag\"", "\"tag\"");
 
             return jsonStr;
+        }
+
+        public static void EnsurePathFoldersExist(string path){
+            var dirPath = Path.GetDirectoryName(path);				
+			Directory.CreateDirectory(dirPath);
+        }
+
+        public static IEnumerable<long> LongRange(long start, long count){
+            var limit = start + count;
+
+            while (start < limit)
+            {
+                yield return start;
+                start++;
+            }
         }
 
     }
