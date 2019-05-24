@@ -4,6 +4,7 @@ using UnityEngine;
 
 using DBXSync;
 using System.Threading.Tasks;
+using System;
 
 public class DropboxSync : MonoBehaviour {
 
@@ -52,6 +53,11 @@ public class DropboxSync : MonoBehaviour {
         }, _configuration);
 
         return (await request.ExecuteAsync()).GetMetadata();
+    }
+
+    public async Task<FileMetadata> DownloadFileAsync(string dropboxPath, string localPath, IProgress<int> progress){
+        var downloadTask = new DownloadFileTransfer(dropboxPath, localPath, _configuration).ExecuteAsync(progress);
+        return await downloadTask;
     }
 
     // EVENTS

@@ -8,29 +8,24 @@ namespace DBXSync {
 
     public class DownloadFileTransfer : IFileTransfer {
 
-        public string DropboxPath =>
-            throw new System.NotImplementedException ();
-
-        public string LocalPath =>
-            throw new System.NotImplementedException ();
-
-        public int Progress =>
-            throw new System.NotImplementedException ();
+        public string DropboxPath => _dropboxPath;
+        public string LocalPath => _localTargetPath;
+        public int Progress => _progress; 
 
         private string _dropboxPath;
         private string _localTargetPath;
         private DropboxSyncConfiguration _config;
+        private int _progress;
 
         public DownloadFileTransfer (string dropboxPath, string localTargetPath, DropboxSyncConfiguration config) {
             // TODO: validate paths
             _dropboxPath = dropboxPath;
             _localTargetPath = localTargetPath;
             _config = config;
-
         }
 
         public async Task<FileMetadata> ExecuteAsync (IProgress<int> progress) {
-            
+
             Utils.EnsurePathFoldersExist (_localTargetPath);
 
             var metadata = (await new GetFileMetadataRequest (new GetMetadataRequestParameters {
@@ -40,6 +35,9 @@ namespace DBXSync {
             long fileSize = metadata.size;
 
             FileMetadata latestMetadata = null;
+
+            // go to background thread            
+            await new WaitForBackgroundThread();
 
             using (FileStream file = new FileStream (_localTargetPath, FileMode.Create, FileAccess.Write, FileShare.Write)) {
                 file.SetLength (fileSize); // set the length first
@@ -82,7 +80,8 @@ namespace DBXSync {
                                     while ((bytesRead = responseStream.Read (buffer, 0, buffer.Length)) > 0) {
                                         file.Write (buffer, 0, bytesRead);
                                         totalBytesRead += bytesRead;
-                                        progress.Report ((int)(totalBytesRead * 100 / fileSize));
+                                        _progress = (int)(totalBytesRead * 100 / fileSize);
+                                        progress.Report (_progress);
                                     }
                                 }
 
@@ -91,6 +90,9 @@ namespace DBXSync {
                         }
                 });                
             }
+
+            // return from background thread
+            await new WaitForUpdate();
 
             return latestMetadata;
         }
