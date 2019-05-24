@@ -6,10 +6,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+using System.Net.NetworkInformation;
+
 
 namespace DBXSync.Utils {
 
 	public class InternetConnectionWatcher {
+
+		NetworkChange
+
 		float INTERNET_CONNECTION_CHECK_INTERVAL_SECONDS = 5f;
 		
 		public Action OnLostInternetConnection = () => {};
@@ -31,10 +36,7 @@ namespace DBXSync.Utils {
 
 							OnInternetConnectionRecovered();		
 
-							foreach(var a in _onInternetRecoverOnceCallbacks){
-								a();
-							}
-							_onInternetRecoverOnceCallbacks.Clear();
+							
 						}
 
 						_wasConnectedWhenCheckedLastTime = true;					
@@ -52,6 +54,13 @@ namespace DBXSync.Utils {
 		}
 
 		// METHODS
+
+		private FireQueuedOnceOnRecover(){
+			foreach(var a in _onInternetRecoverOnceCallbacks){
+				a();
+			}
+			_onInternetRecoverOnceCallbacks.Clear();
+		}
 
 		public void SubscribeToInternetConnectionRecoverOnce(Action a){
 			_onInternetRecoverOnceCallbacks.Add(a);

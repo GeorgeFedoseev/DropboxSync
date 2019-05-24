@@ -13,9 +13,7 @@ using UnityEngine;
 
 namespace DBXSync {
 
-    public class DBXChunkedDownloader {
-
-        
+    public class DBXChunkedDownloader {        
 
         public Action<DBXFile> OnSuccess = (localPath) => {};
         public Action<DBXError> OnError = (err) => {};
