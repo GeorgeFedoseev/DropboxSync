@@ -61,8 +61,6 @@ namespace DBXSync {
 
                 var response = UnityEngine.JsonUtility.FromJson<RESP_T>(responseString);
 
-                // TODO: throw Dropbox related exceptions based on JSON error_summary field
-
                 return response;
             }
         }

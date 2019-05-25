@@ -63,7 +63,9 @@ namespace DBXSync {
             }
         }
 
-        // METHODS        
+        // METHODS
+
+        // TODO: dont add transfer if same already exists
 
         public async Task<FileMetadata> DownloadFileAsync (string dropboxPath, string localPath, IProgress<int> progressCallback) {
             var completionSource = new TaskCompletionSource<FileMetadata> ();
@@ -105,7 +107,6 @@ namespace DBXSync {
 
         }
 
-        
 
         public void Dispose () {
             _isDisposed = true;
