@@ -9,5 +9,6 @@ namespace DBXSync {
         TaskCompletionSource<FileMetadata> CompletionSource {get;}
 
         System.Threading.Tasks.Task<FileMetadata> ExecuteAsync();
+        void Cancel();
     }
 }

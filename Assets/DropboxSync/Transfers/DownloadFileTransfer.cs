@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -21,6 +22,7 @@ namespace DBXSync {
         private int _progress;
         private IProgress<int> _progressCallback;
         private TaskCompletionSource<FileMetadata> _completionSource;
+        private CancellationTokenSource _cancellationTokenSource;
 
         public DownloadFileTransfer (string dropboxPath, string localTargetPath, IProgress<int> progressCallback, 
                                     TaskCompletionSource<FileMetadata> completionSource, DropboxSyncConfiguration config) {
@@ -29,8 +31,10 @@ namespace DBXSync {
             _dropboxPath = dropboxPath;
             _localTargetPath = localTargetPath;
             _progressCallback = progressCallback;
-            _completionSource = completionSource;
+            _completionSource = completionSource;            
             _config = config;
+
+            _cancellationTokenSource = new CancellationTokenSource();
         }
 
         public DownloadFileTransfer (FileMetadata metadata, string localTargetPath, IProgress<int> progressCallback, 
@@ -40,11 +44,14 @@ namespace DBXSync {
             _dropboxPath = metadata.path_lower;
             _localTargetPath = localTargetPath;
             _progressCallback = progressCallback;
-            _completionSource = completionSource;
+            _completionSource = completionSource;            
             _config = config;
+
+            _cancellationTokenSource = new CancellationTokenSource();
         }
 
         public async Task<FileMetadata> ExecuteAsync () {
+            var cancellationToken = _cancellationTokenSource.Token;
             
             if(_metadata == null){
                 _metadata = (await new GetFileMetadataRequest (new GetMetadataRequestParameters {
@@ -100,6 +107,8 @@ namespace DBXSync {
                                     byte[] buffer = new byte[8192];
                                     int bytesRead;
                                     while ((bytesRead = responseStream.Read (buffer, 0, buffer.Length)) > 0) {
+                                        cancellationToken.ThrowIfCancellationRequested();
+                                        
                                         file.Write (buffer, 0, bytesRead);
                                         totalBytesRead += bytesRead;
                                         _progress = (int)(totalBytesRead * 100 / fileSize);
@@ -128,6 +137,10 @@ namespace DBXSync {
             await new WaitForUpdate();
 
             return latestMetadata;
+        }
+
+        public void Cancel() {
+            _cancellationTokenSource.Cancel();
         }
     }
 }

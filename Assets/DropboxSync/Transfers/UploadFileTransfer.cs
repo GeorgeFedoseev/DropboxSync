@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -20,11 +21,21 @@ namespace DBXSync {
         private int _progress;
         private IProgress<int> _progressCallback;
         private TaskCompletionSource<FileMetadata> _completionSource;
-
+        private CancellationTokenSource _cancellationTokenSource;
         
 
+        public UploadFileTransfer(){
+            _cancellationTokenSource = new CancellationTokenSource();
+        }
+
         public async Task<FileMetadata> ExecuteAsync () {
+            var cancellationToken = _cancellationTokenSource.Token;
+            
             throw new NotImplementedException();
+        }
+
+        public void Cancel() {
+            _cancellationTokenSource.Cancel();
         }
     }
 }

@@ -49,6 +49,8 @@ public class DropboxSync : MonoBehaviour {
         // DropboxReachability.Main.Initialize(_configuration.dropboxReachabilityCheckIntervalMilliseconds);
 
         _transferManger = new TransferManager(_configuration);
+        _transferManger.DeleteAllTempDownloadFiles();
+        
         _cacheManager = new CacheManager(_transferManger, _configuration);
     }
 
