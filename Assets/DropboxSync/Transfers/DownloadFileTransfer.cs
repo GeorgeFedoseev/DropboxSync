@@ -77,7 +77,7 @@ namespace DBXSync {
 
                         HttpWebRequest request = (HttpWebRequest) WebRequest.Create (Endpoints.DOWNLOAD_FILE_ENDPOINT);
 
-                        var parametersJSONString = new PathParameters { path = _dropboxPath}.ToString();
+                        var parametersJSONString = new PathParameters { path = $"rev:{_metadata.rev}"}.ToString();
 
                         request.Headers.Set ("Authorization", "Bearer " + _config.accessToken);
                         request.Headers.Set ("Dropbox-API-Arg", parametersJSONString);
