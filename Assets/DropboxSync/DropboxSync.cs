@@ -70,7 +70,9 @@ public class DropboxSync : MonoBehaviour {
     void OnApplicationQuit(){
         print("OnApplicationQuit()");
         // DropboxReachability.Main.Dispose();
-        _transferManger.Dispose();
+        if(_transferManger != null){
+            _transferManger.Dispose();
+        }        
     }
 
 

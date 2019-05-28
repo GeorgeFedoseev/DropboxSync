@@ -33,20 +33,20 @@ namespace DBXSync {
 
         public async Task<FileMetadata> ExecuteAsync () {
 
-            Utils.EnsurePathFoldersExist (_localTargetPath);
-
             var metadata = (await new GetFileMetadataRequest (new GetMetadataRequestParameters {
                 path = _dropboxPath
             }, _config).ExecuteAsync ()).GetMetadata ();
 
-            long fileSize = metadata.size;
+            string tempDownloadPath = Utils.GetDownloadTempFilePath(_localTargetPath, metadata.content_hash);            
 
+            long fileSize = metadata.size;
             FileMetadata latestMetadata = null;
 
             // go to background thread            
             await new WaitForBackgroundThread();
 
-            using (FileStream file = new FileStream (_localTargetPath, FileMode.Create, FileAccess.Write, FileShare.Write)) {
+            Utils.EnsurePathFoldersExist (tempDownloadPath);
+            using (FileStream file = new FileStream (tempDownloadPath, FileMode.Create, FileAccess.Write, FileShare.Write)) {
                 file.SetLength (fileSize); // set the length first
 
                 object syncObject = new object (); // synchronize file writes
@@ -97,6 +97,17 @@ namespace DBXSync {
                         }
                 });                
             }
+            
+
+            // TODO: 
+            // ensure final folder exists
+            Utils.EnsurePathFoldersExist (_localTargetPath);
+            // move file to final location (maybe replace old one) 
+            if(File.Exists(_localTargetPath)){
+                File.Delete(_localTargetPath);
+            }
+            File.Move(tempDownloadPath, _localTargetPath);
+
 
             // return to the Unity thread
             await new WaitForUpdate();

@@ -27,7 +27,8 @@ namespace DBXSync {
             }
 
             if(!Directory.Exists(cacheDirecoryPath)) {
-                throw new InvalidConfigurationException($"Cache directory path ({cacheDirecoryPath}) does not exist");
+                Utils.EnsurePathFoldersExist(cacheDirecoryPath);
+                //throw new InvalidConfigurationException($"Cache directory path ({cacheDirecoryPath}) does not exist");
             }
         }
     }
