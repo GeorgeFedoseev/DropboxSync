@@ -11,9 +11,7 @@ using System.Net.NetworkInformation;
 
 namespace DBXSync.Utils {
 
-	public class InternetConnectionWatcher {
-
-		NetworkChange
+	public class InternetConnectionWatcher {		
 
 		float INTERNET_CONNECTION_CHECK_INTERVAL_SECONDS = 5f;
 		
@@ -36,7 +34,7 @@ namespace DBXSync.Utils {
 
 							OnInternetConnectionRecovered();		
 
-							
+							FireQueuedOnceOnRecover();							
 						}
 
 						_wasConnectedWhenCheckedLastTime = true;					
@@ -55,7 +53,7 @@ namespace DBXSync.Utils {
 
 		// METHODS
 
-		private FireQueuedOnceOnRecover(){
+		private void FireQueuedOnceOnRecover(){
 			foreach(var a in _onInternetRecoverOnceCallbacks){
 				a();
 			}

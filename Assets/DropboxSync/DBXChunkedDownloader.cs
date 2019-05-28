@@ -61,7 +61,7 @@ namespace DBXSync {
 
             DBXFile latestMetadata = null;
             
-            using (FileStream file = new FileStream(_targetLocalPath, FileMode.Create, FileAccess.Write, FileShare.Write))
+            using (FileStream file = new FileStream(_targetLocalPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
             {
                 file.SetLength(fileSize); // set the length first
 
@@ -120,12 +120,15 @@ namespace DBXSync {
                         }
                     });
 
+                    file.Close();
+                    Debug.Log($"closed file {_targetLocalPath}");
+
                     //Debug.LogWarning("ChunkedDownloader: Finished Parallel.ForEach");
 
                 }catch(Exception ex){
                     OnError(new DBXError(ex.Message, DBXErrorType.NetworkProblem));
                     return;
-                }                
+                }           
             }
             
             //Debug.LogWarning("ChunkedDownloader: Success");

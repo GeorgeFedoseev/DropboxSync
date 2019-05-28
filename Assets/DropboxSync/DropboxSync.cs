@@ -22,7 +22,7 @@ namespace DBXSync {
 		// <CONSTS
 		static readonly string DROPBOX_SYNC_VERSION = "2.1.1";
 		static readonly float CHECK_REMOTE_UPDATES_INTERVAL_SECONDS = 7;
-		static readonly DropboxSyncLogLevel LOG_LEVEL = DropboxSyncLogLevel.Warnings;
+		static readonly DropboxSyncLogLevel LOG_LEVEL = DropboxSyncLogLevel.Debug;
 		// CONSTS>
 
 

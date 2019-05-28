@@ -260,6 +260,7 @@ namespace DBXSync {
 				var cachedFilePath = GetPathInCache(dropboxPath);
 
 				if(File.Exists(cachedFilePath)){
+					print($"read {cachedFilePath}");
 					var bytes = File.ReadAllBytes(cachedFilePath);
 					_mainThreadQueueRunner.QueueOnMainThread(() => {
 						onResult(new DropboxRequestResult<byte[]>(bytes));
@@ -442,20 +443,20 @@ namespace DBXSync {
 		}
 
 		void UpdateFileFromRemote(string dropboxPath, Action onSuccess, Action<float> onProgress, Action<DBXError> onError){
-			Log("UpdateFileFromRemote");
+			Log("UpdateFileFromRemote ("+dropboxPath+")");
 			FileGetRemoteChanges(dropboxPath, onResult: (fileChange) => {
-				Log("FileGetRemoteChanges:onResult");
+				Log("FileGetRemoteChanges:onResult ("+dropboxPath+")");
 				
 				if(fileChange.changeType == DBXFileChangeType.Modified || fileChange.changeType == DBXFileChangeType.Added){
-					Log("File was created or modified - download new version");
+					Log("File "+dropboxPath+" was created or modified - download new version ("+dropboxPath+")");
 					DownloadToCache(dropboxPath, onSuccess: onSuccess, onProgress: onProgress, onError: onError);
 				}else if(fileChange.changeType == DBXFileChangeType.Deleted){
-					Log("File was deleted on remote - delete locally from cache");
+					Log("File was deleted on remote - delete locally from cache ("+dropboxPath+")");
 					DeleteFileFromCache(dropboxPath);
 					onSuccess();
 				}else{
 					// no changes on remote
-					Log("No changes on remote");
+					Log("No changes on remote ("+dropboxPath+")");
 					if(!GetLocalMetadataForFile(dropboxPath).deletedOnRemote){
 						// check if file actually downloaded, not only metadata
 						if(IsFileCached(dropboxPath)){
@@ -466,7 +467,7 @@ namespace DBXSync {
 					}else{
 						DeleteFileFromCache(dropboxPath);
 						// no changes, file is deleted locally and on remote - synced
-						Log("no changes, file is deleted locally and on remote - synced");
+						Log("no changes, file is deleted locally and on remote - synced ("+dropboxPath+")");
 						onSuccess();
 					}									
 				}

@@ -29,7 +29,7 @@ namespace DBXSync {
 			Log("GetMetadata for "+dropboxPath);
 			MakeDropboxRequest(Const.METADATA_ENDPOINT, prms, 
 			onResponse: (jsonStr) => {
-				Log("GetMetadata onResponse");
+				Log("GetMetadata onResponse ("+dropboxPath+")");
 				var dict = JSON.FromJson<Dictionary<string, object>>(jsonStr);				
 
 				if(typeof(T) == typeof(DBXFolder)){
@@ -65,7 +65,7 @@ namespace DBXSync {
 		DBXFile GetLocalMetadataForFile(string dropboxFilePath){
 			Log("GetLocalMetadataForFile "+dropboxFilePath);
 			var metadataFilePath = GetMetadataFilePath(dropboxFilePath);
-			Log("Local metadata path: "+metadataFilePath);
+			// Log("Local metadata path: "+metadataFilePath);
 			return ParseLocalMetadata(metadataFilePath);
 		}
 

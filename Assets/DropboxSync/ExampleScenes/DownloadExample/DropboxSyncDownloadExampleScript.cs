@@ -43,7 +43,7 @@ public class DropboxSyncDownloadExampleScript : MonoBehaviour {
 				var textStr = res.data;
 				UpdatePlanetDescription(textStr);
 			}
-		}, receiveUpdates:true);
+		}, receiveUpdates:false);
 
 		// JSON OBJECT
 		DropboxSync.Main.GetFile<JsonObject>(EXAMPLE_JSON_PATH, (res) => {
@@ -54,7 +54,7 @@ public class DropboxSyncDownloadExampleScript : MonoBehaviour {
 				var jsonObject = res.data;
 				UpdatePlanetInfo(jsonObject);
 			}
-		}, receiveUpdates:true);
+		}, receiveUpdates:false);
 
 		
 		// IMAGE
@@ -66,7 +66,7 @@ public class DropboxSyncDownloadExampleScript : MonoBehaviour {
 				var tex = res.data;
 				UpdatePicture(tex);
 			}
-		}, useCachedFirst:true);
+		}, useCachedFirst:false);
 
 
 		// VIDEO
@@ -78,7 +78,9 @@ public class DropboxSyncDownloadExampleScript : MonoBehaviour {
 				var filePathInCache = res.data;
 				UpdateVideo(filePathInCache);
 			}
-		}, receiveUpdates:true);
+		}, receiveUpdates:false, onProgress: (progress) => {
+			// print($"Video download progress: {progress}");
+		});
 
 
 		// BYTES ARRAY

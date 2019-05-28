@@ -62,7 +62,7 @@ namespace DBXSync {
 						};
 
 						client.UploadDataCompleted += (s, e) => {
-							Log("MakeDropboxRequest -> UploadDataCompleted");	
+							Log("MakeDropboxRequest -> UploadDataCompleted ("+jsonParameters+")");	
 							_activeWebClientsList.Remove(client);					
 
 							if(e.Error != null){

@@ -85,7 +85,7 @@ namespace DBXSync {
 				if(res.error != null){
 					Log("Failed to get remote metadata for file "+dropboxFilePath);
 					if (res.error.ErrorType == DBXErrorType.RemotePathNotFound){
-						Log("file not found - file was deleted or moved");
+						Log("file not found - file was deleted or moved ("+dropboxFilePath+")");
 						// file was deleted or moved
 
 						// if we knew about this file before
@@ -110,8 +110,8 @@ namespace DBXSync {
 					var remoteMedatadata = res.data;
 
 					if(localMetadata != null && !localMetadata.deletedOnRemote){
-						Log("local metadata file exists and we knew this file existed on remote");
-						Log("check if remote content has changed");
+						Log("local metadata file exists and we knew this file existed on remote ("+dropboxFilePath+")");
+						// Log("check if remote content has changed");
 						// get local content hash				
 						// var local_content_hash = localMetadata.contentHash;
 						string local_content_hash = null;
@@ -124,15 +124,15 @@ namespace DBXSync {
 						var remote_content_hash = remoteMedatadata.contentHash;
 
 						if(local_content_hash != remote_content_hash){
-							Log("remote content hash has changed - file was modified");
+							Log("remote content hash has changed - file was modified ("+dropboxFilePath+")");
 							result = new DBXFileChange(remoteMedatadata, DBXFileChangeType.Modified);
 						}else{
-							Log("remote content did not change");
+							Log("remote content did not change ("+dropboxFilePath+")");
 							result = new DBXFileChange(remoteMedatadata, DBXFileChangeType.None);						
 						}	
 					}else{						
 						// metadata file doesnt exist
-						Log("local metadata file doesnt exist - consider as new file added");
+						Log("local metadata file doesnt exist - consider as new file added ("+dropboxFilePath+")");
 						// TODO: check maybe file itself exists and right version, then just create metadata file - no need to redownload file itself
 						result = new DBXFileChange(remoteMedatadata, DBXFileChangeType.Added);
 					}
