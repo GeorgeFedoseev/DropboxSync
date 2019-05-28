@@ -37,7 +37,7 @@ namespace DBXSync {
         private object _transfersLock = new object ();
 
         private Thread _backgroundThread;
-        private bool _isDisposed = false;
+        private volatile bool _isDisposed = false;
 
         public TransferManager (DropboxSyncConfiguration config) {
             _config = config;
@@ -172,6 +172,7 @@ namespace DBXSync {
         }
 
         public void Dispose () {
+            // stop adding new transfers
             _isDisposed = true;
             // cancel current tranfers
             lock (_transfersLock) {
