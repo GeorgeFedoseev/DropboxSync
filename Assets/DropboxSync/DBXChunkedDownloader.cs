@@ -29,7 +29,7 @@ namespace DBXSync {
 
 
 
-        public DBXChunkedDownloader(string dropboxPath, string targetLocalPath, string dropboxAccessToken, long chunkSize=10000000, int threadNum=4){
+        public DBXChunkedDownloader(string dropboxPath, string targetLocalPath, string dropboxAccessToken, long chunkSize=100000000, int threadNum=1){
             _dropboxFilePath = dropboxPath;
             _targetLocalPath = targetLocalPath;
 
