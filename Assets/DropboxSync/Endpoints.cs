@@ -12,5 +12,7 @@ namespace DBXSync {
 
         // public static readonly string UPLOAD_FILE_ENDPOINT = "https://content.dropboxapi.com/2/files/upload";
         public static readonly string UPLOAD_START_ENDPOINT = "https://content.dropboxapi.com/2/files/upload_session/start";
+        public static readonly string UPLOAD_APPEND_ENDPOINT = "https://content.dropboxapi.com/2/files/upload_session/append_v2";
+        public static readonly string UPLOAD_FINISH_ENDPOINT = "https://content.dropboxapi.com/2/files/upload_session/finish";
     }
 }
