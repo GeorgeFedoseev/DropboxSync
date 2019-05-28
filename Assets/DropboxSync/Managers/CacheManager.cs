@@ -26,15 +26,16 @@ namespace DBXSync {
                     path = dropboxPath
                 }, _config).ExecuteAsync ()).GetMetadata ();            
 
+            var localFilePath = Utils.DropboxPathToLocalPath(dropboxPath, _config);
+
             // decide if need to download a new version
-            if(!ShouldUpdateFileFromDropbox(remoteMetadata)){
+            if(File.Exists(localFilePath) && !ShouldUpdateFileFromDropbox(remoteMetadata)){
                 progressCallback.Report(100);
                 return;
             }
             
-            // download file
-            var downloadToPath = Utils.DropboxPathToLocalPath(dropboxPath, _config);
-            remoteMetadata = await _transferManager.DownloadFileAsync(remoteMetadata, downloadToPath, progressCallback);
+            // download file            
+            remoteMetadata = await _transferManager.DownloadFileAsync(remoteMetadata, localFilePath, progressCallback);
 
             // write metadata if all went good
             WriteMetadata(remoteMetadata);

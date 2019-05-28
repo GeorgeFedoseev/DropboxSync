@@ -56,15 +56,31 @@ namespace DBXSync {
                     int addNum = Math.Min(canAddNum, _downloadTransferQueue.Count);
 
                     if(addNum > 0){
-                        Debug.Log($"[TransferManager] Adding {addNum} transfers to process");
+                        Debug.Log($"[TransferManager] Adding {addNum} download transfers to process");
                         for (var i = 0; i < addNum; i++) {
                             var transfer = _downloadTransferQueue.Dequeue();
                             // fire and forget
                             ProcessTransferAsync(transfer);
                             _currentDownloadTransfers.Add(transfer);
                         }
-                    }
-                    
+                    }                   
+                }
+
+                // upload
+                if (_currentUploadTransfers.Count < _config.maxSimultaneousUploadFileTransfers) {
+                    // can add more
+                    int canAddNum = _config.maxSimultaneousUploadFileTransfers - _currentUploadTransfers.Count;
+                    int addNum = Math.Min(canAddNum, _uploadTransferQueue.Count);
+
+                    if(addNum > 0){
+                        Debug.Log($"[TransferManager] Adding {addNum} upload transfers to process");
+                        for (var i = 0; i < addNum; i++) {
+                            var transfer = _uploadTransferQueue.Dequeue();
+                            // fire and forget
+                            ProcessTransferAsync(transfer);
+                            _currentUploadTransfers.Add(transfer);
+                        }
+                    }                   
                 }
             }
         }
