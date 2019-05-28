@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -10,15 +11,26 @@ namespace DBXSync {
 
         private DropboxSyncConfiguration _config;
 
-        private Queue<IFileTransfer> _transferQueue = new Queue<IFileTransfer> ();
-        public int CurrentQueuedTransfersNumber => _transferQueue.Count;
 
-        private List<IFileTransfer> _currentTransfers = new List<IFileTransfer> ();
-        public int CurrentTransferNumber => _currentTransfers.Count;
+        // queued
+        private Queue<DownloadFileTransfer> _downloadTransferQueue = new Queue<DownloadFileTransfer> ();
+        public int CurrentQueuedDownloadTransfersNumber => _downloadTransferQueue.Count;
+
+        private Queue<UploadFileTransfer> _uploadTransferQueue = new Queue<UploadFileTransfer> ();
+        public int CurrentQueuedUploadTransfersNumber => _uploadTransferQueue.Count;
+
+        // current
+        private List<IFileTransfer> _currentDownloadTransfers = new List<IFileTransfer> ();
+        public int CurrentDownloadTransferNumber => _currentDownloadTransfers.Count;
+
+        private List<IFileTransfer> _currentUploadTransfers = new List<IFileTransfer> ();
+        public int CurrentUploadTransferNumber => _currentUploadTransfers.Count;
         
+        // failed
         private List<IFileTransfer> _failedTransfers = new List<IFileTransfer> ();
         public int FailedTransfersNumber => _failedTransfers.Count;
 
+        // completed
         private List<IFileTransfer> _completedTransfers = new List<IFileTransfer> ();
         public int CompletedTransferNumber => _completedTransfers.Count;
 
@@ -37,18 +49,19 @@ namespace DBXSync {
 
         public void MaybeAddFromQueue () {
             lock (_transfersLock) {
-                if (_currentTransfers.Count < _config.maxSimultaneousFileTransfers) {
+                // download
+                if (_currentDownloadTransfers.Count < _config.maxSimultaneousDownloadFileTransfers) {
                     // can add more
-                    int canAddNum = _config.maxSimultaneousFileTransfers - _currentTransfers.Count;
-                    int addNum = Math.Min(canAddNum, _transferQueue.Count);
+                    int canAddNum = _config.maxSimultaneousDownloadFileTransfers - _currentDownloadTransfers.Count;
+                    int addNum = Math.Min(canAddNum, _downloadTransferQueue.Count);
 
                     if(addNum > 0){
                         Debug.Log($"[TransferManager] Adding {addNum} transfers to process");
                         for (var i = 0; i < addNum; i++) {
-                            var transfer = _transferQueue.Dequeue();
+                            var transfer = _downloadTransferQueue.Dequeue();
                             // fire and forget
                             ProcessTransferAsync(transfer);
-                            _currentTransfers.Add(transfer);
+                            _currentDownloadTransfers.Add(transfer);
                         }
                     }
                     
@@ -64,19 +77,47 @@ namespace DBXSync {
         }
 
         // METHODS
-
-        // TODO: dont add transfer if same already exists
-
         public async Task<FileMetadata> DownloadFileAsync (string dropboxPath, string localPath, IProgress<int> progressCallback) {
             var completionSource = new TaskCompletionSource<FileMetadata> ();
-
             var downloadTransfer = new DownloadFileTransfer (dropboxPath, localPath, progressCallback, completionSource, _config);
+            return await _DownloadFileAsync(downloadTransfer);
+        }
 
+        public async Task<FileMetadata> DownloadFileAsync (FileMetadata metadata, string localPath, IProgress<int> progressCallback) {
+            var completionSource = new TaskCompletionSource<FileMetadata> ();            
+            var downloadTransfer = new DownloadFileTransfer (metadata, localPath, progressCallback, completionSource, _config);
+            return await _DownloadFileAsync(downloadTransfer);
+        }
+
+        private async Task<FileMetadata> _DownloadFileAsync(DownloadFileTransfer transfer){
+            // check if transfer is already queued or in process
+            // if so, subscribe to its completion
+            var alreadyHave = GetQueuedOrExecutingDownloadTransfer(transfer.DropboxPath, transfer.LocalPath);
+            if(alreadyHave != null){                
+                return await alreadyHave.CompletionSource.Task;
+            }
+            // otherwise put new transfer to queue
             lock (_transfersLock) {
-                _transferQueue.Enqueue (downloadTransfer);
+                _downloadTransferQueue.Enqueue (transfer);
+            }
+            // and subscribe to completion
+            return await transfer.CompletionSource.Task;
+        }
+
+        private DownloadFileTransfer GetQueuedOrExecutingDownloadTransfer(string dropboxPath, string localPath){
+            lock(_transfersLock){
+                var executing = _currentDownloadTransfers.FirstOrDefault(t => Utils.AreEqualDropboxPaths(t.DropboxPath, dropboxPath) && t.LocalPath == localPath);
+                if(executing != null){
+                    return executing as DownloadFileTransfer;
+                }
+
+                var queued = _downloadTransferQueue.FirstOrDefault(t => Utils.AreEqualDropboxPaths(t.DropboxPath, dropboxPath) && t.LocalPath == localPath);
+                if(queued != null){
+                    return queued;
+                }
             }
 
-            return await completionSource.Task;
+            return null;
         }
 
         private async void ProcessTransferAsync (IFileTransfer transfer) {
@@ -87,7 +128,7 @@ namespace DBXSync {
                 
                 // move to completed
                 lock(_transfersLock){
-                    _currentTransfers.Remove(transfer);
+                    _currentDownloadTransfers.Remove(transfer);
                     _completedTransfers.Add(transfer);
 
                     Debug.Log($"[TransferManager] Transfer completed, moving to completed (now {_completedTransfers.Count} completed)");
@@ -96,13 +137,11 @@ namespace DBXSync {
                 transfer.CompletionSource.SetException (ex);                
                 // move to failed
                 lock(_transfersLock){
-                    _currentTransfers.Remove(transfer);
+                    _currentDownloadTransfers.Remove(transfer);
                     _failedTransfers.Add(transfer);
 
                     Debug.Log($"[TransferManager] Transfer failed, moving to failed (now {_failedTransfers.Count} failed)");
                 }
-
-                
             }
 
         }

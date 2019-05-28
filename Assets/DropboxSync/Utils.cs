@@ -8,14 +8,36 @@ namespace DBXSync {
 
     public static class Utils {
 
+
+        public static bool AreEqualDropboxPaths(string dropboxPath1, string dropboxPath2){
+            return UnifyDropboxPath(dropboxPath1) == UnifyDropboxPath(dropboxPath2);
+        }
+
+        private static string UnifyDropboxPath(string dropboxPath){
+            dropboxPath = dropboxPath.Trim();
+            dropboxPath = dropboxPath.ToLower();
+            
+            if(dropboxPath.First() != '/'){
+                dropboxPath = $"/{dropboxPath}";
+            }			
+			if(dropboxPath.Last() == '/'){
+				dropboxPath = dropboxPath.Substring(1, dropboxPath.Length-1);
+			}
+
+            return dropboxPath;
+        }
+
+        public static string GetMetadataLocalFilePath(string dropboxPath, DropboxSyncConfiguration config){
+            dropboxPath = UnifyDropboxPath(dropboxPath);
+			return DropboxPathToLocalPath(dropboxPath, config)+".dbxsync";
+		}
+
         public static string DropboxPathToLocalPath(string dropboxPath, DropboxSyncConfiguration config){
-            string relativeDropboxPath = dropboxPath;
+            string relativeDropboxPath = UnifyDropboxPath(dropboxPath);
+
             if(relativeDropboxPath.First() == '/'){
                 relativeDropboxPath = relativeDropboxPath.Substring(1);
             }			
-			if(relativeDropboxPath.Last() == '/'){
-				relativeDropboxPath = relativeDropboxPath.Substring(1, relativeDropboxPath.Length-1);
-			}
 
 			var fullPath = Path.Combine(config.cacheDirecoryPath, relativeDropboxPath);
 			// replace slashes with backslashes if needed

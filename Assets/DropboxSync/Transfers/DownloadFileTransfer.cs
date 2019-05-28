@@ -15,6 +15,7 @@ namespace DBXSync {
         public TaskCompletionSource<FileMetadata> CompletionSource => _completionSource;
 
         private string _dropboxPath;
+        private FileMetadata _metadata = null;
         private string _localTargetPath;
         private DropboxSyncConfiguration _config;
         private int _progress;
@@ -24,6 +25,7 @@ namespace DBXSync {
         public DownloadFileTransfer (string dropboxPath, string localTargetPath, IProgress<int> progressCallback, 
                                     TaskCompletionSource<FileMetadata> completionSource, DropboxSyncConfiguration config) {
             // TODO: validate paths
+            _metadata = null;
             _dropboxPath = dropboxPath;
             _localTargetPath = localTargetPath;
             _progressCallback = progressCallback;
@@ -31,15 +33,28 @@ namespace DBXSync {
             _config = config;
         }
 
+        public DownloadFileTransfer (FileMetadata metadata, string localTargetPath, IProgress<int> progressCallback, 
+                                    TaskCompletionSource<FileMetadata> completionSource, DropboxSyncConfiguration config) {
+            // TODO: validate paths
+            _metadata = metadata;
+            _dropboxPath = metadata.path_lower;
+            _localTargetPath = localTargetPath;
+            _progressCallback = progressCallback;
+            _completionSource = completionSource;
+            _config = config;
+        }
+
         public async Task<FileMetadata> ExecuteAsync () {
+            
+            if(_metadata == null){
+                _metadata = (await new GetFileMetadataRequest (new GetMetadataRequestParameters {
+                    path = _dropboxPath
+                }, _config).ExecuteAsync ()).GetMetadata ();
+            }            
 
-            var metadata = (await new GetFileMetadataRequest (new GetMetadataRequestParameters {
-                path = _dropboxPath
-            }, _config).ExecuteAsync ()).GetMetadata ();
+            string tempDownloadPath = Utils.GetDownloadTempFilePath(_localTargetPath, _metadata.content_hash);            
 
-            string tempDownloadPath = Utils.GetDownloadTempFilePath(_localTargetPath, metadata.content_hash);            
-
-            long fileSize = metadata.size;
+            long fileSize = _metadata.size;
             FileMetadata latestMetadata = null;
 
             // go to background thread            

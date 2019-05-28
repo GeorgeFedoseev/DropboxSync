@@ -11,18 +11,16 @@ public class DownloadFileExampleScript : MonoBehaviour
     async void Start()
     {
 
-        var downloadTasks = new List<Task<FileMetadata>>();
+        var downloadTasks = new List<Task<string>>();
         for(var i = 0; i < 5; i++){
-            downloadTasks.Add(DropboxSync.Main.TransferManager.DownloadFileAsync("/DropboxSyncExampleFolder/video.mp4",
-                                                             $"/Users/gosha/Desktop/boo/video-{i}.mp4", 
+            downloadTasks.Add(DropboxSync.Main.CacheManager.GetLocalFilePathAsync("/DropboxSyncExampleFolder/video.mp4", 
                     new Progress<int>((progress) => {
                         //Debug.Log($"Downloading: {progress}%");
                     })));
         }
 
         var results = await Task.WhenAll(downloadTasks);
-        print("All file downloads completed");
-        
+        print("All file downloads completed");       
         
         //Debug.Log($"Download finished; file metadata: {metadata}");
     }

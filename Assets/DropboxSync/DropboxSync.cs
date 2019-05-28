@@ -34,6 +34,13 @@ public class DropboxSync : MonoBehaviour {
         }
     }
 
+    private CacheManager _cacheManager;
+    public CacheManager CacheManager {
+        get {
+            return _cacheManager;
+        }
+    }
+
 
     void Awake(){        
         // set configuration based on inspector values
@@ -42,6 +49,7 @@ public class DropboxSync : MonoBehaviour {
         // DropboxReachability.Main.Initialize(_configuration.dropboxReachabilityCheckIntervalMilliseconds);
 
         _transferManger = new TransferManager(_configuration);
+        _cacheManager = new CacheManager(_transferManger, _configuration);
     }
 
 

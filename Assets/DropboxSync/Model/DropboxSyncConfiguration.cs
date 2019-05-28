@@ -11,7 +11,7 @@ namespace DBXSync {
         public int downloadChunckedThreadNum = 4;
 
         // transfers
-        public int maxSimultaneousFileTransfers = 3;
+        public int maxSimultaneousDownloadFileTransfers = 3;
 
         // public int dropboxReachabilityCheckIntervalMilliseconds = 5000;
 
