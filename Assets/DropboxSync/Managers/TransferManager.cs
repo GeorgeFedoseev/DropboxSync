@@ -165,7 +165,7 @@ namespace DBXSync {
 
         }
 
-        public void DeleteAllTempDownloadFiles () {
+        private void DeleteAllTempDownloadFiles () {
             foreach (string file in Directory.GetFiles (_config.cacheDirecoryPath, "*.download", SearchOption.AllDirectories)) {
                 File.Delete (file);
             }
