@@ -42,6 +42,9 @@ namespace DBXSync {
         public TransferManager (DropboxSyncConfiguration config) {
             _config = config;
 
+            // clean up temp files from prev launch
+            DeleteAllTempDownloadFiles();
+
             _backgroundThread = new Thread (_backgroudWorker);
             _backgroundThread.IsBackground = true;
             _backgroundThread.Start ();
