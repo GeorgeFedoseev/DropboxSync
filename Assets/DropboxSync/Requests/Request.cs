@@ -14,18 +14,26 @@ namespace DBXSync {
         private string _endpoint;
         private RequestParameters _parameters;
         private DropboxSyncConfiguration _config;
+        private bool _parametersInBody;
 
-        public Request(string endpoint, RequestParameters parameters, DropboxSyncConfiguration config) {
+        public Request(string endpoint, RequestParameters parameters, bool parametersInBody, DropboxSyncConfiguration config) {
             _endpoint = endpoint;
             _parameters = parameters;
             _config = config;
+            _parametersInBody = parametersInBody;
         }
 
 
         public async Task<RESP_T> ExecuteAsync(IProgress<int> progress = null){
             using (var client = new WebClientWithTimeout()){
+                var parametersJSONString = UnityEngine.JsonUtility.ToJson(_parameters);
+                if(!_parametersInBody){
+                    // add parameters in header
+                    client.Headers.Set ("Dropbox-API-Arg", parametersJSONString); 
+                }
+
                 client.Headers.Set("Authorization", $"Bearer {_config.accessToken}");
-				client.Headers.Set("Content-Type", "application/json");
+				client.Headers.Set("Content-Type", _parametersInBody ? "application/json" : "application/octet-stream");
 
                 if(progress != null) {
                     client.UploadProgressChanged += (object sender, UploadProgressChangedEventArgs e) => {
@@ -33,27 +41,17 @@ namespace DBXSync {
                     };
                 }                
 
-                var parametersJSONString = UnityEngine.JsonUtility.ToJson(_parameters);
-                var paramatersBytes = Encoding.Default.GetBytes(parametersJSONString);
-
                 byte[] responseBytes = null; 
                 try {
-                    responseBytes = await client.UploadDataTaskAsync(new System.Uri(_endpoint), "POST", paramatersBytes);
-                }catch (WebException ex){                   
-                    
-                    try {
-                        var errorResponseString = new StreamReader(ex.Response.GetResponseStream()).ReadToEnd();
-                        var errorResponse = JsonUtility.FromJson<Response>(errorResponseString);
-
-                        if(!string.IsNullOrEmpty(errorResponse.error_summary)){
-                            throw new DropboxAPIException($"error: {errorResponse.error_summary}; request parameters: {_parameters}; endpoint: {_endpoint}" );
-                        }else{
-                            throw ex;
-                        }
-                    } catch {
-                        // throw original
-                        throw ex;
+                    if(_parametersInBody){
+                        var paramatersBytes = Encoding.Default.GetBytes(parametersJSONString);
+                        responseBytes = await client.UploadDataTaskAsync(new System.Uri(_endpoint), "POST", paramatersBytes);
+                    }else{
+                        // parameters are in header
+                        responseBytes = await client.UploadDataTaskAsync(new System.Uri(_endpoint), "POST", new byte[0]);
                     }                    
+                }catch (WebException ex){
+                    Utils.HandleDropboxRequestWebException(ex, _parameters, _endpoint);                 
                 }               
 
                 var responseString = Encoding.UTF8.GetString(responseBytes);

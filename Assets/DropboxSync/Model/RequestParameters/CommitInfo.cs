@@ -1,4 +1,5 @@
 namespace DBXSync {
+    [System.Serializable]
     public class CommitInfo {
         public string path;
         public string mode;

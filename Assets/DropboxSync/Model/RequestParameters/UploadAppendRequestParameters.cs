@@ -8,7 +8,7 @@ namespace DBXSync {
         public UploadAppendRequestParameters(string session_id, long offset){
             cursor = new Cursor();
             cursor.session_id = session_id;
-            cursor.offset = offset;            
+            cursor.offset = offset;                        
         }
     }
 

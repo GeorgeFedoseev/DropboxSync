@@ -1,13 +1,47 @@
 
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using UnityEngine;
 
 namespace DBXSync {
 
     public static class Utils {
 
+
+        public static void HandleDropboxRequestWebException(WebException ex, RequestParameters parameters, string endpoint){
+            Exception exceptionToThrow = ex;          
+                    
+            try {
+                var errorResponseString = new StreamReader(ex.Response.GetResponseStream()).ReadToEnd();  
+
+                if(!string.IsNullOrWhiteSpace(errorResponseString)){
+                    try {
+                        var errorResponse = JsonUtility.FromJson<Response>(errorResponseString);
+                        if(!string.IsNullOrEmpty(errorResponse.error_summary)){
+                            exceptionToThrow = new DropboxAPIException($"error: {errorResponse.error_summary}; request parameters: {parameters}; endpoint: {endpoint}" );
+                        }else{
+                            // empty error-summary
+                            exceptionToThrow = new DropboxAPIException($"error: {errorResponseString}; request parameters: {parameters}; endpoint: {endpoint}" );                                            
+                        }
+                    }catch {
+                        // not json-formatted error
+                        exceptionToThrow = new DropboxAPIException($"error: {errorResponseString}; request parameters: {parameters}; endpoint: {endpoint}" );                                        
+                    }
+                }else{
+                    // no text in response - throw original
+                    exceptionToThrow = ex;
+                }                        
+            } catch {
+                // failed to get response - throw original
+                exceptionToThrow = ex;
+            }   
+
+            throw exceptionToThrow;
+        }
 
         public static bool AreEqualDropboxPaths(string dropboxPath1, string dropboxPath2){
             return UnifyDropboxPath(dropboxPath1) == UnifyDropboxPath(dropboxPath2);
