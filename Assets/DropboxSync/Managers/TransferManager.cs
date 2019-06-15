@@ -108,6 +108,12 @@ namespace DBXSync {
             return await _DownloadFileAsync (downloadTransfer);
         }
 
+        public async Task<FileMetadata> UploadFileAsync(string localPath, string dropboxPath, IProgress<int> progressCallback) {
+            var completionSource = new TaskCompletionSource<FileMetadata> ();
+            var uploadTransfer = new UploadFileTransfer (localPath, dropboxPath, progressCallback, completionSource, _config);
+            return await _UploadFileAsync (uploadTransfer);
+        }
+
         private async Task<FileMetadata> _DownloadFileAsync (DownloadFileTransfer transfer) {
             // check if transfer is already queued or in process
             // if so, subscribe to its completion
@@ -123,14 +129,47 @@ namespace DBXSync {
             return await transfer.CompletionSource.Task;
         }
 
+        private async Task<FileMetadata> _UploadFileAsync (UploadFileTransfer transfer) {
+            // check if transfer is already queued or in process
+            // if so, subscribe to its completion
+            var alreadyHave = GetQueuedOrExecutingUploadTransfer (transfer.DropboxPath, transfer.LocalPath);
+            if (alreadyHave != null) {
+                return await alreadyHave.CompletionSource.Task;
+            }
+            // otherwise put new transfer to queue
+            lock (_transfersLock) {
+                _uploadTransferQueue.Enqueue (transfer);
+            }
+            // and subscribe to completion
+            return await transfer.CompletionSource.Task;
+        }
+
         private DownloadFileTransfer GetQueuedOrExecutingDownloadTransfer (string dropboxPath, string localPath) {
             lock (_transfersLock) {
-                var executing = _currentDownloadTransfers.FirstOrDefault (t => Utils.AreEqualDropboxPaths (t.DropboxPath, dropboxPath) && t.LocalPath == localPath);
+                var executing = _currentDownloadTransfers.FirstOrDefault (t => Utils.AreEqualDropboxPaths (t.DropboxPath, dropboxPath) 
+                                && t.LocalPath == localPath);
                 if (executing != null) {
                     return executing as DownloadFileTransfer;
                 }
 
                 var queued = _downloadTransferQueue.FirstOrDefault (t => Utils.AreEqualDropboxPaths (t.DropboxPath, dropboxPath) && t.LocalPath == localPath);
+                if (queued != null) {
+                    return queued;
+                }
+            }
+
+            return null;
+        }
+
+        private UploadFileTransfer GetQueuedOrExecutingUploadTransfer (string dropboxPath, string localPath) {
+            lock (_transfersLock) {
+                var executing = _currentUploadTransfers.FirstOrDefault (t => Utils.AreEqualDropboxPaths (t.DropboxPath, dropboxPath) 
+                                    && t.LocalPath == localPath);
+                if (executing != null) {
+                    return executing as UploadFileTransfer;
+                }
+
+                var queued = _uploadTransferQueue.FirstOrDefault (t => Utils.AreEqualDropboxPaths (t.DropboxPath, dropboxPath) && t.LocalPath == localPath);
                 if (queued != null) {
                     return queued;
                 }
@@ -147,22 +186,32 @@ namespace DBXSync {
 
                 // move to completed
                 lock (_transfersLock) {
-                    _currentDownloadTransfers.Remove (transfer);
+                    if(transfer is DownloadFileTransfer){
+                        _currentDownloadTransfers.Remove (transfer);
+                    }else if(transfer is UploadFileTransfer){
+                        _currentUploadTransfers.Remove (transfer);
+                    }                    
                     _completedTransfers.Add (transfer);
 
                     Debug.Log ($"[TransferManager] Transfer completed, moving to completed (now {_completedTransfers.Count} completed)");
                 }
             } catch (Exception ex) {
+
                 transfer.CompletionSource.SetException (ex);
+
                 // move to failed
                 lock (_transfersLock) {
-                    _currentDownloadTransfers.Remove (transfer);
+                    if(transfer is DownloadFileTransfer){
+                        _currentDownloadTransfers.Remove (transfer);
+                    }else if(transfer is UploadFileTransfer){
+                        _currentUploadTransfers.Remove (transfer);
+                    }
+
                     _failedTransfers.Add (transfer);
 
                     Debug.Log ($"[TransferManager] Transfer failed, moving to failed (now {_failedTransfers.Count} failed)");
                 }
             }
-
         }
 
         private void DeleteAllTempDownloadFiles () {
