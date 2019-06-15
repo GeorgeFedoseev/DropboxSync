@@ -30,6 +30,12 @@ namespace DBXSync {
 
         public async Task<FileMetadata> ExecuteAsync () {
             var cancellationToken = _cancellationTokenSource.Token;
+
+            // send start request
+            
+            // upload in Parallel.ForEach
+
+            // send finish request
             
             throw new NotImplementedException();
         }
