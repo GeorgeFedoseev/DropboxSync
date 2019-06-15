@@ -31,6 +31,7 @@ namespace DBXSync {
             _dropboxPath = dropboxPath;
             _localTargetPath = localTargetPath;
             _progressCallback = progressCallback;
+            _progress = 0;
             _completionSource = completionSource;            
             _config = config;
 
@@ -96,6 +97,8 @@ namespace DBXSync {
 
                         using (HttpWebResponse response = (HttpWebResponse) request.GetResponse ()) {
 
+                            // TODO: handle error in this response
+
                             lock (syncObject) {
 
                                 var fileMetadataJSONString = response.Headers["Dropbox-API-Result"];
@@ -111,8 +114,7 @@ namespace DBXSync {
                                         
                                         file.Write (buffer, 0, bytesRead);
                                         totalBytesRead += bytesRead;
-                                        _progress = (int)(totalBytesRead * 100 / fileSize);
-                                        _progressCallback.Report (_progress);
+                                        ReportProgress((int)(totalBytesRead * 100 / fileSize));                                      
                                     }
                                 }
 
@@ -132,15 +134,22 @@ namespace DBXSync {
             }
             File.Move(tempDownloadPath, _localTargetPath);
 
-
             // return to the Unity thread
             await new WaitForUpdate();
+
+            // report complete progress
+            ReportProgress(100);
 
             return latestMetadata;
         }
 
         public void Cancel() {
             _cancellationTokenSource.Cancel();
+        }
+
+        private void ReportProgress(int progress){
+            _progress = progress;
+            _progressCallback.Report (progress);
         }
     }
 }
