@@ -47,6 +47,9 @@ namespace DBXSync {
                 throw new FileNotFoundException($"Uploading file not found: {_localPath}");
             }
 
+            // go to background thread            
+            await new WaitForBackgroundThread();
+
             long fileSize = new FileInfo(_localPath).Length;            
 
             // send start request
@@ -69,7 +72,7 @@ namespace DBXSync {
                     HttpWebRequest request = (HttpWebRequest) WebRequest.Create (Endpoints.UPLOAD_APPEND_ENDPOINT);
 
                     // read from local file to buffer                    
-                    int chunkDataLength = await file.ReadAsync(chunkData, (int)totalBytesUploaded, (int)_config.uploadChunkSizeBytes);
+                    int chunkDataLength = await file.ReadAsync(chunkData, 0, (int)_config.uploadChunkSizeBytes);
 
                     var uploadAppendParameters = new UploadAppendRequestParameters(session_id: sessionId, offset: totalBytesUploaded);
                     var parametersJSONString = uploadAppendParameters.ToString();
@@ -80,17 +83,23 @@ namespace DBXSync {
                     request.Method = "POST";
                     request.ContentType = "application/octet-stream";
                     // request.ContentLength = chunkDataLength;
-                    using (Stream postStream = request.GetRequestStream()) {
+                    using (Stream postStream = await request.GetRequestStreamAsync()) {
                         using(var ms = new MemoryStream(chunkData)){
                             ms.SetLength(chunkDataLength);
 
-                            byte[] buffer = new byte[10000];
+                            byte[] buffer = new byte[1000000];
                             int bytesRead = 0;
                             while((bytesRead = await ms.ReadAsync(buffer, 0, buffer.Length)) != 0){                                
                                 // Send the data.
                                 await postStream.WriteAsync(buffer, 0, bytesRead);
                                 long currentlyUploadedBytes = totalBytesUploaded + ms.Position + 1;
+
+                                // return to the Unity thread
+                                await new WaitForUpdate();
                                 ReportProgress((int)(currentlyUploadedBytes * 100 / fileSize));
+                                await new WaitForBackgroundThread();
+
+                                //Debug.Log($"currentlyUploadedBytes = {currentlyUploadedBytes}");
                             }
                         }
                         
@@ -113,6 +122,9 @@ namespace DBXSync {
             // send finish request            
             var metadata = await new UploadFinishRequest(new UploadFinishRequestParameters(sessionId, totalBytesUploaded, _dropboxTargetPath), _config).ExecuteAsync();
             
+            // return to the Unity thread
+            await new WaitForUpdate();
+
             ReportProgress(100);
 
             return metadata;

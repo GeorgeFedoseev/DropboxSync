@@ -48,6 +48,7 @@ public class DropboxUploadFileExampleScript : MonoBehaviour {
 		try {
 			var metadta = await DropboxSync.Main.TransferManager.UploadFileAsync(localFilePath, uploadDropboxPath, new Progress<int>((progress) => {
 				statusText.text = $"Uploading file {progress}%";
+				Debug.Log($"Uploading file {progress}%");
 			}));
 			statusText.text = "<color=green>File uploaded to "+uploadDropboxPath+"</color>";
 		}catch(Exception ex){
