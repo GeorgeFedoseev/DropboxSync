@@ -63,7 +63,7 @@ namespace DBXSync {
             long totalChunks = 1 + fileSize / _config.uploadChunkSizeBytes;
             long totalBytesUploaded = 0;
             
-            // uploading chunks is serial (cant be in parallel): https://www.dropboxforum.com/t5/API-Support-Feedback/Using-upload-session-append-v2-is-is-possible-to-upload-chunks/m-p/225947/highlight/true#M12305
+            // uploading chunks is serial (can't be in parallel): https://www.dropboxforum.com/t5/API-Support-Feedback/Using-upload-session-append-v2-is-is-possible-to-upload-chunks/m-p/225947/highlight/true#M12305
             using (FileStream file = new FileStream (_localPath, FileMode.Open, FileAccess.Read, FileShare.Read)) {
 
                 var chunkDataBuffer = new byte[_config.uploadChunkSizeBytes];

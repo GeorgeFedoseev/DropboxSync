@@ -22,9 +22,7 @@ namespace DBXSync {
             _endpoint = endpoint;
             _parameters = parameters;
             _config = config;
-        }
-
-       
+        }      
 
 
         public async Task<RESP_T> ExecuteAsync(byte[] payload = null, IProgress<int> progress = null, CancellationToken? cancellationToken = null){
@@ -32,8 +30,7 @@ namespace DBXSync {
 
                 if(cancellationToken != null){
                     cancellationToken.Value.Register(client.CancelAsync);
-                }
-                
+                }               
 
                 var parametersJSONString = UnityEngine.JsonUtility.ToJson(_parameters);
                 
@@ -44,8 +41,6 @@ namespace DBXSync {
 
                 client.Headers.Set("Authorization", $"Bearer {_config.accessToken}");
 				client.Headers.Set("Content-Type", payload == null ? "application/json" : "application/octet-stream");
-
-                
 
                 if(progress != null) {
                     client.UploadProgressChanged += (object sender, UploadProgressChangedEventArgs e) => {
@@ -64,11 +59,8 @@ namespace DBXSync {
                         responseBytes = await client.UploadDataTaskAsync(new System.Uri(_endpoint), "POST", payload != null ? payload : new byte[0]);
                     }                    
                 }catch (WebException ex){
-                    Utils.HandleDropboxRequestWebException(ex, _parameters, _endpoint);                 
-                }            
-
-
-                
+                    Utils.RethrowDropboxRequestWebException(ex, _parameters, _endpoint);                 
+                }
 
                 var responseString = Encoding.UTF8.GetString(responseBytes);
 

@@ -18,7 +18,7 @@ namespace DBXSync {
         }
 
 
-        public static void HandleDropboxRequestWebException(WebException ex, RequestParameters parameters, string endpoint){
+        public static void RethrowDropboxRequestWebException(WebException ex, RequestParameters parameters, string endpoint){
             Exception exceptionToThrow = ex;          
                     
             try {

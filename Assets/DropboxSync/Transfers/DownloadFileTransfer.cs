@@ -25,8 +25,7 @@ namespace DBXSync {
         private CancellationTokenSource _cancellationTokenSource;
 
         public DownloadFileTransfer (string dropboxPath, string localTargetPath, IProgress<int> progressCallback, 
-                                    TaskCompletionSource<FileMetadata> completionSource, DropboxSyncConfiguration config) {
-            // TODO: validate paths
+                                    TaskCompletionSource<FileMetadata> completionSource, DropboxSyncConfiguration config) {            
             _metadata = null;
             _dropboxPath = dropboxPath;
             _localTargetPath = localTargetPath;
@@ -39,8 +38,7 @@ namespace DBXSync {
         }
 
         public DownloadFileTransfer (FileMetadata metadata, string localTargetPath, IProgress<int> progressCallback, 
-                                    TaskCompletionSource<FileMetadata> completionSource, DropboxSyncConfiguration config) {
-            // TODO: validate paths
+                                    TaskCompletionSource<FileMetadata> completionSource, DropboxSyncConfiguration config) {            
             _metadata = metadata;
             _dropboxPath = metadata.path_lower;
             _localTargetPath = localTargetPath;
@@ -85,7 +83,8 @@ namespace DBXSync {
 
                         HttpWebRequest request = (HttpWebRequest) WebRequest.Create (Endpoints.DOWNLOAD_FILE_ENDPOINT);
 
-                        var parametersJSONString = new PathParameters { path = $"rev:{_metadata.rev}"}.ToString();
+                        var requestParameters = new PathParameters { path = $"rev:{_metadata.rev}"};
+                        var parametersJSONString = requestParameters.ToString();
 
                         request.Headers.Set ("Authorization", "Bearer " + _config.accessToken);
                         request.Headers.Set ("Dropbox-API-Arg", parametersJSONString);
@@ -93,39 +92,39 @@ namespace DBXSync {
                         request.AddRange (start * _config.downloadChunkSizeBytes,
                                             start * _config.downloadChunkSizeBytes + _config.downloadChunkSizeBytes - 1);
 
-                        //Debug.LogWarning("Downloading chunk "+start.ToString());
+                        
+                        try {
+                            using (HttpWebResponse response = (HttpWebResponse) request.GetResponse ()) {
 
-                        using (HttpWebResponse response = (HttpWebResponse) request.GetResponse ()) {
+                                lock (syncObject) {
 
-                            // TODO: handle error in this response
+                                    var fileMetadataJSONString = response.Headers["Dropbox-API-Result"];
+                                    latestMetadata = JsonUtility.FromJson<FileMetadata>(fileMetadataJSONString);
 
-                            lock (syncObject) {
+                                    file.Seek (start * _config.downloadChunkSizeBytes, SeekOrigin.Begin);
 
-                                var fileMetadataJSONString = response.Headers["Dropbox-API-Result"];
-                                latestMetadata = JsonUtility.FromJson<FileMetadata>(fileMetadataJSONString);
-
-                                file.Seek (start * _config.downloadChunkSizeBytes, SeekOrigin.Begin);
-
-                                using (Stream responseStream = response.GetResponseStream ()) {
-                                    byte[] buffer = new byte[8192];
-                                    int bytesRead;
-                                    while ((bytesRead = responseStream.Read (buffer, 0, buffer.Length)) > 0) {
-                                        cancellationToken.ThrowIfCancellationRequested();
-                                        
-                                        file.Write (buffer, 0, bytesRead);
-                                        totalBytesRead += bytesRead;
-                                        ReportProgress((int)(totalBytesRead * 100 / fileSize));                                      
+                                    using (Stream responseStream = response.GetResponseStream ()) {
+                                        byte[] buffer = new byte[8192];
+                                        int bytesRead;
+                                        while ((bytesRead = responseStream.Read (buffer, 0, buffer.Length)) > 0) {
+                                            cancellationToken.ThrowIfCancellationRequested();
+                                            
+                                            file.Write (buffer, 0, bytesRead);
+                                            totalBytesRead += bytesRead;
+                                            ReportProgress((int)(totalBytesRead * 100 / fileSize));                                      
+                                        }
                                     }
+
+                                    chunksDownloaded += 1;
                                 }
-
-                                chunksDownloaded += 1;
                             }
-                        }
+                        }catch(WebException ex){
+                            Utils.RethrowDropboxRequestWebException(ex, requestParameters, Endpoints.DOWNLOAD_FILE_ENDPOINT);
+                        }                        
                 });                
-            }
-            
+            }            
 
-            // TODO: 
+            
             // ensure final folder exists
             Utils.EnsurePathFoldersExist (_localTargetPath);
             // move file to final location (maybe replace old one) 
