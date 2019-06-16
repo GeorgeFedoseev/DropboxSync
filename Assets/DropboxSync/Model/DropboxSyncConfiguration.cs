@@ -11,7 +11,7 @@ namespace DBXSync {
         public int downloadChunckedThreadNum = 4;
 
         // uploading
-        public long uploadChunkSizeBytes = 150000000;        
+        public long uploadChunkSizeBytes = 150000000;
 
         // transfers
         public int maxSimultaneousDownloadFileTransfers = 3;

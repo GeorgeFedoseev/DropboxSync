@@ -53,10 +53,11 @@ namespace DBXSync {
             long fileSize = new FileInfo(_localPath).Length;            
 
             // send start request
-            var startUploadResponse = await new UploadStartRequest(new UploadStartRequestParameters(), _config).ExecuteAsync();
+            Debug.LogWarning($"Sending start upload request..."); 
+            var startUploadResponse = await new UploadStartRequest(new UploadStartRequestParameters(), _config).ExecuteAsync(new byte[0]);
             string sessionId = startUploadResponse.session_id;      
 
-            Debug.Log($"Starting upload with session id {sessionId}");     
+            Debug.LogWarning($"Starting upload with session id {sessionId}");     
 
             long chunksUploaded = 0;
             long totalChunks = 1 + fileSize / _config.uploadChunkSizeBytes;
@@ -65,67 +66,36 @@ namespace DBXSync {
             // uploading chunks is serial (cant be in parallel): https://www.dropboxforum.com/t5/API-Support-Feedback/Using-upload-session-append-v2-is-is-possible-to-upload-chunks/m-p/225947/highlight/true#M12305
             using (FileStream file = new FileStream (_localPath, FileMode.Open, FileAccess.Read, FileShare.Read)) {
 
-                var chunkData = new byte[_config.uploadChunkSizeBytes];
+                var chunkDataBuffer = new byte[_config.uploadChunkSizeBytes];
 
                 foreach (long chunkIndex in Utils.LongRange (0, totalChunks)) {
-
-                    HttpWebRequest request = (HttpWebRequest) WebRequest.Create (Endpoints.UPLOAD_APPEND_ENDPOINT);
-
                     // read from local file to buffer                    
-                    int chunkDataLength = await file.ReadAsync(chunkData, 0, (int)_config.uploadChunkSizeBytes);
+                    int chunkDataLength = await file.ReadAsync(chunkDataBuffer, 0, (int)_config.uploadChunkSizeBytes);                   
 
                     var uploadAppendParameters = new UploadAppendRequestParameters(session_id: sessionId, offset: totalBytesUploaded);
-                    var parametersJSONString = uploadAppendParameters.ToString();
+                    var uploadAppendRequest = new UploadAppendRequest(uploadAppendParameters, _config);
 
-                    request.Headers.Set ("Authorization", "Bearer " + _config.accessToken);
-                    request.Headers.Set ("Dropbox-API-Arg", parametersJSONString);                    
-                    
-                    request.Method = "POST";
-                    request.ContentType = "application/octet-stream";
-                    // request.ContentLength = chunkDataLength;
-                    using (Stream postStream = await request.GetRequestStreamAsync()) {
-                        using(var ms = new MemoryStream(chunkData)){
-                            ms.SetLength(chunkDataLength);
-
-                            byte[] buffer = new byte[1000000];
-                            int bytesRead = 0;
-                            while((bytesRead = await ms.ReadAsync(buffer, 0, buffer.Length)) != 0){                                
-                                // Send the data.
-                                await postStream.WriteAsync(buffer, 0, bytesRead);
-                                long currentlyUploadedBytes = totalBytesUploaded + ms.Position + 1;
-
-                                // return to the Unity thread
-                                await new WaitForUpdate();
-                                ReportProgress((int)(currentlyUploadedBytes * 100 / fileSize));
-                                await new WaitForBackgroundThread();
-
-                                //Debug.Log($"currentlyUploadedBytes = {currentlyUploadedBytes}");
-                            }
-                        }
-                        
-                        postStream.Close();
-                    }
-
-                    try {
-                        var appendChunkResponse = await request.GetResponseAsync();
-                        appendChunkResponse.Dispose();
-                    }catch (WebException ex) {
-                        Utils.HandleDropboxRequestWebException(ex, uploadAppendParameters, Endpoints.UPLOAD_APPEND_ENDPOINT);
-                    }                       
+                    await uploadAppendRequest.ExecuteAsync(chunkDataBuffer.SubArray(0, chunkDataLength), new Progress<int>((chunkUploadProgress) => {
+                        // Debug.Log($"Chunk {chunksUploaded} upload progress: {progress}");
+                        long currentlyUploadedBytes = totalBytesUploaded + chunkDataLength/100*chunkUploadProgress;
+                        ReportProgress((int)(currentlyUploadedBytes * 100 / fileSize));
+                    }), cancellationToken);
 
                     chunksUploaded += 1;
-                    totalBytesUploaded += chunkDataLength;
-                    
+                    totalBytesUploaded += chunkDataLength;                    
                 }                
             }
 
+            Debug.LogWarning($"Committing upload...");
             // send finish request            
-            var metadata = await new UploadFinishRequest(new UploadFinishRequestParameters(sessionId, totalBytesUploaded, _dropboxTargetPath), _config).ExecuteAsync();
+            var metadata = await new UploadFinishRequest(new UploadFinishRequestParameters(sessionId, totalBytesUploaded, _dropboxTargetPath), _config).ExecuteAsync(new byte[0]);
             
             // return to the Unity thread
             await new WaitForUpdate();
 
             ReportProgress(100);
+
+            Debug.LogWarning($"Upload done.");
 
             return metadata;
         }
@@ -135,8 +105,10 @@ namespace DBXSync {
         }
 
         private void ReportProgress(int progress){
-            _progress = progress;
-            _progressCallback.Report (progress);
+            if(progress != _progress){
+                _progress = progress;
+                _progressCallback.Report (progress);
+            }            
         }
     }
 }

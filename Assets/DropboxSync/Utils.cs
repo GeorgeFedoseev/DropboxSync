@@ -11,6 +11,12 @@ namespace DBXSync {
 
     public static class Utils {
 
+        public static T[] SubArray<T>(this T[] data, int index, int length) {
+            T[] result = new T[length];
+            Array.Copy(data, index, result, 0, length);
+            return result;
+        }
+
 
         public static void HandleDropboxRequestWebException(WebException ex, RequestParameters parameters, string endpoint){
             Exception exceptionToThrow = ex;          
@@ -22,7 +28,7 @@ namespace DBXSync {
                     try {
                         var errorResponse = JsonUtility.FromJson<Response>(errorResponseString);
                         if(!string.IsNullOrEmpty(errorResponse.error_summary)){
-                            exceptionToThrow = new DropboxAPIException($"error: {errorResponse.error_summary}; request parameters: {parameters}; endpoint: {endpoint}" );
+                            exceptionToThrow = new DropboxAPIException($"error: {errorResponse.error_summary}; request parameters: {parameters}; endpoint: {endpoint}; full-response: {errorResponseString}" );
                         }else{
                             // empty error-summary
                             exceptionToThrow = new DropboxAPIException($"error: {errorResponseString}; request parameters: {parameters}; endpoint: {endpoint}" );                                            
