@@ -75,11 +75,29 @@ namespace DBXSync {
                     var uploadAppendParameters = new UploadAppendRequestParameters(session_id: sessionId, offset: totalBytesUploaded);
                     var uploadAppendRequest = new UploadAppendRequest(uploadAppendParameters, _config);
 
-                    await uploadAppendRequest.ExecuteAsync(chunkDataBuffer.SubArray(0, chunkDataLength), new Progress<int>((chunkUploadProgress) => {
-                        // Debug.Log($"Chunk {chunksUploaded} upload progress: {progress}");
-                        long currentlyUploadedBytes = totalBytesUploaded + chunkDataLength/100*chunkUploadProgress;
-                        ReportProgress((int)(currentlyUploadedBytes * 100 / fileSize));
-                    }), cancellationToken);
+                    int failedAttempts = 0;
+                    while(true){
+                        try {                           
+                            await uploadAppendRequest.ExecuteAsync(chunkDataBuffer.SubArray(0, chunkDataLength), new Progress<int>((chunkUploadProgress) => {
+                                // Debug.Log($"Chunk {chunksUploaded} upload progress: {progress}");
+                                long currentlyUploadedBytes = totalBytesUploaded + chunkDataLength/100*chunkUploadProgress;
+                                ReportProgress(Mathf.Clamp((int)(currentlyUploadedBytes * 100 / fileSize), 0, 100));
+                            }), cancellationToken);
+
+                            // success - exit retry block
+                            break;
+                        }catch(Exception ex){
+                            failedAttempts += 1;
+                            if(failedAttempts <= _config.chunkTransferMaxFailedAttempts){
+                                Debug.LogWarning($"Failed to upload chunk of data. Retry {failedAttempts}/{_config.chunkTransferMaxFailedAttempts}\nException: {ex}");
+                                await new WaitForSeconds(_config.chunkTransferRetryDelaySeconds);
+                                continue;                                
+                            }else{
+                                // exit retry loop
+                                throw ex;
+                            }
+                        }
+                    }                    
 
                     chunksUploaded += 1;
                     totalBytesUploaded += chunkDataLength;                    

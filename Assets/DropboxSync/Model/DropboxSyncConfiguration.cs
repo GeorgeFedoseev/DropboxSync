@@ -6,9 +6,13 @@ namespace DBXSync {
         public string accessToken;
         public string cacheDirecoryPath;
 
+        // retry
+        public int chunkTransferMaxFailedAttempts = 3;
+        public int chunkTransferRetryDelaySeconds = 3;
+
         // downloading
         public long downloadChunkSizeBytes = 10000000;
-        public int downloadChunckedThreadNum = 4;
+        public int downloadChunckedThreadNum = 2;
 
         // uploading
         public long uploadChunkSizeBytes = 150000000;

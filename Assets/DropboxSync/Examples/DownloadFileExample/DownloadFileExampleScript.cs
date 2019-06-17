@@ -4,18 +4,22 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using DBXSync;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class DownloadFileExampleScript : MonoBehaviour
 {
+
+    public Text statusText;
     // Start is called before the first frame update
     async void Start()
     {
 
         var downloadTasks = new List<Task<string>>();
         for(var i = 0; i < 5; i++){
-            downloadTasks.Add(DropboxSync.Main.CacheManager.GetLocalFilePathAsync("/DropboxSyncExampleFolder/video.mp4", 
+            downloadTasks.Add(DropboxSync.Main.CacheManager.GetLocalFilePathAsync("/DropboxSyncExampleFolder/embedded-gallery.apk", 
                     new Progress<int>((progress) => {
                         //Debug.Log($"Downloading: {progress}%");
+                        statusText.text = $"Downloading: {progress}%";
                     })));
         }
 
