@@ -68,8 +68,7 @@ namespace DBXSync {
 
             Utils.EnsurePathFoldersExist (tempDownloadPath);
             using (FileStream file = new FileStream (tempDownloadPath, FileMode.Create, FileAccess.Write, FileShare.Write)) {
-                file.SetLength (fileSize); // set the length first
-
+                
                 object syncObject = new object (); // synchronize file writes
 
                 long chunksDownloaded = 0;
@@ -78,6 +77,9 @@ namespace DBXSync {
 
                 //Debug.LogWarning("Total chunks: "+totalChunks.ToString());                
 
+
+                // TODO: change to sequential downloads with settings file size after each succesful (so that its possible to continue from last succesful chunk in case of failure event after app crash)
+                file.SetLength (fileSize); // set the length first
                 Parallel.ForEach (Utils.LongRange (0, totalChunks),
                     new ParallelOptions () { MaxDegreeOfParallelism = _config.downloadChunckedThreadNum }, (start) => {
 
