@@ -215,7 +215,7 @@ namespace DBXSync {
         }
 
         private void DeleteAllTempDownloadFiles () {
-            foreach (string file in Directory.GetFiles (_config.cacheDirecoryPath, "*.download", SearchOption.AllDirectories)) {
+            foreach (string file in Directory.GetFiles (_config.cacheDirecoryPath, $"*{DropboxSyncConfiguration.INTERMEDIATE_DOWNLOAD_FILE_EXTENSION}", SearchOption.AllDirectories)) {
                 File.Delete (file);
             }
         }

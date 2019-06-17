@@ -69,7 +69,7 @@ namespace DBXSync {
 
         public static string GetMetadataLocalFilePath(string dropboxPath, DropboxSyncConfiguration config){
             dropboxPath = UnifyDropboxPath(dropboxPath);
-			return DropboxPathToLocalPath(dropboxPath, config)+".dbxsync";
+			return DropboxPathToLocalPath(dropboxPath, config) + DropboxSyncConfiguration.METADATA_EXTENSION;
 		}
 
         public static string DropboxPathToLocalPath(string dropboxPath, DropboxSyncConfiguration config){
@@ -88,7 +88,7 @@ namespace DBXSync {
 
         public static string GetDownloadTempFilePath(string targetLocalPath, string content_hash){
             string piece_of_hash = content_hash.Substring(0, 10);
-            return $"{targetLocalPath}.{piece_of_hash}.download";                   
+            return $"{targetLocalPath}.{piece_of_hash}{DropboxSyncConfiguration.INTERMEDIATE_DOWNLOAD_FILE_EXTENSION}";
         }
 
         public static bool IsAccessTokenValid(string accessToken) {

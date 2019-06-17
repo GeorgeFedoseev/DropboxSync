@@ -3,10 +3,14 @@ using System.IO;
 namespace DBXSync {
     
     public class DropboxSyncConfiguration {
+        public static string METADATA_EXTENSION = ".dbxsync";
+        public static string INTERMEDIATE_DOWNLOAD_FILE_EXTENSION = ".download";
+
+
         public string accessToken;
         public string cacheDirecoryPath;
 
-        // retry
+        // retry chunk transfers
         public int chunkTransferMaxFailedAttempts = 3;
         public int chunkTransferRetryDelaySeconds = 3;
 

@@ -74,7 +74,8 @@ namespace DBXSync {
 
                     var uploadAppendParameters = new UploadAppendRequestParameters(session_id: sessionId, offset: totalBytesUploaded);
                     var uploadAppendRequest = new UploadAppendRequest(uploadAppendParameters, _config);
-
+                    
+                    // retry loop
                     int failedAttempts = 0;
                     while(true){
                         try {                           
@@ -84,16 +85,17 @@ namespace DBXSync {
                                 ReportProgress(Mathf.Clamp((int)(currentlyUploadedBytes * 100 / fileSize), 0, 100));
                             }), cancellationToken);
 
-                            // success - exit retry block
+                            // success - exit retry loop
                             break;
                         }catch(Exception ex){
                             failedAttempts += 1;
                             if(failedAttempts <= _config.chunkTransferMaxFailedAttempts){
                                 Debug.LogWarning($"Failed to upload chunk of data. Retry {failedAttempts}/{_config.chunkTransferMaxFailedAttempts}\nException: {ex}");
+                                // wait before attempting again
                                 await new WaitForSeconds(_config.chunkTransferRetryDelaySeconds);
                                 continue;                                
                             }else{
-                                // exit retry loop
+                                // attempts exceeded - exit retry loop
                                 throw ex;
                             }
                         }
