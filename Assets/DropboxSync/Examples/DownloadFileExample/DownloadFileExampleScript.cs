@@ -17,9 +17,8 @@ public class DownloadFileExampleScript : MonoBehaviour
         var downloadTasks = new List<Task<string>>();
         for(var i = 0; i < 5; i++){
             downloadTasks.Add(DropboxSync.Main.CacheManager.GetLocalFilePathAsync("/DropboxSyncExampleFolder/embedded-gallery.apk", 
-                    new Progress<int>((progress) => {
-                        //Debug.Log($"Downloading: {progress}%");
-                        statusText.text = $"Downloading: {progress}%";
+                    new Progress<TransferProgressReport>((report) => {                        
+                        statusText.text = $"Downloading: {report.progress}% {report.bytesPerSecondFormatted}";
                     })));
         }
 

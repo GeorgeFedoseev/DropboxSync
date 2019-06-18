@@ -16,12 +16,12 @@ namespace DBXSync {
             _transferManager = transferManager;
         }
 
-        public async Task<string> GetLocalFilePathAsync(string dropboxPath, IProgress<int> progressCallback) {
+        public async Task<string> GetLocalFilePathAsync(string dropboxPath, IProgress<TransferProgressReport> progressCallback) {
             await MaybeCacheFileAsync(dropboxPath, progressCallback);
             return Utils.DropboxPathToLocalPath(dropboxPath, _config);
         }
 
-        private async Task MaybeCacheFileAsync(string dropboxPath, IProgress<int> progressCallback){
+        private async Task MaybeCacheFileAsync(string dropboxPath, IProgress<TransferProgressReport> progressCallback){
             var remoteMetadata = (await new GetFileMetadataRequest (new GetMetadataRequestParameters {
                     path = dropboxPath
                 }, _config).ExecuteAsync ()).GetMetadata ();            
@@ -29,8 +29,7 @@ namespace DBXSync {
             var localFilePath = Utils.DropboxPathToLocalPath(dropboxPath, _config);
 
             // decide if need to download a new version
-            if(File.Exists(localFilePath) && !ShouldUpdateFileFromDropbox(remoteMetadata)){
-                progressCallback.Report(100);
+            if(File.Exists(localFilePath) && !ShouldUpdateFileFromDropbox(remoteMetadata)){                
                 return;
             }
             

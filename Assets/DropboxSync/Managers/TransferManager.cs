@@ -96,19 +96,19 @@ namespace DBXSync {
         }
 
         // METHODS
-        public async Task<FileMetadata> DownloadFileAsync (string dropboxPath, string localPath, IProgress<int> progressCallback) {
+        public async Task<FileMetadata> DownloadFileAsync (string dropboxPath, string localPath, IProgress<TransferProgressReport> progressCallback) {
             var completionSource = new TaskCompletionSource<FileMetadata> ();
             var downloadTransfer = new DownloadFileTransfer (dropboxPath, localPath, progressCallback, completionSource, _config);
             return await _DownloadFileAsync (downloadTransfer);
         }
 
-        public async Task<FileMetadata> DownloadFileAsync (FileMetadata metadata, string localPath, IProgress<int> progressCallback) {
+        public async Task<FileMetadata> DownloadFileAsync (FileMetadata metadata, string localPath, IProgress<TransferProgressReport> progressCallback) {
             var completionSource = new TaskCompletionSource<FileMetadata> ();
             var downloadTransfer = new DownloadFileTransfer (metadata, localPath, progressCallback, completionSource, _config);
             return await _DownloadFileAsync (downloadTransfer);
         }
 
-        public async Task<FileMetadata> UploadFileAsync(string localPath, string dropboxPath, IProgress<int> progressCallback) {
+        public async Task<FileMetadata> UploadFileAsync(string localPath, string dropboxPath, IProgress<TransferProgressReport> progressCallback) {
             var completionSource = new TaskCompletionSource<FileMetadata> ();
             var uploadTransfer = new UploadFileTransfer (localPath, dropboxPath, progressCallback, completionSource, _config);
             return await _UploadFileAsync (uploadTransfer);

@@ -13,19 +13,21 @@ namespace DBXSync {
         public string DropboxPath => _dropboxTargetPath;
         public string LocalPath => _localPath;
         public int Progress => _progress; 
-        public IProgress<int> ProgressCallback => _progressCallback;
+        public double BytesPerSecond => _bytesPerSecond;
+        public IProgress<TransferProgressReport> ProgressCallback => _progressCallback;
         public TaskCompletionSource<FileMetadata> CompletionSource => _completionSource;
 
         private string _dropboxTargetPath;        
         private string _localPath;
         private DropboxSyncConfiguration _config;
         private int _progress;
-        private IProgress<int> _progressCallback;
+        private double _bytesPerSecond;
+        private IProgress<TransferProgressReport> _progressCallback;
         private TaskCompletionSource<FileMetadata> _completionSource;
         private CancellationTokenSource _cancellationTokenSource;
         
 
-        public UploadFileTransfer(string localPath, string dropboxTargetPath, IProgress<int> progressCallback, 
+        public UploadFileTransfer(string localPath, string dropboxTargetPath, IProgress<TransferProgressReport> progressCallback, 
                                     TaskCompletionSource<FileMetadata> completionSource, DropboxSyncConfiguration config)
         {
             _config = config;
@@ -47,8 +49,7 @@ namespace DBXSync {
                 throw new FileNotFoundException($"Uploading file not found: {_localPath}");
             }
 
-            // go to background thread            
-            await new WaitForBackgroundThread();
+            var speedTracker = new TransferSpeedTracker(50, TimeSpan.FromMilliseconds(500));
 
             long fileSize = new FileInfo(_localPath).Length;            
 
@@ -82,7 +83,8 @@ namespace DBXSync {
                             await uploadAppendRequest.ExecuteAsync(chunkDataBuffer.SubArray(0, chunkDataLength), new Progress<int>((chunkUploadProgress) => {
                                 // Debug.Log($"Chunk {chunksUploaded} upload progress: {progress}");
                                 long currentlyUploadedBytes = totalBytesUploaded + chunkDataLength/100*chunkUploadProgress;
-                                ReportProgress(Mathf.Clamp((int)(currentlyUploadedBytes * 100 / fileSize), 0, 100));
+                                speedTracker.SetBytesCompleted(currentlyUploadedBytes);
+                                ReportProgress(Mathf.Clamp((int)(currentlyUploadedBytes * 100 / fileSize), 0, 100), speedTracker.GetBytesPerSecond());
                             }), cancellationToken);
 
                             // success - exit retry loop
@@ -110,10 +112,7 @@ namespace DBXSync {
             // send finish request            
             var metadata = await new UploadFinishRequest(new UploadFinishRequestParameters(sessionId, totalBytesUploaded, _dropboxTargetPath), _config).ExecuteAsync(new byte[0]);
             
-            // return to the Unity thread
-            await new WaitForUpdate();
-
-            ReportProgress(100);
+            ReportProgress(100, speedTracker.GetBytesPerSecond());
 
             Debug.LogWarning($"Upload done.");
 
@@ -124,11 +123,12 @@ namespace DBXSync {
             _cancellationTokenSource.Cancel();
         }
 
-        private void ReportProgress(int progress){
-            if(progress != _progress){
+        private void ReportProgress(int progress, double bytesPerSecond){            
+            if(progress != _progress || bytesPerSecond != _bytesPerSecond){
                 _progress = progress;
-                _progressCallback.Report (progress);
-            }            
+                _bytesPerSecond = bytesPerSecond;                
+                _progressCallback.Report (new TransferProgressReport(_progress, bytesPerSecond));    
+            }                                
         }
     }
 }

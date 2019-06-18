@@ -11,8 +11,9 @@ using UnityEngine.UI;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Threading.Tasks;
 
-public class DropboxUploadFileExampleScript : MonoBehaviour {
+public class UploadFileExampleScript : MonoBehaviour {
 
 	public InputField localFileInput;
 	public Button uploadButton;
@@ -43,18 +44,17 @@ public class DropboxUploadFileExampleScript : MonoBehaviour {
 		var localFilePath = localFileInput.text;
 		var uploadDropboxPath = Path.Combine("/DropboxSyncExampleFolder/", Path.GetFileName(localFilePath));
 
-		Debug.Log(string.Format("Uploading {0} to Dropbox {1}...", localFilePath, uploadDropboxPath));
+		
+		var uploadTasks = new List<Task<FileMetadata>>();
+        for(var i = 0; i < 5; i++){
+            uploadTasks.Add(DropboxSync.Main.TransferManager.UploadFileAsync(localFilePath, uploadDropboxPath, new Progress<TransferProgressReport>((report) => {
+				statusText.text = $"Uploading file {report.progress}% {report.bytesPerSecondFormatted}";				
+			})));
+        }
 
-		try {
-			var metadta = await DropboxSync.Main.TransferManager.UploadFileAsync(localFilePath, uploadDropboxPath, new Progress<int>((progress) => {
-				statusText.text = $"Uploading file {progress}%";
-				Debug.Log($"Uploading file {progress}%");
-			}));
-			statusText.text = "<color=green>File uploaded to "+uploadDropboxPath+"</color>";
-		}catch(Exception ex){
-			statusText.text = $"<color=red>Failed to upload file: {ex}</color>";
-			Debug.LogError($"Error uploading file: {ex}");			
-		}
+        var results = await Task.WhenAll(uploadTasks);
+				
+        print("All file uploads completed");		
 
 		uploadButton.interactable = true;		
 	}

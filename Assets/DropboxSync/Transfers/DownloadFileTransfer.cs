@@ -12,7 +12,8 @@ namespace DBXSync {
         public string DropboxPath => _dropboxPath;
         public string LocalPath => _localTargetPath;
         public int Progress => _progress; 
-        public IProgress<int> ProgressCallback => _progressCallback;
+        public double BytesPerSecond => _bytesPerSecond;
+        public IProgress<TransferProgressReport> ProgressCallback => _progressCallback;
         public TaskCompletionSource<FileMetadata> CompletionSource => _completionSource;
 
         private string _dropboxPath;
@@ -20,11 +21,12 @@ namespace DBXSync {
         private string _localTargetPath;
         private DropboxSyncConfiguration _config;
         private int _progress;
-        private IProgress<int> _progressCallback;
+        private double _bytesPerSecond;
+        private IProgress<TransferProgressReport> _progressCallback;
         private TaskCompletionSource<FileMetadata> _completionSource;
         private CancellationTokenSource _cancellationTokenSource;
 
-        public DownloadFileTransfer (string dropboxPath, string localTargetPath, IProgress<int> progressCallback, 
+        public DownloadFileTransfer (string dropboxPath, string localTargetPath, IProgress<TransferProgressReport> progressCallback, 
                                     TaskCompletionSource<FileMetadata> completionSource, DropboxSyncConfiguration config) {            
             _metadata = null;
             _dropboxPath = dropboxPath;
@@ -37,7 +39,7 @@ namespace DBXSync {
             _cancellationTokenSource = new CancellationTokenSource();
         }
 
-        public DownloadFileTransfer (FileMetadata metadata, string localTargetPath, IProgress<int> progressCallback, 
+        public DownloadFileTransfer (FileMetadata metadata, string localTargetPath, IProgress<TransferProgressReport> progressCallback, 
                                     TaskCompletionSource<FileMetadata> completionSource, DropboxSyncConfiguration config) {            
             _metadata = metadata;
             _dropboxPath = metadata.path_lower;
@@ -61,7 +63,9 @@ namespace DBXSync {
             string tempDownloadPath = Utils.GetDownloadTempFilePath(_localTargetPath, _metadata.content_hash);            
 
             long fileSize = _metadata.size;
-            FileMetadata latestMetadata = null;            
+            FileMetadata latestMetadata = null;
+
+            var speedTracker = new TransferSpeedTracker(1000, TimeSpan.FromMilliseconds(1000));  
 
             // download chunk by chunk to temp file
             Utils.EnsurePathFoldersExist (tempDownloadPath);
@@ -103,11 +107,11 @@ namespace DBXSync {
                                     while ((bytesRead = await responseStream.ReadAsync (buffer, 0, buffer.Length)) > 0) {
                                         cancellationToken.ThrowIfCancellationRequested();
 
-                                        
-                                        
                                         await file.WriteAsync (buffer, 0, bytesRead);
                                         totalBytesRead += bytesRead;
-                                        ReportProgress((int)(totalBytesRead * 100 / fileSize));                                      
+
+                                        speedTracker.SetBytesCompleted(totalBytesRead);
+                                        ReportProgress((int)(totalBytesRead * 100 / fileSize), speedTracker.GetBytesPerSecond());                                      
                                     }
                                 }
 
@@ -153,7 +157,7 @@ namespace DBXSync {
             File.Move(tempDownloadPath, _localTargetPath);
 
             // report complete progress
-            ReportProgress(100);
+            ReportProgress(100, speedTracker.GetBytesPerSecond());
 
             return latestMetadata;
         }        
@@ -162,9 +166,12 @@ namespace DBXSync {
             _cancellationTokenSource.Cancel();
         }
 
-        private void ReportProgress(int progress){
-            _progress = progress;
-            _progressCallback.Report (progress);
+        private void ReportProgress(int progress, double bytesPerSecond){
+            if(progress != _progress || bytesPerSecond != _bytesPerSecond){
+                _progress = progress;
+                _bytesPerSecond = bytesPerSecond;                
+                _progressCallback.Report (new TransferProgressReport(_progress, bytesPerSecond));    
+            }  
         }
     }
 }
