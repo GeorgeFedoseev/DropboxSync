@@ -64,68 +64,86 @@ namespace DBXSync {
             FileMetadata latestMetadata = null;
 
             // go to background thread            
-            await new WaitForBackgroundThread();
+           // await new WaitForBackgroundThread();
 
+            // download chunk by chunk to temp file
             Utils.EnsurePathFoldersExist (tempDownloadPath);
             using (FileStream file = new FileStream (tempDownloadPath, FileMode.Create, FileAccess.Write, FileShare.Write)) {
-                
-                object syncObject = new object (); // synchronize file writes
 
                 long chunksDownloaded = 0;
                 long totalChunks = 1 + fileSize / _config.downloadChunkSizeBytes;
                 long totalBytesRead = 0;
-
-                //Debug.LogWarning("Total chunks: "+totalChunks.ToString());                
-
-
-                // TODO: change to sequential downloads with settings file size after each succesful (so that its possible to continue from last succesful chunk in case of failure event after app crash)
+                
                 file.SetLength (fileSize); // set the length first
-                Parallel.ForEach (Utils.LongRange (0, totalChunks),
-                    new ParallelOptions () { MaxDegreeOfParallelism = _config.downloadChunckedThreadNum }, (start) => {
 
-                        HttpWebRequest request = (HttpWebRequest) WebRequest.Create (Endpoints.DOWNLOAD_FILE_ENDPOINT);
+                foreach (long chunkIndex in Utils.LongRange (0, totalChunks)) {
 
-                        var requestParameters = new PathParameters { path = $"rev:{_metadata.rev}"};
-                        var parametersJSONString = requestParameters.ToString();
+                    HttpWebRequest request = (HttpWebRequest) WebRequest.Create (Endpoints.DOWNLOAD_FILE_ENDPOINT);
 
-                        request.Headers.Set ("Authorization", "Bearer " + _config.accessToken);
-                        request.Headers.Set ("Dropbox-API-Arg", parametersJSONString);
+                    var requestParameters = new PathParameters { path = $"rev:{_metadata.rev}"};
+                    var parametersJSONString = requestParameters.ToString();
 
-                        request.AddRange (start * _config.downloadChunkSizeBytes,
-                                            start * _config.downloadChunkSizeBytes + _config.downloadChunkSizeBytes - 1);
+                    request.Headers.Set ("Authorization", "Bearer " + _config.accessToken);
+                    request.Headers.Set ("Dropbox-API-Arg", parametersJSONString);
 
-                        
+                    request.AddRange (chunkIndex * _config.downloadChunkSizeBytes,
+                                        chunkIndex * _config.downloadChunkSizeBytes + _config.downloadChunkSizeBytes - 1);
+
+                    //  Debug.LogWarning($"Downloading chunk {chunkIndex}...");
+                    // retry loop
+                    int failedAttempts = 0;
+                    while(true){
                         try {
-                            using (HttpWebResponse response = (HttpWebResponse) request.GetResponse ()) {
+                            using (HttpWebResponse response = (HttpWebResponse) await request.GetResponseAsync ()) {
+                                var fileMetadataJSONString = response.Headers["Dropbox-API-Result"];
+                                latestMetadata = JsonUtility.FromJson<FileMetadata>(fileMetadataJSONString);
 
-                                lock (syncObject) {
+                                file.Seek (chunkIndex * _config.downloadChunkSizeBytes, SeekOrigin.Begin);
 
-                                    var fileMetadataJSONString = response.Headers["Dropbox-API-Result"];
-                                    latestMetadata = JsonUtility.FromJson<FileMetadata>(fileMetadataJSONString);
+                                using (Stream responseStream = response.GetResponseStream ()) {
+                                    byte[] buffer = new byte[8192];
+                                    int bytesRead;
+                                    while ((bytesRead = await responseStream.ReadAsync (buffer, 0, buffer.Length)) > 0) {
+                                        cancellationToken.ThrowIfCancellationRequested();
 
-                                    file.Seek (start * _config.downloadChunkSizeBytes, SeekOrigin.Begin);
-
-                                    using (Stream responseStream = response.GetResponseStream ()) {
-                                        byte[] buffer = new byte[8192];
-                                        int bytesRead;
-                                        while ((bytesRead = responseStream.Read (buffer, 0, buffer.Length)) > 0) {
-                                            cancellationToken.ThrowIfCancellationRequested();
-                                            
-                                            file.Write (buffer, 0, bytesRead);
-                                            totalBytesRead += bytesRead;
-                                            ReportProgress((int)(totalBytesRead * 100 / fileSize));                                      
-                                        }
+                                        
+                                        
+                                        await file.WriteAsync (buffer, 0, bytesRead);
+                                        totalBytesRead += bytesRead;
+                                        ReportProgress((int)(totalBytesRead * 100 / fileSize));                                      
                                     }
-
-                                    chunksDownloaded += 1;
                                 }
-                            }
-                        }catch(WebException ex){
-                            Utils.RethrowDropboxRequestWebException(ex, requestParameters, Endpoints.DOWNLOAD_FILE_ENDPOINT);
-                        }                        
-                });                
-            }            
 
+                                chunksDownloaded += 1;
+                            }                            
+
+                            // success - exit retry loop
+                            break;
+
+                        }catch(Exception ex){
+                            // dont retry if cancel request
+                            if(ex is OperationCanceledException){
+                                throw ex;
+                            }
+
+                            if(ex is WebException){
+                                ex = Utils.DecorateDropboxRequestWebException(ex as WebException, requestParameters, Endpoints.DOWNLOAD_FILE_ENDPOINT);
+                            }                            
+
+                            failedAttempts += 1;
+                            if(failedAttempts <= _config.chunkTransferMaxFailedAttempts){
+                                Debug.LogWarning($"Failed to download chunk {chunkIndex}. Retry {failedAttempts}/{_config.chunkTransferMaxFailedAttempts}\nException: {ex}");
+                                // wait before attempting again
+                                await new WaitForSeconds(_config.chunkTransferRetryDelaySeconds);
+                                continue;                                
+                            }else{
+                                // attempts exceeded - exit retry loop
+                                throw ex;
+                            }                                
+                        }    
+                    }                    
+                }                
+            }
             
             // ensure final folder exists
             Utils.EnsurePathFoldersExist (_localTargetPath);
@@ -136,13 +154,13 @@ namespace DBXSync {
             File.Move(tempDownloadPath, _localTargetPath);
 
             // return to the Unity thread
-            await new WaitForUpdate();
+            //await new WaitForUpdate();
 
             // report complete progress
             ReportProgress(100);
 
             return latestMetadata;
-        }
+        }        
 
         public void Cancel() {
             _cancellationTokenSource.Cancel();

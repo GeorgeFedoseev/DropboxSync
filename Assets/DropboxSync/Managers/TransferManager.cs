@@ -215,9 +215,11 @@ namespace DBXSync {
         }
 
         private void DeleteAllTempDownloadFiles () {
-            foreach (string file in Directory.GetFiles (_config.cacheDirecoryPath, $"*{DropboxSyncConfiguration.INTERMEDIATE_DOWNLOAD_FILE_EXTENSION}", SearchOption.AllDirectories)) {
-                File.Delete (file);
-            }
+            if(Directory.Exists(_config.cacheDirecoryPath)){
+                foreach (string file in Directory.GetFiles (_config.cacheDirecoryPath, $"*{DropboxSyncConfiguration.INTERMEDIATE_DOWNLOAD_FILE_EXTENSION}", SearchOption.AllDirectories)) {
+                    File.Delete (file);
+                }
+            }            
         }
 
         public void Dispose () {

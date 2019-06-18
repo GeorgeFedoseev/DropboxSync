@@ -19,7 +19,11 @@ namespace DBXSync {
 
 
         public static void RethrowDropboxRequestWebException(WebException ex, RequestParameters parameters, string endpoint){
-            Exception exceptionToThrow = ex;          
+            throw DecorateDropboxRequestWebException(ex, parameters, endpoint);
+        }
+
+        public static Exception DecorateDropboxRequestWebException(WebException ex, RequestParameters parameters, string endpoint){
+            Exception result = ex;          
                     
             try {
                 var errorResponseString = new StreamReader(ex.Response.GetResponseStream()).ReadToEnd();  
@@ -28,25 +32,25 @@ namespace DBXSync {
                     try {
                         var errorResponse = JsonUtility.FromJson<Response>(errorResponseString);
                         if(!string.IsNullOrEmpty(errorResponse.error_summary)){
-                            exceptionToThrow = new DropboxAPIException($"error: {errorResponse.error_summary}; request parameters: {parameters}; endpoint: {endpoint}; full-response: {errorResponseString}" );
+                            result = new DropboxAPIException($"error: {errorResponse.error_summary}; request parameters: {parameters}; endpoint: {endpoint}; full-response: {errorResponseString}" );
                         }else{
                             // empty error-summary
-                            exceptionToThrow = new DropboxAPIException($"error: {errorResponseString}; request parameters: {parameters}; endpoint: {endpoint}" );                                            
+                            result = new DropboxAPIException($"error: {errorResponseString}; request parameters: {parameters}; endpoint: {endpoint}" );                                            
                         }
                     }catch {
                         // not json-formatted error
-                        exceptionToThrow = new DropboxAPIException($"error: {errorResponseString}; request parameters: {parameters}; endpoint: {endpoint}" );                                        
+                        result = new DropboxAPIException($"error: {errorResponseString}; request parameters: {parameters}; endpoint: {endpoint}" );                                        
                     }
                 }else{
                     // no text in response - throw original
-                    exceptionToThrow = ex;
+                    result = ex;
                 }                        
             } catch {
                 // failed to get response - throw original
-                exceptionToThrow = ex;
+                result = ex;
             }   
 
-            throw exceptionToThrow;
+            return result;
         }
 
         public static bool AreEqualDropboxPaths(string dropboxPath1, string dropboxPath2){
