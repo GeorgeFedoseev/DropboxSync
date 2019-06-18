@@ -61,10 +61,7 @@ namespace DBXSync {
             string tempDownloadPath = Utils.GetDownloadTempFilePath(_localTargetPath, _metadata.content_hash);            
 
             long fileSize = _metadata.size;
-            FileMetadata latestMetadata = null;
-
-            // go to background thread            
-           // await new WaitForBackgroundThread();
+            FileMetadata latestMetadata = null;            
 
             // download chunk by chunk to temp file
             Utils.EnsurePathFoldersExist (tempDownloadPath);
@@ -147,14 +144,13 @@ namespace DBXSync {
             
             // ensure final folder exists
             Utils.EnsurePathFoldersExist (_localTargetPath);
+
             // move file to final location (maybe replace old one) 
             if(File.Exists(_localTargetPath)){
                 File.Delete(_localTargetPath);
             }
-            File.Move(tempDownloadPath, _localTargetPath);
 
-            // return to the Unity thread
-            //await new WaitForUpdate();
+            File.Move(tempDownloadPath, _localTargetPath);
 
             // report complete progress
             ReportProgress(100);
