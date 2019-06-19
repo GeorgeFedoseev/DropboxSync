@@ -21,6 +21,21 @@ namespace DBXSync {
         public bool has_explicit_shared_members;
         public string content_hash;
 
+        public DropboxEntryType EntryType {
+            get {
+                switch(tag){
+                    case "file":
+                        return DropboxEntryType.File;
+                    case "folder":
+                        return DropboxEntryType.Folder;
+                    case "deleted":
+                        return DropboxEntryType.Deleted;
+                    default:
+                        throw new DropboxAPIException($"Unknown tag: {tag}");
+                }
+            }
+        }
+
     }
 
 }

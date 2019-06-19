@@ -1,5 +1,7 @@
 namespace DBXSync {
-    public enum FileChangeType {
+    
+    [System.Serializable]
+    public enum EntryChangeType {
         Created,
         Modified,
         Removed

@@ -94,7 +94,7 @@ namespace DBXSync {
                             if(failedAttempts <= _config.chunkTransferMaxFailedAttempts){
                                 Debug.LogWarning($"Failed to upload chunk of data. Retry {failedAttempts}/{_config.chunkTransferMaxFailedAttempts}\nException: {ex}");
                                 // wait before attempting again
-                                await new WaitForSeconds(_config.chunkTransferRetryDelaySeconds);
+                                await new WaitForSeconds(_config.requestErrorRetryDelaySeconds);
                                 continue;                                
                             }else{
                                 // attempts exceeded - exit retry loop

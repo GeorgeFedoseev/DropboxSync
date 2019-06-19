@@ -12,7 +12,7 @@ namespace DBXSync {
 
         // retry chunk transfers
         public int chunkTransferMaxFailedAttempts = 3;
-        public int chunkTransferRetryDelaySeconds = 3;
+        public int requestErrorRetryDelaySeconds = 3;
 
         // downloading
         public long downloadChunkSizeBytes = 10000000;

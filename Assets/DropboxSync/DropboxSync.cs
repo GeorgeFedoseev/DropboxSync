@@ -26,7 +26,7 @@ public class DropboxSync : MonoBehaviour {
     [SerializeField]
     private string _dropboxAccessToken;
 
-    private DropboxSyncConfiguration _configuration;
+    private DropboxSyncConfiguration _config;
     private TransferManager _transferManger;
     public TransferManager TransferManager {
         get {
@@ -41,6 +41,13 @@ public class DropboxSync : MonoBehaviour {
         }
     }
 
+    private ChangesManager _changesManager;
+    public ChangesManager ChangesManager {
+        get {
+            return _changesManager;
+        }
+    }
+
 
     void Awake(){        
         // set configuration based on inspector values
@@ -48,16 +55,17 @@ public class DropboxSync : MonoBehaviour {
 
         // DropboxReachability.Main.Initialize(_configuration.dropboxReachabilityCheckIntervalMilliseconds);
 
-        _transferManger = new TransferManager(_configuration);
-        _cacheManager = new CacheManager(_transferManger, _configuration);
+        _transferManger = new TransferManager(_config);
+        _cacheManager = new CacheManager(_transferManger, _config);
+        _changesManager = new ChangesManager(_config);
     }
 
 
     // METHODS
 
     public void SetConfiguration(DropboxSyncConfiguration config){
-        _configuration = config;
-        _configuration.FillDefaultsAndValidate();        
+        _config = config;
+        _config.FillDefaultsAndValidate();        
 
         // DropboxReachability.Main.SetPingInterval(_configuration.dropboxReachabilityCheckIntervalMilliseconds);
     }
@@ -66,7 +74,7 @@ public class DropboxSync : MonoBehaviour {
     public async Task<Metadata> GetFileMetadataAsync(string dropboxFilePath){
         var request = new GetMetadataRequest(new GetMetadataRequestParameters {
             path = dropboxFilePath
-        }, _configuration);
+        }, _config);
 
         return (await request.ExecuteAsync()).GetMetadata();
     }
@@ -80,7 +88,10 @@ public class DropboxSync : MonoBehaviour {
         // DropboxReachability.Main.Dispose();
         if(_transferManger != null){
             _transferManger.Dispose();
-        }        
+        }
+        if(_changesManager != null){
+            _changesManager.Dispose();
+        }
     }
 
 

@@ -15,13 +15,14 @@ namespace DBXSync {
         private string _endpoint;
         private RequestParameters _parameters;
         private DropboxSyncConfiguration _config;
-        // private bool _parametersInBody;
+        private bool _requiresAuthorization;
 
 
-        public Request(string endpoint, RequestParameters parameters, DropboxSyncConfiguration config) {
+        public Request(string endpoint, RequestParameters parameters, DropboxSyncConfiguration config, bool requiresAuthorization = true) {
             _endpoint = endpoint;
             _parameters = parameters;
             _config = config;
+            _requiresAuthorization = requiresAuthorization;
         }      
 
 
@@ -39,7 +40,10 @@ namespace DBXSync {
                     client.Headers.Set ("Dropbox-API-Arg", parametersJSONString);                     
                 }
 
-                client.Headers.Set("Authorization", $"Bearer {_config.accessToken}");
+                if(_requiresAuthorization) {
+                    client.Headers.Set("Authorization", $"Bearer {_config.accessToken}");
+                }
+                
 				client.Headers.Set("Content-Type", payload == null ? "application/json" : "application/octet-stream");
 
                 if(progress != null) {
