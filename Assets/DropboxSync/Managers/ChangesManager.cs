@@ -81,7 +81,7 @@ namespace DBXSync {
             // associate folder with callback
             _folderSubscriptions[dropboxFolderPath].Add(callback);
 
-            CheckChangesInFolders();
+            CheckChangesInFolder(dropboxFolderPath);
         }
 
         private async void CheckChangesInFolders(){
@@ -96,23 +96,38 @@ namespace DBXSync {
         private async Task CheckChangesInFoldersAsync(){
             var folders = _folderSubscriptions.Select(x => x.Key);
             foreach(var folder in folders){
-                await CheckChangesInFolder(folder);
+                await CheckChangesInFolderAsync(folder);
             }
         }
 
-        // called from longpoll when changes = true or after adding new folder subscription 
-        private async Task CheckChangesInFolder(string dropboxFolderPath){
-            // list_folder 
-            var listFolderResponse = await new ListFolderRequest(new ListFolderRequestParameters {
-                recursive = true,
-                include_deleted = true                
-            }, _config).ExecuteAsync();
+        private async void CheckChangesInFolder(string dropboxFolderPath){
+            await CheckChangesInFolderAsync(dropboxFolderPath);
+        }
 
-            // process entries
-            listFolderResponse.entries.ForEach(entry => ProcessReceivedMetadata(entry));
+        // called from longpoll when changes = true or after adding new folder subscription 
+        private async Task CheckChangesInFolderAsync(string dropboxFolderPath){
+            string cursor = null;
+            bool has_more = true;
+
+            // if was already listing folder - continue from there
+            if(_folderCursors.ContainsKey(dropboxFolderPath)){
+                cursor = _folderCursors[dropboxFolderPath];
+            }
+
+            if(cursor == null){
+                // list_folder 
+                var listFolderResponse = await new ListFolderRequest(new ListFolderRequestParameters {
+                    recursive = true,
+                    include_deleted = true                
+                }, _config).ExecuteAsync();
+
+                // process entries
+                listFolderResponse.entries.ForEach(entry => ProcessReceivedMetadata(entry));
+                
+                has_more = listFolderResponse.has_more;
+                cursor = listFolderResponse.cursor;
+            }
             
-            bool has_more = listFolderResponse.has_more;
-            string cursor = listFolderResponse.cursor;
             while(has_more){
                 Debug.LogWarning("CheckChangesInFolder: has_more");
 
@@ -122,14 +137,16 @@ namespace DBXSync {
                 }, _config).ExecuteAsync();
 
                 // process entries
-                listFolderResponse.entries.ForEach(entry => ProcessReceivedMetadata(entry));
+                listFolderContinueResponse.entries.ForEach(entry => ProcessReceivedMetadata(entry));
                 
                 has_more = listFolderContinueResponse.has_more;
                 cursor = listFolderContinueResponse.cursor;
             }
 
+            // save latest cursor to the folder
+            _folderCursors[dropboxFolderPath] = cursor;
             // update _lastCursor for next longpoll
-            _lastCursor = cursor;            
+            _lastCursor = cursor;
         }
 
         private void ProcessReceivedMetadata(Metadata metadata){
