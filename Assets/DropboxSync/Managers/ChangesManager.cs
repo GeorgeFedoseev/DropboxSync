@@ -55,9 +55,10 @@ namespace DBXSync {
                         // wait before making next longpoll
                         Thread.Sleep(longpollResponse.backoff * 10000);
 
-                    }catch(Exception ex){
+                    }catch(Exception ex){                        
+                        // TODO: if exception is because cursor is not valid anymore do CheckChangesInFoldersAsync()
                         Debug.LogError($"Failed to request Dropbox changes: {ex}");
-                        Thread.Sleep(_config.requestErrorRetryDelaySeconds * 1000);
+                        Thread.Sleep(_config.requestErrorRetryDelaySeconds * 1000);                                                
                     }                    
                 }
                 
@@ -124,6 +125,8 @@ namespace DBXSync {
                 var listFolderContinueResponse = await new ListFolderContinueRequest(new CursorRequestParameters {
                     cursor = cursor
                 }, _config).ExecuteAsync();
+
+                // TODO: if get exception that cursor is not valid anymore == drop current cursor and call CheckChangesInFolderAsync()
 
                 // process entries
                 listFolderContinueResponse.entries.ForEach(entry => ProcessReceivedMetadataForFolder(dropboxFolderPath, entry));

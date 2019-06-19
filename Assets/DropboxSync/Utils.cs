@@ -32,14 +32,15 @@ namespace DBXSync {
                     try {
                         var errorResponse = JsonUtility.FromJson<Response>(errorResponseString);
                         if(!string.IsNullOrEmpty(errorResponse.error_summary)){
-                            result = new DropboxAPIException($"error: {errorResponse.error_summary}; request parameters: {parameters}; endpoint: {endpoint}; full-response: {errorResponseString}" );
+                            result = new DropboxAPIException($"error: {errorResponse.error_summary}; request parameters: {parameters}; endpoint: {endpoint}; full-response: {errorResponseString}",
+                                                                     errorResponse.error_summary, errorResponse.error.tag);
                         }else{
                             // empty error-summary
-                            result = new DropboxAPIException($"error: {errorResponseString}; request parameters: {parameters}; endpoint: {endpoint}" );                                            
+                            result = new DropboxAPIException($"error: {errorResponseString}; request parameters: {parameters}; endpoint: {endpoint}", errorResponseString, null);                                            
                         }
                     }catch {
                         // not json-formatted error
-                        result = new DropboxAPIException($"error: {errorResponseString}; request parameters: {parameters}; endpoint: {endpoint}" );                                        
+                        result = new DropboxAPIException($"error: {errorResponseString}; request parameters: {parameters}; endpoint: {endpoint}", errorResponseString, null);                                        
                     }
                 }else{
                     // no text in response - throw original
