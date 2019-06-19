@@ -9,6 +9,8 @@ namespace DBXSync {
 
     public class ChangesManager {
 
+
+        private CacheManager _cacheManager;
         private DropboxSyncConfiguration _config;
 
         private Thread _backgroundThread;
@@ -18,11 +20,10 @@ namespace DBXSync {
         private string _lastCursor;
 
         private Dictionary<string, List<Action<EntryChange>>> _folderSubscriptions = new Dictionary<string, List<Action<EntryChange>>>();
-        private Dictionary<string, string> _folderCursors = new Dictionary<string, string>();
+        private Dictionary<string, string> _folderCursors = new Dictionary<string, string>();        
 
-        private Task _checkChangesInFoldersCurrentTask = null;
-
-        public ChangesManager (DropboxSyncConfiguration config) {
+        public ChangesManager (CacheManager cacheManager, DropboxSyncConfiguration config) {
+            _cacheManager = cacheManager;
             _config = config;
 
             _backgroundThread = new Thread (_backgroudWorker);
@@ -44,13 +45,7 @@ namespace DBXSync {
                         Debug.LogWarning($"Longpoll response: {longpollResponse}");
                         
                         if(longpollResponse.changes){
-                            // check what changes happened
-                            if(_checkChangesInFoldersCurrentTask != null){
-                                await _checkChangesInFoldersCurrentTask;
-                            }
-
-                            _checkChangesInFoldersCurrentTask = CheckChangesInFoldersAsync();
-                            await _checkChangesInFoldersCurrentTask;
+                            await CheckChangesInFoldersAsync();                             
                         }
 
                         if(longpollResponse.backoff > 0){
@@ -73,6 +68,8 @@ namespace DBXSync {
         }
 
         public void SubscribeToFolder(string dropboxFolderPath, Action<EntryChange> callback){
+            dropboxFolderPath = Utils.UnifyDropboxPath(dropboxFolderPath);
+
             // add folder to dictionary
             if(!_folderSubscriptions.ContainsKey(dropboxFolderPath)){
                 _folderSubscriptions[dropboxFolderPath] = new List<Action<EntryChange>>();
@@ -82,15 +79,7 @@ namespace DBXSync {
             _folderSubscriptions[dropboxFolderPath].Add(callback);
 
             CheckChangesInFolder(dropboxFolderPath);
-        }
-
-        private async void CheckChangesInFolders(){
-            if(_checkChangesInFoldersCurrentTask != null){
-                await _checkChangesInFoldersCurrentTask;
-            }
-            _checkChangesInFoldersCurrentTask = CheckChangesInFoldersAsync();
-            await _checkChangesInFoldersCurrentTask;
-        }
+        }      
 
         // called from longpoll thread when changes = true
         private async Task CheckChangesInFoldersAsync(){
@@ -122,7 +111,7 @@ namespace DBXSync {
                 }, _config).ExecuteAsync();
 
                 // process entries
-                listFolderResponse.entries.ForEach(entry => ProcessReceivedMetadata(entry));
+                listFolderResponse.entries.ForEach(entry => ProcessReceivedMetadataForFolder(dropboxFolderPath, entry));
                 
                 has_more = listFolderResponse.has_more;
                 cursor = listFolderResponse.cursor;
@@ -137,7 +126,7 @@ namespace DBXSync {
                 }, _config).ExecuteAsync();
 
                 // process entries
-                listFolderContinueResponse.entries.ForEach(entry => ProcessReceivedMetadata(entry));
+                listFolderContinueResponse.entries.ForEach(entry => ProcessReceivedMetadataForFolder(dropboxFolderPath, entry));
                 
                 has_more = listFolderContinueResponse.has_more;
                 cursor = listFolderContinueResponse.cursor;
@@ -149,14 +138,42 @@ namespace DBXSync {
             _lastCursor = cursor;
         }
 
-        private void ProcessReceivedMetadata(Metadata metadata){
+        private void ProcessReceivedMetadataForFolder(string dropboxFolderPath, Metadata remoteMetadata){
+            dropboxFolderPath = Utils.UnifyDropboxPath(dropboxFolderPath);
             // detect changes based on local metadata
             // call FileChange events for subscriptions if detected changes
 
-            Debug.Log($"Process received metadata: {metadata}");
-            // if(metadata.EntryType == DropboxEntryType.File){
-                
-            // }
+            // Debug.Log($"Process remote metadata: {remoteMetadata}");
+
+            if(remoteMetadata.EntryType == DropboxEntryType.File){
+                // file created or modified
+                if(_cacheManager.HaveFileLocally(remoteMetadata)){
+                    if(_cacheManager.ShouldUpdateFileFromDropbox(remoteMetadata)){
+                        // file modified
+                        _folderSubscriptions[dropboxFolderPath].ForEach(a => a(new EntryChange {
+                            type = EntryChangeType.Modified,
+                            metadata = remoteMetadata
+                        }));
+                    }
+                }else{
+                    // file created
+                    _folderSubscriptions[dropboxFolderPath].ForEach(a => a(new EntryChange {
+                        type = EntryChangeType.Created,
+                        metadata = remoteMetadata
+                    }));
+                }
+            }else if(remoteMetadata.EntryType == DropboxEntryType.Deleted){
+                // can be folder or file path here, but we ignore folders:
+                // if path will be folder then HaveFileLocally will return false and we do nothing
+
+                // check if we also need to delete file
+                if(_cacheManager.HaveFileLocally(remoteMetadata)){                    
+                    _folderSubscriptions[dropboxFolderPath].ForEach(a => a(new EntryChange {
+                        type = EntryChangeType.Removed,
+                        metadata = remoteMetadata
+                    }));
+                }
+            }
         }
 
 

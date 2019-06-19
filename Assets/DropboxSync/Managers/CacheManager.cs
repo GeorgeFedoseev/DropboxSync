@@ -40,7 +40,12 @@ namespace DBXSync {
             WriteMetadata(remoteMetadata);
         }
 
-        private bool ShouldUpdateFileFromDropbox(Metadata remoteMetadata){
+        public bool HaveFileLocally(Metadata remoteMetadata){
+            return GetLocalMetadataForDropboxPath(remoteMetadata.path_lower) != null;
+        }
+        
+
+        public bool ShouldUpdateFileFromDropbox(Metadata remoteMetadata){
             // check if server has different version
             var localMetadata = GetLocalMetadataForDropboxPath(remoteMetadata.path_lower);
 

@@ -57,13 +57,18 @@ namespace DBXSync {
             return UnifyDropboxPath(dropboxPath1) == UnifyDropboxPath(dropboxPath2);
         }
 
-        private static string UnifyDropboxPath(string dropboxPath){
+        public static string UnifyDropboxPath(string dropboxPath){
             dropboxPath = dropboxPath.Trim();
+
+            // lowercase
             dropboxPath = dropboxPath.ToLower();
             
+            // always slash in the beginning
             if(dropboxPath.First() != '/'){
                 dropboxPath = $"/{dropboxPath}";
-            }			
+            }
+
+            // remove slash in the end for folders			
 			if(dropboxPath.Last() == '/'){
 				dropboxPath = dropboxPath.Substring(1, dropboxPath.Length-1);
 			}

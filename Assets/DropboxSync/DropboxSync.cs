@@ -57,7 +57,7 @@ public class DropboxSync : MonoBehaviour {
 
         _transferManger = new TransferManager(_config);
         _cacheManager = new CacheManager(_transferManger, _config);
-        _changesManager = new ChangesManager(_config);
+        _changesManager = new ChangesManager(_cacheManager, _config);
     }
 
 

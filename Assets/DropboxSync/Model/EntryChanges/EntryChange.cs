@@ -1,10 +1,13 @@
 namespace DBXSync {
 
     [System.Serializable]
-    public class EntryChange : JSONSerializableObject {
-        public string dropboxPath;
+    public class EntryChange : JSONSerializableObject {        
         public EntryChangeType type;
-        public Metadata latestMetadata;        
+        public Metadata metadata;
+
+        public override string ToString(){
+            return $"[{type}]: {metadata}";
+        }
     }
 
 }
