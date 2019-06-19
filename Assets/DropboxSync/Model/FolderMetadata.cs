@@ -1,7 +1,7 @@
-namespace DBXSync {
+// namespace DBXSync {
 
-    public class FolderMetadata : Metadata {        
+//     public class FolderMetadata : Metadata {        
         
-        public FolderSharingInfo sharing_info;
-    }
-}
+//         public FolderSharingInfo sharing_info;
+//     }
+// }

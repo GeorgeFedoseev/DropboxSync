@@ -15,7 +15,7 @@ namespace DBXSync {
         public int Progress => _progress; 
         public double BytesPerSecond => _bytesPerSecond;
         public IProgress<TransferProgressReport> ProgressCallback => _progressCallback;
-        public TaskCompletionSource<FileMetadata> CompletionSource => _completionSource;
+        public TaskCompletionSource<Metadata> CompletionSource => _completionSource;
 
         private string _dropboxTargetPath;        
         private string _localPath;
@@ -23,12 +23,12 @@ namespace DBXSync {
         private int _progress;
         private double _bytesPerSecond;
         private IProgress<TransferProgressReport> _progressCallback;
-        private TaskCompletionSource<FileMetadata> _completionSource;
+        private TaskCompletionSource<Metadata> _completionSource;
         private CancellationTokenSource _cancellationTokenSource;
         
 
         public UploadFileTransfer(string localPath, string dropboxTargetPath, IProgress<TransferProgressReport> progressCallback, 
-                                    TaskCompletionSource<FileMetadata> completionSource, DropboxSyncConfiguration config)
+                                    TaskCompletionSource<Metadata> completionSource, DropboxSyncConfiguration config)
         {
             _config = config;
 
@@ -42,7 +42,7 @@ namespace DBXSync {
             _cancellationTokenSource = new CancellationTokenSource();
         }
 
-        public async Task<FileMetadata> ExecuteAsync () {
+        public async Task<Metadata> ExecuteAsync () {
             var cancellationToken = _cancellationTokenSource.Token;
 
             if(!File.Exists(_localPath)){

@@ -96,25 +96,25 @@ namespace DBXSync {
         }
 
         // METHODS
-        public async Task<FileMetadata> DownloadFileAsync (string dropboxPath, string localPath, IProgress<TransferProgressReport> progressCallback) {
-            var completionSource = new TaskCompletionSource<FileMetadata> ();
+        public async Task<Metadata> DownloadFileAsync (string dropboxPath, string localPath, IProgress<TransferProgressReport> progressCallback) {
+            var completionSource = new TaskCompletionSource<Metadata> ();
             var downloadTransfer = new DownloadFileTransfer (dropboxPath, localPath, progressCallback, completionSource, _config);
             return await _DownloadFileAsync (downloadTransfer);
         }
 
-        public async Task<FileMetadata> DownloadFileAsync (FileMetadata metadata, string localPath, IProgress<TransferProgressReport> progressCallback) {
-            var completionSource = new TaskCompletionSource<FileMetadata> ();
+        public async Task<Metadata> DownloadFileAsync (Metadata metadata, string localPath, IProgress<TransferProgressReport> progressCallback) {
+            var completionSource = new TaskCompletionSource<Metadata> ();
             var downloadTransfer = new DownloadFileTransfer (metadata, localPath, progressCallback, completionSource, _config);
             return await _DownloadFileAsync (downloadTransfer);
         }
 
-        public async Task<FileMetadata> UploadFileAsync(string localPath, string dropboxPath, IProgress<TransferProgressReport> progressCallback) {
-            var completionSource = new TaskCompletionSource<FileMetadata> ();
+        public async Task<Metadata> UploadFileAsync(string localPath, string dropboxPath, IProgress<TransferProgressReport> progressCallback) {
+            var completionSource = new TaskCompletionSource<Metadata> ();
             var uploadTransfer = new UploadFileTransfer (localPath, dropboxPath, progressCallback, completionSource, _config);
             return await _UploadFileAsync (uploadTransfer);
         }
 
-        private async Task<FileMetadata> _DownloadFileAsync (DownloadFileTransfer transfer) {
+        private async Task<Metadata> _DownloadFileAsync (DownloadFileTransfer transfer) {
             // check if transfer is already queued or in process
             // if so, subscribe to its completion
             var alreadyHave = GetQueuedOrExecutingDownloadTransfer (transfer.DropboxPath, transfer.LocalPath);
@@ -129,7 +129,7 @@ namespace DBXSync {
             return await transfer.CompletionSource.Task;
         }
 
-        private async Task<FileMetadata> _UploadFileAsync (UploadFileTransfer transfer) {
+        private async Task<Metadata> _UploadFileAsync (UploadFileTransfer transfer) {
             // check if transfer is already queued or in process
             // if so, subscribe to its completion
             var alreadyHave = GetQueuedOrExecutingUploadTransfer (transfer.DropboxPath, transfer.LocalPath);

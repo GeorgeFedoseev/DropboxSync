@@ -63,8 +63,8 @@ public class DropboxSync : MonoBehaviour {
     }
     
 
-    public async Task<FileMetadata> GetFileMetadataAsync(string dropboxFilePath){
-        var request = new GetFileMetadataRequest(new GetMetadataRequestParameters {
+    public async Task<Metadata> GetFileMetadataAsync(string dropboxFilePath){
+        var request = new GetMetadataRequest(new GetMetadataRequestParameters {
             path = dropboxFilePath
         }, _configuration);
 

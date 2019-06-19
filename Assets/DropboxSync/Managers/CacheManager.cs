@@ -22,7 +22,7 @@ namespace DBXSync {
         }
 
         private async Task MaybeCacheFileAsync(string dropboxPath, IProgress<TransferProgressReport> progressCallback){
-            var remoteMetadata = (await new GetFileMetadataRequest (new GetMetadataRequestParameters {
+            var remoteMetadata = (await new GetMetadataRequest (new GetMetadataRequestParameters {
                     path = dropboxPath
                 }, _config).ExecuteAsync ()).GetMetadata ();            
 
@@ -40,7 +40,7 @@ namespace DBXSync {
             WriteMetadata(remoteMetadata);
         }
 
-        private bool ShouldUpdateFileFromDropbox(FileMetadata remoteMetadata){
+        private bool ShouldUpdateFileFromDropbox(Metadata remoteMetadata){
             // check if server has different version
             var localMetadata = GetLocalMetadataForDropboxPath(remoteMetadata.path_lower);
 
@@ -50,12 +50,12 @@ namespace DBXSync {
             return localMetadata == null || localMetadata.content_hash != remoteMetadata.content_hash;
         }
 
-        private FileMetadata GetLocalMetadataForDropboxPath(string dropboxPath){
+        private Metadata GetLocalMetadataForDropboxPath(string dropboxPath){
             var localMetadataFilePath = Utils.GetMetadataLocalFilePath(dropboxPath, _config);			
 			if(File.Exists(localMetadataFilePath)){				
 				var metadataJSONString = File.ReadAllText(localMetadataFilePath);
 				try {
-					return JsonUtility.FromJson<FileMetadata>(metadataJSONString);
+					return JsonUtility.FromJson<Metadata>(metadataJSONString);
 				}catch{
 					return null;
 				}		
@@ -63,7 +63,7 @@ namespace DBXSync {
 			return null;
         }
 
-        private void WriteMetadata(FileMetadata metadata){
+        private void WriteMetadata(Metadata metadata){
             var localMetadataFilePath = Utils.GetMetadataLocalFilePath(metadata.path_lower, _config);			
 			// make sure containing directory exists
 			Utils.EnsurePathFoldersExist(localMetadataFilePath);			

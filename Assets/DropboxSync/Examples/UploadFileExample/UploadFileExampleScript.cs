@@ -45,7 +45,7 @@ public class UploadFileExampleScript : MonoBehaviour {
 		var uploadDropboxPath = Path.Combine("/DropboxSyncExampleFolder/", Path.GetFileName(localFilePath));
 
 		
-		var uploadTasks = new List<Task<FileMetadata>>();
+		var uploadTasks = new List<Task<Metadata>>();
         for(var i = 0; i < 5; i++){
             uploadTasks.Add(DropboxSync.Main.TransferManager.UploadFileAsync(localFilePath, uploadDropboxPath, new Progress<TransferProgressReport>((report) => {
 				statusText.text = $"Uploading file {report.progress}% {report.bytesPerSecondFormatted}";				

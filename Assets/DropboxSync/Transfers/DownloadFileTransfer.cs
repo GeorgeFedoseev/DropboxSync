@@ -14,20 +14,20 @@ namespace DBXSync {
         public int Progress => _progress; 
         public double BytesPerSecond => _bytesPerSecond;
         public IProgress<TransferProgressReport> ProgressCallback => _progressCallback;
-        public TaskCompletionSource<FileMetadata> CompletionSource => _completionSource;
+        public TaskCompletionSource<Metadata> CompletionSource => _completionSource;
 
         private string _dropboxPath;
-        private FileMetadata _metadata = null;
+        private Metadata _metadata = null;
         private string _localTargetPath;
         private DropboxSyncConfiguration _config;
         private int _progress;
         private double _bytesPerSecond;
         private IProgress<TransferProgressReport> _progressCallback;
-        private TaskCompletionSource<FileMetadata> _completionSource;
+        private TaskCompletionSource<Metadata> _completionSource;
         private CancellationTokenSource _cancellationTokenSource;
 
         public DownloadFileTransfer (string dropboxPath, string localTargetPath, IProgress<TransferProgressReport> progressCallback, 
-                                    TaskCompletionSource<FileMetadata> completionSource, DropboxSyncConfiguration config) {            
+                                    TaskCompletionSource<Metadata> completionSource, DropboxSyncConfiguration config) {            
             _metadata = null;
             _dropboxPath = dropboxPath;
             _localTargetPath = localTargetPath;
@@ -39,8 +39,8 @@ namespace DBXSync {
             _cancellationTokenSource = new CancellationTokenSource();
         }
 
-        public DownloadFileTransfer (FileMetadata metadata, string localTargetPath, IProgress<TransferProgressReport> progressCallback, 
-                                    TaskCompletionSource<FileMetadata> completionSource, DropboxSyncConfiguration config) {            
+        public DownloadFileTransfer (Metadata metadata, string localTargetPath, IProgress<TransferProgressReport> progressCallback, 
+                                    TaskCompletionSource<Metadata> completionSource, DropboxSyncConfiguration config) {            
             _metadata = metadata;
             _dropboxPath = metadata.path_lower;
             _localTargetPath = localTargetPath;
@@ -51,11 +51,11 @@ namespace DBXSync {
             _cancellationTokenSource = new CancellationTokenSource();
         }
 
-        public async Task<FileMetadata> ExecuteAsync () {
+        public async Task<Metadata> ExecuteAsync () {
             var cancellationToken = _cancellationTokenSource.Token;
             
             if(_metadata == null){
-                _metadata = (await new GetFileMetadataRequest (new GetMetadataRequestParameters {
+                _metadata = (await new GetMetadataRequest (new GetMetadataRequestParameters {
                     path = _dropboxPath
                 }, _config).ExecuteAsync ()).GetMetadata ();
             }            
@@ -63,7 +63,7 @@ namespace DBXSync {
             string tempDownloadPath = Utils.GetDownloadTempFilePath(_localTargetPath, _metadata.content_hash);            
 
             long fileSize = _metadata.size;
-            FileMetadata latestMetadata = null;
+            Metadata latestMetadata = null;
 
             var speedTracker = new TransferSpeedTracker(1000, TimeSpan.FromMilliseconds(1000));  
 
@@ -97,7 +97,7 @@ namespace DBXSync {
                         try {
                             using (HttpWebResponse response = (HttpWebResponse) await request.GetResponseAsync ()) {
                                 var fileMetadataJSONString = response.Headers["Dropbox-API-Result"];
-                                latestMetadata = JsonUtility.FromJson<FileMetadata>(fileMetadataJSONString);
+                                latestMetadata = JsonUtility.FromJson<Metadata>(fileMetadataJSONString);
 
                                 file.Seek (chunkIndex * _config.downloadChunkSizeBytes, SeekOrigin.Begin);
 

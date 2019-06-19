@@ -44,12 +44,38 @@ namespace DBXSync {
         }
 
         // called from longpoll when changes = true or after adding new folder subscription 
-        private void CheckChangesInFolder(string dropboxFolderPath){
+        private async void CheckChangesInFolder(string dropboxFolderPath){
             // list_folder 
-            // list_folder/continue
+            var listFolderResponse = await new ListFolderRequest(new ListFolderRequestParameters {
+                recursive = true,
+                include_deleted = true                
+            }, _config).ExecuteAsync();
+
+            // process entries
+            listFolderResponse.entries.ForEach(entry => ProcessListFolderMetadata(entry));
+            
+            bool has_more = listFolderResponse.has_more;
+            string cursor = listFolderResponse.cursor;
+            while(has_more){
+                // list_folder/continue
+                var listFolderContinueResponse = await new ListFolderContinueRequest(new CursorRequestParameters {
+                    cursor = cursor
+                }, _config).ExecuteAsync();
+
+                // process entries
+                listFolderResponse.entries.ForEach(entry => ProcessListFolderMetadata(entry));
+                
+                has_more = listFolderContinueResponse.has_more;
+                cursor = listFolderContinueResponse.cursor;
+            }
+
+            // update _lastCursor for next longpoll
+            _lastCursor = cursor;
+        }
+
+        private void ProcessListFolderMetadata(Metadata metadata){
             // detect changes based on local metadata
             // call FileChange events for subscriptions if detected changes
-            // update _lastCursor for next longpoll
         }
 
 

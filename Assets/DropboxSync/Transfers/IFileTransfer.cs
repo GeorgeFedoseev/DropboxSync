@@ -6,9 +6,9 @@ namespace DBXSync {
         string LocalPath {get;}
         int Progress {get;}
         System.IProgress<TransferProgressReport> ProgressCallback {get;}
-        TaskCompletionSource<FileMetadata> CompletionSource {get;}
+        TaskCompletionSource<Metadata> CompletionSource {get;}
 
-        System.Threading.Tasks.Task<FileMetadata> ExecuteAsync();
+        System.Threading.Tasks.Task<Metadata> ExecuteAsync();
         void Cancel();
     }
 }
