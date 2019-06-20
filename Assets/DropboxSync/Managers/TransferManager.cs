@@ -253,6 +253,14 @@ namespace DBXSync {
                             _currentUploadTransfers.Remove (transfer);
                         }
                     }
+
+                    // if it's download trasnfer - remove *.download file
+                    if(transfer is DownloadFileTransfer){
+                        var downloadTrasnfer = transfer as DownloadFileTransfer;
+                        if(downloadTrasnfer.Metadata != null){                            
+                            File.Delete(Utils.GetDownloadTempFilePath(transfer.LocalPath, downloadTrasnfer.Metadata.content_hash));
+                        }                        
+                    }                    
                 }else{
                     // move to failed
                     lock (_transfersLock) {

@@ -21,6 +21,8 @@ namespace DBXSync {
         public TaskCompletionSource<Metadata> CompletionSource => _completionSource;
         public CancellationToken CancellationToken => _externalCancellationToken;
 
+        public Metadata Metadata => _metadata;
+
         private string _dropboxPath;
         private Metadata _metadata = null;
         private string _localTargetPath;
