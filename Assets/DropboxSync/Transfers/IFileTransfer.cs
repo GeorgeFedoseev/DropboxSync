@@ -4,8 +4,10 @@ namespace DBXSync {
     public interface IFileTransfer {        
         string DropboxPath {get;}
         string LocalPath {get;}
-        int Progress {get;}
+
+        TransferProgressReport Progress {get;}
         System.Progress<TransferProgressReport> ProgressCallback {get;}
+        
         TaskCompletionSource<Metadata> CompletionSource {get;}
 
         System.Threading.Tasks.Task<Metadata> ExecuteAsync();

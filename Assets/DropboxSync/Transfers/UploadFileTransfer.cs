@@ -12,16 +12,16 @@ namespace DBXSync {
 
         public string DropboxPath => _dropboxTargetPath;
         public string LocalPath => _localPath;
-        public int Progress => _progress; 
-        public double BytesPerSecond => _bytesPerSecond;
+        
+        public TransferProgressReport Progress => _latestProgressReport;
         public Progress<TransferProgressReport> ProgressCallback => _progressCallback;
+
         public TaskCompletionSource<Metadata> CompletionSource => _completionSource;
 
         private string _dropboxTargetPath;        
         private string _localPath;
-        private DropboxSyncConfiguration _config;
-        private int _progress;
-        private double _bytesPerSecond;
+        private DropboxSyncConfiguration _config;        
+        private TransferProgressReport _latestProgressReport;
         private Progress<TransferProgressReport> _progressCallback;
         private TaskCompletionSource<Metadata> _completionSource;
         private CancellationTokenSource _cancellationTokenSource;
@@ -35,8 +35,8 @@ namespace DBXSync {
             _localPath = localPath;
             _dropboxTargetPath = dropboxTargetPath;
 
-            _progressCallback = progressCallback;
-            _progress = 0;
+            _progressCallback = progressCallback;            
+            _latestProgressReport = new TransferProgressReport(0, 0);
             _completionSource = completionSource;            
 
             _cancellationTokenSource = new CancellationTokenSource();
@@ -124,10 +124,9 @@ namespace DBXSync {
         }
 
         private void ReportProgress(int progress, double bytesPerSecond){            
-            if(progress != _progress || bytesPerSecond != _bytesPerSecond){
-                _progress = progress;
-                _bytesPerSecond = bytesPerSecond;                
-                ((IProgress<TransferProgressReport>)_progressCallback).Report (new TransferProgressReport(_progress, bytesPerSecond));    
+            if(progress != _latestProgressReport.progress || bytesPerSecond != _latestProgressReport.bytesPerSecondSpeed){
+                _latestProgressReport = new TransferProgressReport(progress, bytesPerSecond);
+                ((IProgress<TransferProgressReport>)_progressCallback).Report (_latestProgressReport);
             }                                
         }
     }
