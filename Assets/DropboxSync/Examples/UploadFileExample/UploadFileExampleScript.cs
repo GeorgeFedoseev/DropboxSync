@@ -18,10 +18,10 @@ public class UploadFileExampleScript : MonoBehaviour {
 
 	public InputField localFileInput;
 	public Button uploadButton;
-	public Button cancelDuplicateButton;
+	public Button cancelButton;
 	public Text statusText;
 
-	private CancellationTokenSource _duplicateCancellationTokenSource;
+	private CancellationTokenSource _cancellationTokenSource;
 
 	void Start(){
 		localFileInput.onValueChanged.AddListener((val) => {
@@ -32,9 +32,9 @@ public class UploadFileExampleScript : MonoBehaviour {
 
 		uploadButton.onClick.AddListener(UploadFile);	
 
-		_duplicateCancellationTokenSource = new CancellationTokenSource();
-		cancelDuplicateButton.onClick.AddListener(() => {
-			_duplicateCancellationTokenSource.Cancel();
+		_cancellationTokenSource = new CancellationTokenSource();
+		cancelButton.onClick.AddListener(() => {
+			_cancellationTokenSource.Cancel();
 		});
 	}	
 
@@ -49,26 +49,31 @@ public class UploadFileExampleScript : MonoBehaviour {
 	}
 
 	async void UploadFile(){
+		_cancellationTokenSource  = new CancellationTokenSource();
+
 		uploadButton.interactable = false;
 		var localFilePath = localFileInput.text;
 		var uploadDropboxPath = Path.Combine("/DropboxSyncExampleFolder/", Path.GetFileName(localFilePath));
 
-		var originalUploadTask = DropboxSync.Main.TransferManager.UploadFileAsync(localFilePath, uploadDropboxPath, new Progress<TransferProgressReport>((report) => {
+		var uploadTask = DropboxSync.Main.TransferManager.UploadFileAsync(localFilePath, uploadDropboxPath, new Progress<TransferProgressReport>((report) => {
 				if(Application.isPlaying){
 					statusText.text = $"Uploading file {report.progress}% {report.bytesPerSecondFormatted}";
 				}				
-		}));
-
-		var duplicateUploadTask = DropboxSync.Main.TransferManager.UploadFileAsync(localFilePath, uploadDropboxPath, new Progress<TransferProgressReport>((report) => {
-				if(Application.isPlaying){
-					Debug.Log($"Duplicate uploading file {report.progress}% {report.bytesPerSecondFormatted}");
-				}				
-		}), _duplicateCancellationTokenSource.Token);
+		}), _cancellationTokenSource.Token);
 		
-		
-		
-		var results = await Task.WhenAll(originalUploadTask, duplicateUploadTask);
-		print("All file uploads completed");        
+		try {
+			var metadata = await uploadTask;
+			print($"Upload completed:\n{metadata}");
+			statusText.text = $"<color=green>Uploaded. {metadata.id}</color>";
+		}catch(Exception ex){
+			if(ex is OperationCanceledException){
+				Debug.Log("Upload cancelled");
+				statusText.text = $"<color=orange>Upload canceled.</color>";
+			}else{
+				Debug.LogException(ex);
+				statusText.text = $"<color=red>Upload failed.</color>";
+			}
+		}
 
 		uploadButton.interactable = true;		
 	}

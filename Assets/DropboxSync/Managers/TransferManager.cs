@@ -228,6 +228,14 @@ namespace DBXSync {
                 if(ex is OperationCanceledException){
                     // transfer cancelled
                     Debug.Log ($"[TransferManager] Transfer was cancelled");
+                    // remove from current
+                    lock (_transfersLock) {
+                        if(transfer is DownloadFileTransfer){
+                            _currentDownloadTransfers.Remove (transfer);
+                        }else if(transfer is UploadFileTransfer){
+                            _currentUploadTransfers.Remove (transfer);
+                        }
+                    }
                 }else{
                     // move to failed
                     lock (_transfersLock) {
