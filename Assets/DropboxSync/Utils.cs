@@ -78,7 +78,7 @@ namespace DBXSync {
                 dropboxPath = $"/{dropboxPath}";
             }
 
-            // remove slash in the end for folders			
+            // remove slash in the end		
 			if(dropboxPath.Last() == '/'){
 				dropboxPath = dropboxPath.Substring(1, dropboxPath.Length-1);
 			}

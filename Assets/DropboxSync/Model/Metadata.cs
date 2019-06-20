@@ -36,6 +36,9 @@ namespace DBXSync {
             }
         }
 
+        public bool IsFile => EntryType == DropboxEntryType.File;
+        public bool IsFolder => EntryType == DropboxEntryType.Folder;
+
     }
 
 }

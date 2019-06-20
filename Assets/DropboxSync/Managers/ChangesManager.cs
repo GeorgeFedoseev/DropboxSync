@@ -1,11 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
 namespace DBXSync {
+
+    public class FileChangeSubscription {
+        public string fileParentFolderPath;
+        public Action<EntryChange> folderChangeCallback;
+        public Action<EntryChange> fileChangeCallback;
+    }
 
     public class ChangesManager {
 
@@ -21,6 +28,10 @@ namespace DBXSync {
 
         private Dictionary<string, List<Action<EntryChange>>> _folderSubscriptions = new Dictionary<string, List<Action<EntryChange>>>();
         private Dictionary<string, string> _folderCursors = new Dictionary<string, string>();        
+
+        private Dictionary<string, List<FileChangeSubscription>> _fileSubscriptions = new Dictionary<string, List<FileChangeSubscription>>();
+
+        private Dictionary<string, List<Action<EntryChange>>> _syncSubscriptions = new Dictionary<string, List<Action<EntryChange>>>();
 
         public ChangesManager (CacheManager cacheManager, DropboxSyncConfiguration config) {
             _cacheManager = cacheManager;
@@ -70,7 +81,84 @@ namespace DBXSync {
             }
         }
 
-        public void SubscribeToFolder(string dropboxFolderPath, Action<EntryChange> callback){
+        // SYNCRONIZATION
+
+        public void KeepSynced(string dropboxPath, Action<EntryChange> callback){
+            dropboxPath = Utils.UnifyDropboxPath(dropboxPath);
+
+            // add folder to dictionary
+            if(!_syncSubscriptions.ContainsKey(dropboxPath)){
+                _syncSubscriptions[dropboxPath] = new List<Action<EntryChange>>();
+            }
+            
+            // associate path with callback
+            if(!_syncSubscriptions[dropboxPath].Contains(callback)){
+                _syncSubscriptions[dropboxPath].Add(callback);
+            }
+            
+
+
+        }
+
+        // CHANGES NOTIFICATIONS
+        public async void SubscribeToChanges(string dropboxPath, Action<EntryChange> callback){
+            var metadata = (await new GetMetadataRequest(dropboxPath, _config).ExecuteAsync()).GetMetadata();
+            if(metadata.IsFile){
+                SubscribeToFileChages(dropboxPath, callback);
+            }else if(metadata.IsFolder){
+                SubscribeToFolderChanges(dropboxPath, callback);
+            }
+        }
+
+        public void UnsubscribeFromChanges(string dropboxPath, Action<EntryChange> callback){
+            // no need to check if file or folder, can do both
+            UnsubscribeFromFileChanges(dropboxPath, callback);
+            UnsubscribeFromFolderChanges(dropboxPath, callback);
+        }
+
+        private void SubscribeToFileChages(string dropboxFilePath, Action<EntryChange> callback){
+            dropboxFilePath = Utils.UnifyDropboxPath(dropboxFilePath);
+
+            Debug.Log($"SubscribeToFileChages {dropboxFilePath}");
+
+            // get folder path from file path
+            var dropboxFolderPath = Path.GetDirectoryName(dropboxFilePath);
+            Action<EntryChange> folderChangeCallback = (change) => {
+                if(Utils.AreEqualDropboxPaths(change.metadata.path_lower, dropboxFilePath)){
+                    callback(change);
+                }
+            };
+            
+            if(!_fileSubscriptions.ContainsKey(dropboxFilePath)){
+                _fileSubscriptions[dropboxFilePath] = new List<FileChangeSubscription>();
+            }
+
+            // associate file path with subscription
+            if(!_fileSubscriptions[dropboxFilePath].Any(sub => sub.fileChangeCallback == callback)){
+                _fileSubscriptions[dropboxFilePath].Add(new FileChangeSubscription {
+                    fileParentFolderPath = dropboxFolderPath,
+                    folderChangeCallback = folderChangeCallback,
+                    fileChangeCallback = callback
+                });
+            }            
+
+            SubscribeToFolderChanges(dropboxFolderPath, folderChangeCallback);
+        }
+
+        private void UnsubscribeFromFileChanges(string dropboxFilePath, Action<EntryChange> callback){
+            dropboxFilePath = Utils.UnifyDropboxPath(dropboxFilePath);
+
+            if(_fileSubscriptions.ContainsKey(dropboxFilePath)){
+                // unsubscribe associated folder change callbacks
+                _fileSubscriptions[dropboxFilePath].Where(sub => sub.fileChangeCallback == callback).ToList().ForEach(sub => {
+                    UnsubscribeFromFolderChanges(sub.fileParentFolderPath, sub.folderChangeCallback);
+                });
+                _fileSubscriptions[dropboxFilePath].RemoveAll(sub => sub.fileChangeCallback == callback);
+            }
+
+        }
+
+        private async void SubscribeToFolderChanges(string dropboxFolderPath, Action<EntryChange> callback){
             dropboxFolderPath = Utils.UnifyDropboxPath(dropboxFolderPath);
 
             // add folder to dictionary
@@ -79,10 +167,32 @@ namespace DBXSync {
             }
             
             // associate folder with callback
-            _folderSubscriptions[dropboxFolderPath].Add(callback);
+            if(!_folderSubscriptions[dropboxFolderPath].Contains(callback)){
+                _folderSubscriptions[dropboxFolderPath].Add(callback);
+            }
 
-            CheckChangesInFolder(dropboxFolderPath);
+            await CheckChangesInFolderAsync(dropboxFolderPath);
         }      
+
+        private void UnsubscribeFromFolderChanges(string dropboxFolderPath, Action<EntryChange> callback){
+            dropboxFolderPath = Utils.UnifyDropboxPath(dropboxFolderPath);
+
+            if(_folderSubscriptions.ContainsKey(dropboxFolderPath)){
+                if(_folderSubscriptions[dropboxFolderPath].Contains(callback)){
+                    _folderSubscriptions[dropboxFolderPath].Remove(callback);
+                }
+
+                // if no one listening - no reason to check this folder for changes - remove key from dictionary
+                if(_folderSubscriptions[dropboxFolderPath].Count == 0){
+                    _folderSubscriptions.Remove(dropboxFolderPath);
+
+                    // if no folders left - dont't do longpoll
+                    if(_folderSubscriptions.Count == 0){
+                        _lastCursor = null;
+                    }
+                }
+            }
+        }
 
         // called from longpoll thread when changes = true
         private async Task CheckChangesInFoldersAsync(){
@@ -90,11 +200,7 @@ namespace DBXSync {
             foreach(var folder in folders){
                 await CheckChangesInFolderAsync(folder);
             }
-        }
-
-        private async void CheckChangesInFolder(string dropboxFolderPath){
-            await CheckChangesInFolderAsync(dropboxFolderPath);
-        }
+        }      
 
         // called from longpoll when changes = true or after adding new folder subscription 
         private async Task CheckChangesInFolderAsync(string dropboxFolderPath){
