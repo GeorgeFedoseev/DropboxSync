@@ -19,6 +19,7 @@ namespace DBXSync {
         public Progress<TransferProgressReport> ProgressCallback => _progressCallback;
 
         public TaskCompletionSource<Metadata> CompletionSource => _completionSource;
+        public CancellationToken CancellationToken => _externalCancellationToken;
 
         private string _dropboxPath;
         private Metadata _metadata = null;
@@ -27,40 +28,45 @@ namespace DBXSync {
         private TransferProgressReport _latestProgressReport;
         private Progress<TransferProgressReport> _progressCallback;
         private TaskCompletionSource<Metadata> _completionSource;
-        private CancellationTokenSource _cancellationTokenSource;
+        private CancellationTokenSource _internalCancellationTokenSource;
+        private CancellationToken _externalCancellationToken;
 
         private DateTime _startDateTime;
         private DateTime _endDateTime = DateTime.MaxValue;
 
-        public DownloadFileTransfer (string dropboxPath, string localTargetPath, Progress<TransferProgressReport> progressCallback, 
-                                    TaskCompletionSource<Metadata> completionSource, DropboxSyncConfiguration config) {            
+        public DownloadFileTransfer (string dropboxPath, string localTargetPath, Progress<TransferProgressReport> progressCallback, DropboxSyncConfiguration config, CancellationToken? cancellationToken = null) {            
             _metadata = null;
             _dropboxPath = dropboxPath;
-            _localTargetPath = localTargetPath;
-            _progressCallback = progressCallback;            
-            _latestProgressReport = new TransferProgressReport(0, 0);
-            _completionSource = completionSource;            
-            _config = config;
-
-            _cancellationTokenSource = new CancellationTokenSource();
+            _InitCommon(localTargetPath, progressCallback, config, cancellationToken);        
         }
 
-        public DownloadFileTransfer (Metadata metadata, string localTargetPath, Progress<TransferProgressReport> progressCallback, 
-                                    TaskCompletionSource<Metadata> completionSource, DropboxSyncConfiguration config) {            
+        public DownloadFileTransfer (Metadata metadata, string localTargetPath, Progress<TransferProgressReport> progressCallback, DropboxSyncConfiguration config, CancellationToken? cancellationToken = null) {            
             _metadata = metadata;
             _dropboxPath = metadata.path_lower;
+            _InitCommon(localTargetPath, progressCallback, config, cancellationToken);
+        }
+
+        private void _InitCommon(string localTargetPath, Progress<TransferProgressReport> progressCallback, 
+                                   DropboxSyncConfiguration config, CancellationToken? cancellationToken)
+        {
             _localTargetPath = localTargetPath;
             _progressCallback = progressCallback;
-            _completionSource = completionSource;            
+            _latestProgressReport = new TransferProgressReport(0, 0);
+            _completionSource = new TaskCompletionSource<Metadata> ();            
             _config = config;
 
-            _cancellationTokenSource = new CancellationTokenSource();
+            _internalCancellationTokenSource = new CancellationTokenSource();
+            // register external cancellation token
+            if(cancellationToken.HasValue){
+                _externalCancellationToken = cancellationToken.Value;
+                cancellationToken.Value.Register(Cancel);
+            }
         }
 
         public async Task<Metadata> ExecuteAsync () {
             _startDateTime = DateTime.Now;
 
-            var cancellationToken = _cancellationTokenSource.Token;
+            var cancellationToken = _internalCancellationTokenSource.Token;
             
             if(_metadata == null){
                 _metadata = (await new GetMetadataRequest (new GetMetadataRequestParameters {
@@ -173,10 +179,11 @@ namespace DBXSync {
         }        
 
         public void Cancel() {
-            _cancellationTokenSource.Cancel();
+            _internalCancellationTokenSource.Cancel();
         }
 
         private void ReportProgress(int progress, double bytesPerSecond){
+            
             if(progress != _latestProgressReport.progress || bytesPerSecond != _latestProgressReport.bytesPerSecondSpeed){                  
                 _latestProgressReport = new TransferProgressReport(progress, bytesPerSecond);
                 ((IProgress<TransferProgressReport>)_progressCallback).Report(_latestProgressReport);

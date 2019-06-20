@@ -27,6 +27,7 @@ public class UploadFileExampleScript : MonoBehaviour {
 		ValidateLocalFilePath();
 
 		uploadButton.onClick.AddListener(UploadFile);
+		// UploadFile();
 	}	
 
 	void ValidateLocalFilePath(){
@@ -48,13 +49,15 @@ public class UploadFileExampleScript : MonoBehaviour {
 		var uploadTasks = new List<Task<Metadata>>();
         for(var i = 0; i < 5; i++){
             uploadTasks.Add(DropboxSync.Main.TransferManager.UploadFileAsync(localFilePath, uploadDropboxPath, new Progress<TransferProgressReport>((report) => {
-				statusText.text = $"Uploading file {report.progress}% {report.bytesPerSecondFormatted}";				
+				if(Application.isPlaying){
+					statusText.text = $"Uploading file {report.progress}% {report.bytesPerSecondFormatted}";
+				}				
 			})));
         }
 
-        var results = await Task.WhenAll(uploadTasks);
-				
-        print("All file uploads completed");		
+		
+		var results = await Task.WhenAll(uploadTasks);
+		print("All file uploads completed");        
 
 		uploadButton.interactable = true;		
 	}

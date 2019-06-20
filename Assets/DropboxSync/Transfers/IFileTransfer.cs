@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DBXSync {
@@ -13,6 +14,7 @@ namespace DBXSync {
         System.Progress<TransferProgressReport> ProgressCallback {get;}
         
         TaskCompletionSource<Metadata> CompletionSource {get;}
+        CancellationToken CancellationToken {get;}
 
         System.Threading.Tasks.Task<Metadata> ExecuteAsync();
         void Cancel();

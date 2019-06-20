@@ -5,11 +5,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace DBXSync {
 
     public static class Utils {
+
+        public static Task WhenCanceled(this CancellationToken cancellationToken) {
+            var tcs = new TaskCompletionSource<bool>();
+            cancellationToken.Register(s => ((TaskCompletionSource<bool>)s).SetException(new OperationCanceledException()), tcs);
+            return tcs.Task;
+        }
 
         public static T[] SubArray<T>(this T[] data, int index, int length) {
             T[] result = new T[length];
@@ -23,7 +31,12 @@ namespace DBXSync {
         }
 
         public static Exception DecorateDropboxRequestWebException(WebException ex, RequestParameters parameters, string endpoint){
-            Exception result = ex;          
+            Exception result = ex;    
+
+            // Debug.Log($"Decorate exception. Exception message: {ex.Message}");
+            if(ex.Message == "The request was canceled." || ex.Message == "Aborted."){
+                return new OperationCanceledException("Request was cancelled");
+            }
                     
             try {
                 var errorResponseString = new StreamReader(ex.Response.GetResponseStream()).ReadToEnd();  

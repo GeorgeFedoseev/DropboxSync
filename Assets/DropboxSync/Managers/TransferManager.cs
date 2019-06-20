@@ -96,21 +96,18 @@ namespace DBXSync {
         }
 
         // METHODS
-        public async Task<Metadata> DownloadFileAsync (string dropboxPath, string localPath, Progress<TransferProgressReport> progressCallback) {
-            var completionSource = new TaskCompletionSource<Metadata> ();
-            var downloadTransfer = new DownloadFileTransfer (dropboxPath, localPath, progressCallback, completionSource, _config);
+        public async Task<Metadata> DownloadFileAsync (string dropboxPath, string localPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken = null) {            
+            var downloadTransfer = new DownloadFileTransfer (dropboxPath, localPath, progressCallback, _config, cancellationToken);
             return await _DownloadFileAsync (downloadTransfer);
         }
 
-        public async Task<Metadata> DownloadFileAsync (Metadata metadata, string localPath, Progress<TransferProgressReport> progressCallback) {
-            var completionSource = new TaskCompletionSource<Metadata> ();
-            var downloadTransfer = new DownloadFileTransfer (metadata, localPath, progressCallback, completionSource, _config);
+        public async Task<Metadata> DownloadFileAsync (Metadata metadata, string localPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken = null) {            
+            var downloadTransfer = new DownloadFileTransfer (metadata, localPath, progressCallback, _config, cancellationToken);
             return await _DownloadFileAsync (downloadTransfer);
         }
 
-        public async Task<Metadata> UploadFileAsync(string localPath, string dropboxPath, Progress<TransferProgressReport> progressCallback) {
-            var completionSource = new TaskCompletionSource<Metadata> ();
-            var uploadTransfer = new UploadFileTransfer (localPath, dropboxPath, progressCallback, completionSource, _config);
+        public async Task<Metadata> UploadFileAsync(string localPath, string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken = null) {            
+            var uploadTransfer = new UploadFileTransfer (localPath, dropboxPath, progressCallback, _config, cancellationToken);
             return await _UploadFileAsync (uploadTransfer);
         }
 
@@ -118,12 +115,20 @@ namespace DBXSync {
             // check if transfer is already queued or in process
             // if so, subscribe to its completion
             var alreadyHave = GetQueuedOrExecutingDownloadTransfer (transfer.DropboxPath, transfer.LocalPath);
-            if (alreadyHave != null) {                
-                // subscribe to progress of existing transfer
+            if (alreadyHave != null) {
+                Debug.LogWarning("Duplicate upload trasfer.");
+
+                // subscribe duplicate transfer to progress of existing transfer
                 alreadyHave.ProgressCallback.ProgressChanged += (sender, progress) => {
                     ((IProgress<TransferProgressReport>)transfer.ProgressCallback).Report(progress);
                 };
-                return await alreadyHave.CompletionSource.Task;
+
+                // dont wait for existing task if this duplicate was canceled                
+                await Task.WhenAny(alreadyHave.CompletionSource.Task, transfer.CancellationToken.WhenCanceled());            
+
+                // WhenCanceled() should throw exception if duplicate transfer was cancelled
+                // so here we can only be if alreadyHave finished
+                return alreadyHave.CompletionSource.Task.Result;                
             }
             // otherwise put new transfer to queue
             lock (_transfersLock) {
@@ -138,12 +143,21 @@ namespace DBXSync {
             // if so, subscribe to its completion
             var alreadyHave = GetQueuedOrExecutingUploadTransfer (transfer.DropboxPath, transfer.LocalPath);
             if (alreadyHave != null) {
+                Debug.LogWarning("Duplicate upload trasfer.");
+
                 // subscribe to progress of existing transfer
                 alreadyHave.ProgressCallback.ProgressChanged += (sender, progress) => {
                     ((IProgress<TransferProgressReport>)transfer.ProgressCallback).Report(progress);
                 };
-                return await alreadyHave.CompletionSource.Task;
+                
+                // dont wait for existing task if this duplicate was canceled                
+                await Task.WhenAny(alreadyHave.CompletionSource.Task, transfer.CancellationToken.WhenCanceled());            
+
+                // WhenCanceled() should throw exception if duplicate transfer was cancelled
+                // so here we can only be if alreadyHave finished
+                return alreadyHave.CompletionSource.Task.Result;                
             }
+
             // otherwise put new transfer to queue
             lock (_transfersLock) {
                 _uploadTransferQueue.Enqueue (transfer);
@@ -207,18 +221,25 @@ namespace DBXSync {
 
                 transfer.CompletionSource.SetException (ex);
 
-                // move to failed
-                lock (_transfersLock) {
-                    if(transfer is DownloadFileTransfer){
-                        _currentDownloadTransfers.Remove (transfer);
-                    }else if(transfer is UploadFileTransfer){
-                        _currentUploadTransfers.Remove (transfer);
+                if(ex is OperationCanceledException){
+                    // transfer cancelled
+                    Debug.Log ($"[TransferManager] Transfer was cancelled");
+                }else{
+                    // move to failed
+                    lock (_transfersLock) {
+                        if(transfer is DownloadFileTransfer){
+                            _currentDownloadTransfers.Remove (transfer);
+                        }else if(transfer is UploadFileTransfer){
+                            _currentUploadTransfers.Remove (transfer);
+                        }
+
+                        _failedTransfers.Add (transfer);
+
+                        Debug.Log ($"[TransferManager] Transfer failed, moving to failed (now {_failedTransfers.Count} failed)");
                     }
-
-                    _failedTransfers.Add (transfer);
-
-                    Debug.Log ($"[TransferManager] Transfer failed, moving to failed (now {_failedTransfers.Count} failed)");
                 }
+
+                
             }
         }
 

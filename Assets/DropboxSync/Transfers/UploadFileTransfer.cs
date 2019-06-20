@@ -20,6 +20,7 @@ namespace DBXSync {
         public Progress<TransferProgressReport> ProgressCallback => _progressCallback;
 
         public TaskCompletionSource<Metadata> CompletionSource => _completionSource;
+        public CancellationToken CancellationToken => _externalCancellationToken;
 
         private string _dropboxTargetPath;        
         private string _localPath;
@@ -27,14 +28,15 @@ namespace DBXSync {
         private TransferProgressReport _latestProgressReport;
         private Progress<TransferProgressReport> _progressCallback;
         private TaskCompletionSource<Metadata> _completionSource;
-        private CancellationTokenSource _cancellationTokenSource;
+        private CancellationTokenSource _internalCancellationTokenSource;
+        private CancellationToken _externalCancellationToken;
 
         private DateTime _startDateTime;
         private DateTime _endDateTime = DateTime.MaxValue;
         
 
         public UploadFileTransfer(string localPath, string dropboxTargetPath, Progress<TransferProgressReport> progressCallback, 
-                                    TaskCompletionSource<Metadata> completionSource, DropboxSyncConfiguration config)
+                                     DropboxSyncConfiguration config, CancellationToken? cancellationToken = null)
         {
             _config = config;
 
@@ -43,15 +45,20 @@ namespace DBXSync {
 
             _progressCallback = progressCallback;            
             _latestProgressReport = new TransferProgressReport(0, 0);
-            _completionSource = completionSource;            
+            _completionSource = new TaskCompletionSource<Metadata> ();            
 
-            _cancellationTokenSource = new CancellationTokenSource();
+            _internalCancellationTokenSource = new CancellationTokenSource();
+            // register external cancellation token
+            if(cancellationToken.HasValue){
+                _externalCancellationToken = cancellationToken.Value;
+                cancellationToken.Value.Register(Cancel);
+            }
         }
 
         public async Task<Metadata> ExecuteAsync () {
             _startDateTime = DateTime.Now;
 
-            var cancellationToken = _cancellationTokenSource.Token;
+            var cancellationToken = _internalCancellationTokenSource.Token;
 
             if(!File.Exists(_localPath)){
                 throw new FileNotFoundException($"Uploading file not found: {_localPath}");
@@ -98,6 +105,11 @@ namespace DBXSync {
                             // success - exit retry loop
                             break;
                         }catch(Exception ex){
+                            // dont retry if cancel request
+                            if(ex is OperationCanceledException){
+                                throw ex;
+                            }
+
                             failedAttempts += 1;
                             if(failedAttempts <= _config.chunkTransferMaxFailedAttempts){
                                 Debug.LogWarning($"Failed to upload chunk of data. Retry {failedAttempts}/{_config.chunkTransferMaxFailedAttempts}\nException: {ex}");
@@ -130,10 +142,11 @@ namespace DBXSync {
         }
 
         public void Cancel() {
-            _cancellationTokenSource.Cancel();
+            _internalCancellationTokenSource.Cancel();
         }
 
         private void ReportProgress(int progress, double bytesPerSecond){            
+            
             if(progress != _latestProgressReport.progress || bytesPerSecond != _latestProgressReport.bytesPerSecondSpeed){
                 _latestProgressReport = new TransferProgressReport(progress, bytesPerSecond);
                 ((IProgress<TransferProgressReport>)_progressCallback).Report (_latestProgressReport);
