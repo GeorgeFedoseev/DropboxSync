@@ -134,7 +134,7 @@ namespace DBXSync {
         }
 
         private async Task<Metadata> _DownloadFileAsync (DownloadFileTransfer transfer) {
-            Debug.Log("_DownloadFileAsync");
+            // Debug.Log("_DownloadFileAsync");
             // check if transfer is already queued or in process
             // if so, subscribe to its completion
             var alreadyHave = GetQueuedOrExecutingDownloadTransfer (transfer.DropboxPath, transfer.LocalPath);

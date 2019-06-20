@@ -28,6 +28,6 @@ public class KeepSyncedExampleScript : MonoBehaviour
 
     void OnChangeSynced(DBXSync.EntryChange change){
         print($"Change synced: {change}");
-        statusText.text = $"change synced: {change}";
+        // statusText.text = $"change synced: {change}";
     }    
 }

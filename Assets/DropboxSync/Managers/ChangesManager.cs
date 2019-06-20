@@ -104,14 +104,20 @@ namespace DBXSync {
 
                 Action<EntryChange> changedCallback = async (change) => {
                     // sync
-                    Debug.Log(change);
+                    // Debug.Log(change);
 
-                    await _cacheManager.SyncChangeAsync(change, new Progress<TransferProgressReport>((progress) => {
-                        // Debug.Log($"Syncing {dropboxPath} {progress.progress}% {progress.bytesPerSecondFormatted}");
-                    }), _syncSubscriptions[dropboxPath].syncCancellationTokenSource.Token);
+                    try {
 
-                    // report that synced
-                    callback(change);                
+                        await _cacheManager.SyncChangeAsync(change, new Progress<TransferProgressReport>((progress) => {
+                            // Debug.Log($"Syncing {dropboxPath} {progress.progress}% {progress.bytesPerSecondFormatted}");
+                        }), _syncSubscriptions[dropboxPath].syncCancellationTokenSource.Token);
+
+                        // report that synced
+                        callback(change);
+
+                    }catch(OperationCanceledException){
+                        // quiet
+                    }  
                 };                
                 
                 _syncSubscriptions[dropboxPath] = new SyncSubscription {                    
@@ -212,8 +218,9 @@ namespace DBXSync {
             // associate folder with callback
             if(!_folderSubscriptions[dropboxFolderPath].Contains(callback)){
                 _folderSubscriptions[dropboxFolderPath].Add(callback);
-            }
+            }            
 
+            ResetCursorForFolderAsync(dropboxFolderPath);
             await CheckChangesInFolderAsync(dropboxFolderPath);
         }      
 
@@ -290,10 +297,10 @@ namespace DBXSync {
                     Debug.LogWarning($"[DropboxSync] Resetting cursor for folder {dropboxFolderPath}");
 
                     // cursor is invalid - need to reset it
-                    _folderCursors.Remove(dropboxFolderPath);
+                    ResetCursorForFolderAsync(dropboxFolderPath);
 
                     // start listing folder from beginning
-                    await CheckChangesInFolderAsync(dropboxFolderPath);                                        
+                    await CheckChangesInFolderAsync(dropboxFolderPath);
                 }                
             }
 
@@ -301,6 +308,12 @@ namespace DBXSync {
             _folderCursors[dropboxFolderPath] = cursor;
             // update _lastCursor for next longpoll
             _lastCursor = cursor;
+        }
+
+        private void ResetCursorForFolderAsync(string dropboxFolderPath){
+            if(_folderCursors.ContainsKey(dropboxFolderPath)){
+                _folderCursors.Remove(dropboxFolderPath);                
+            }            
         }
 
         private void ProcessReceivedMetadataForFolder(string dropboxFolderPath, Metadata remoteMetadata){
