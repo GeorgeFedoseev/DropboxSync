@@ -145,7 +145,7 @@ namespace DBXSync {
         }
 
         private async Task<Metadata> ProcessDuplicateAsync(IFileTransfer originalTransfer, IFileTransfer duplicateTransfer) {
-            Debug.LogWarning("Duplicate upload trasfer.");
+            Debug.LogWarning($"Duplicate {(duplicateTransfer is DownloadFileTransfer ? "download" : "upload")} trasfer.");
 
             EventHandler<TransferProgressReport> reportProgressToDuplicateHandler = (sender, progress) => {
                 ((IProgress<TransferProgressReport>)duplicateTransfer.ProgressCallback).Report(progress);

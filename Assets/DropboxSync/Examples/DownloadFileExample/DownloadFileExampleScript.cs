@@ -10,8 +10,9 @@ using UnityEngine.UI;
 public class DownloadFileExampleScript : MonoBehaviour
 {
 
-    public Text statusText;
+    public InputField inputField;
     public Button downloadButton, cancelButton;
+    public Text statusText;
 
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
@@ -28,14 +29,14 @@ public class DownloadFileExampleScript : MonoBehaviour
         _cancellationTokenSource = new CancellationTokenSource();
 
         try {
-			var localPath = await DropboxSync.Main.CacheManager.GetLocalFilePathAsync("/DropboxSyncExampleFolder/embedded-gallery.apk", 
+			var localPath = await DropboxSync.Main.CacheManager.GetLocalFilePathAsync(inputField.text, 
                                 new Progress<TransferProgressReport>((report) => {                        
                                     statusText.text = $"Downloading: {report.progress}% {report.bytesPerSecondFormatted}";
                                 }), _cancellationTokenSource.Token);
 
 			print($"Completed");
 			statusText.text = $"<color=green>Local path: {localPath}</color>";
-            
+
 		}catch(Exception ex){
 			if(ex is OperationCanceledException){
 				Debug.Log("Download cancelled");
