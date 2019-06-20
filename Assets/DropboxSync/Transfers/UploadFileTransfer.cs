@@ -12,6 +12,9 @@ namespace DBXSync {
 
         public string DropboxPath => _dropboxTargetPath;
         public string LocalPath => _localPath;
+
+        public DateTime StartDateTime => _startDateTime;
+        public DateTime EndDateTime => _endDateTime;
         
         public TransferProgressReport Progress => _latestProgressReport;
         public Progress<TransferProgressReport> ProgressCallback => _progressCallback;
@@ -25,6 +28,9 @@ namespace DBXSync {
         private Progress<TransferProgressReport> _progressCallback;
         private TaskCompletionSource<Metadata> _completionSource;
         private CancellationTokenSource _cancellationTokenSource;
+
+        private DateTime _startDateTime;
+        private DateTime _endDateTime = DateTime.MaxValue;
         
 
         public UploadFileTransfer(string localPath, string dropboxTargetPath, Progress<TransferProgressReport> progressCallback, 
@@ -43,6 +49,8 @@ namespace DBXSync {
         }
 
         public async Task<Metadata> ExecuteAsync () {
+            _startDateTime = DateTime.Now;
+
             var cancellationToken = _cancellationTokenSource.Token;
 
             if(!File.Exists(_localPath)){
@@ -113,6 +121,8 @@ namespace DBXSync {
             var metadata = await new UploadFinishRequest(new UploadFinishRequestParameters(sessionId, totalBytesUploaded, _dropboxTargetPath), _config).ExecuteAsync(new byte[0]);
             
             ReportProgress(100, speedTracker.GetBytesPerSecond());
+
+            _endDateTime = DateTime.Now;
 
             Debug.LogWarning($"Upload done.");
 

@@ -11,10 +11,13 @@ namespace DBXSync {
 
         public string DropboxPath => _dropboxPath;
         public string LocalPath => _localTargetPath;
+
+        public DateTime StartDateTime => _startDateTime;
+        public DateTime EndDateTime => _endDateTime;
         
         public TransferProgressReport Progress => _latestProgressReport;
         public Progress<TransferProgressReport> ProgressCallback => _progressCallback;
-        
+
         public TaskCompletionSource<Metadata> CompletionSource => _completionSource;
 
         private string _dropboxPath;
@@ -25,6 +28,9 @@ namespace DBXSync {
         private Progress<TransferProgressReport> _progressCallback;
         private TaskCompletionSource<Metadata> _completionSource;
         private CancellationTokenSource _cancellationTokenSource;
+
+        private DateTime _startDateTime;
+        private DateTime _endDateTime = DateTime.MaxValue;
 
         public DownloadFileTransfer (string dropboxPath, string localTargetPath, Progress<TransferProgressReport> progressCallback, 
                                     TaskCompletionSource<Metadata> completionSource, DropboxSyncConfiguration config) {            
@@ -52,6 +58,8 @@ namespace DBXSync {
         }
 
         public async Task<Metadata> ExecuteAsync () {
+            _startDateTime = DateTime.Now;
+
             var cancellationToken = _cancellationTokenSource.Token;
             
             if(_metadata == null){
@@ -159,6 +167,8 @@ namespace DBXSync {
             // report complete progress
             ReportProgress(100, speedTracker.GetBytesPerSecond());
 
+            _endDateTime = DateTime.Now;
+
             return latestMetadata;
         }        
 
@@ -167,9 +177,7 @@ namespace DBXSync {
         }
 
         private void ReportProgress(int progress, double bytesPerSecond){
-            if(progress != _latestProgressReport.progress || bytesPerSecond != _latestProgressReport.bytesPerSecondSpeed){
-                // _progress = progress;
-                // _bytesPerSecond = bytesPerSecond;                
+            if(progress != _latestProgressReport.progress || bytesPerSecond != _latestProgressReport.bytesPerSecondSpeed){                  
                 _latestProgressReport = new TransferProgressReport(progress, bytesPerSecond);
                 ((IProgress<TransferProgressReport>)_progressCallback).Report(_latestProgressReport);
             }  
