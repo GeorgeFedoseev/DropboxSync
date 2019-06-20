@@ -1174,7 +1174,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   localFileInput: {fileID: 1807044547}
   uploadButton: {fileID: 1385013245}
-  cancelDuplicateButton: {fileID: 441422700}
+  cancelButton: {fileID: 441422700}
   statusText: {fileID: 1402052045}
 --- !u!4 &1686903681
 Transform:

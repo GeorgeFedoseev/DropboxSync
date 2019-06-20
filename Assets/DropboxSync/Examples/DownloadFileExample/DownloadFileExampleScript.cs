@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using DBXSync;
 using UnityEngine;
@@ -10,27 +11,41 @@ public class DownloadFileExampleScript : MonoBehaviour
 {
 
     public Text statusText;
+    public Button downloadButton, cancelButton;
+
+    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
     // Start is called before the first frame update
-    async void Start()
-    {
+    async void Start() {
+        downloadButton.onClick.AddListener(DownloadFile);	
 
-        var downloadTasks = new List<Task<string>>();
-        for(var i = 0; i < 5; i++){
-            downloadTasks.Add(DropboxSync.Main.CacheManager.GetLocalFilePathAsync("/DropboxSyncExampleFolder/embedded-gallery.apk", 
-                    new Progress<TransferProgressReport>((report) => {                        
-                        statusText.text = $"Downloading: {report.progress}% {report.bytesPerSecondFormatted}";
-                    })));
-        }
-
-        var results = await Task.WhenAll(downloadTasks);
-        print("All file downloads completed");       
-        
-        //Debug.Log($"Download finished; file metadata: {metadata}");
+		cancelButton.onClick.AddListener(() => {
+			_cancellationTokenSource.Cancel();
+		});
     }
 
-    // Update is called once per frame
-    void Update()
-    {
+    private async void DownloadFile(){
+        _cancellationTokenSource = new CancellationTokenSource();
+
+        try {
+			var localPath = await DropboxSync.Main.CacheManager.GetLocalFilePathAsync("/DropboxSyncExampleFolder/embedded-gallery.apk", 
+                                new Progress<TransferProgressReport>((report) => {                        
+                                    statusText.text = $"Downloading: {report.progress}% {report.bytesPerSecondFormatted}";
+                                }), _cancellationTokenSource.Token);
+
+			print($"Completed");
+			statusText.text = $"<color=green>Local path: {localPath}</color>";
+            
+		}catch(Exception ex){
+			if(ex is OperationCanceledException){
+				Debug.Log("Download cancelled");
+				statusText.text = $"<color=orange>Download canceled.</color>";
+			}else{
+				Debug.LogException(ex);
+				statusText.text = $"<color=red>Download failed.</color>";
+			}
+		}
+
         
     }
 }

@@ -21,7 +21,7 @@ public class UploadFileExampleScript : MonoBehaviour {
 	public Button cancelButton;
 	public Text statusText;
 
-	private CancellationTokenSource _cancellationTokenSource;
+	private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
 	void Start(){
 		localFileInput.onValueChanged.AddListener((val) => {
@@ -32,7 +32,6 @@ public class UploadFileExampleScript : MonoBehaviour {
 
 		uploadButton.onClick.AddListener(UploadFile);	
 
-		_cancellationTokenSource = new CancellationTokenSource();
 		cancelButton.onClick.AddListener(() => {
 			_cancellationTokenSource.Cancel();
 		});

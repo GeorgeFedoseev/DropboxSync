@@ -112,24 +112,14 @@ namespace DBXSync {
         }
 
         private async Task<Metadata> _DownloadFileAsync (DownloadFileTransfer transfer) {
+            Debug.Log("_DownloadFileAsync");
             // check if transfer is already queued or in process
             // if so, subscribe to its completion
             var alreadyHave = GetQueuedOrExecutingDownloadTransfer (transfer.DropboxPath, transfer.LocalPath);
             if (alreadyHave != null) {
-                Debug.LogWarning("Duplicate upload trasfer.");
-
-                // subscribe duplicate transfer to progress of existing transfer
-                alreadyHave.ProgressCallback.ProgressChanged += (sender, progress) => {
-                    ((IProgress<TransferProgressReport>)transfer.ProgressCallback).Report(progress);
-                };
-
-                // dont wait for existing task if this duplicate was canceled                
-                await Task.WhenAny(alreadyHave.CompletionSource.Task, transfer.CancellationToken.WhenCanceled());            
-
-                // WhenCanceled() should throw exception if duplicate transfer was cancelled
-                // so here we can only be if alreadyHave finished
-                return alreadyHave.CompletionSource.Task.Result;                
+                return await ProcessDuplicateAsync(alreadyHave, transfer);    
             }
+
             // otherwise put new transfer to queue
             lock (_transfersLock) {
                 _downloadTransferQueue.Enqueue (transfer);
@@ -143,23 +133,7 @@ namespace DBXSync {
             // if so, subscribe to its completion
             var alreadyHave = GetQueuedOrExecutingUploadTransfer (transfer.DropboxPath, transfer.LocalPath);
             if (alreadyHave != null) {
-                Debug.LogWarning("Duplicate upload trasfer.");
-
-                EventHandler<TransferProgressReport> reportProgressToDuplicateHandler = (sender, progress) => {
-                    ((IProgress<TransferProgressReport>)transfer.ProgressCallback).Report(progress);
-                };
-
-                // subscribe to progress of existing transfer
-                alreadyHave.ProgressCallback.ProgressChanged += reportProgressToDuplicateHandler;
-                
-                // dont wait for existing task if this duplicate was canceled     
-                try {
-                    return await alreadyHave.CompletionSource.Task.WaitOrCancel(transfer.CancellationToken); 
-                }catch(OperationCanceledException ex) {                    
-                    // stop sending progress to duplicate
-                    alreadyHave.ProgressCallback.ProgressChanged -= reportProgressToDuplicateHandler;
-                    throw new OperationCanceledException($"File transfer {transfer} was cancelled");
-                }        
+                return await ProcessDuplicateAsync(alreadyHave, transfer);    
             }
 
             // otherwise put new transfer to queue
@@ -168,6 +142,26 @@ namespace DBXSync {
             }
             // and subscribe to completion
             return await transfer.CompletionSource.Task;
+        }
+
+        private async Task<Metadata> ProcessDuplicateAsync(IFileTransfer originalTransfer, IFileTransfer duplicateTransfer) {
+            Debug.LogWarning("Duplicate upload trasfer.");
+
+            EventHandler<TransferProgressReport> reportProgressToDuplicateHandler = (sender, progress) => {
+                ((IProgress<TransferProgressReport>)duplicateTransfer.ProgressCallback).Report(progress);
+            };
+
+            // subscribe to progress of existing transfer
+            originalTransfer.ProgressCallback.ProgressChanged += reportProgressToDuplicateHandler;
+            
+            // dont wait for existing task if this duplicate was canceled     
+            try {
+                return await originalTransfer.CompletionSource.Task.WaitOrCancel(duplicateTransfer.CancellationToken); 
+            }catch(OperationCanceledException ex) {                    
+                // stop sending progress to duplicate
+                originalTransfer.ProgressCallback.ProgressChanged -= reportProgressToDuplicateHandler;
+                throw new OperationCanceledException($"File transfer {duplicateTransfer} (duplicate) was cancelled");
+            }
         }
 
         private DownloadFileTransfer GetQueuedOrExecutingDownloadTransfer (string dropboxPath, string localPath) {

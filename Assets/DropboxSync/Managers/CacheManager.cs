@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -16,12 +17,12 @@ namespace DBXSync {
             _transferManager = transferManager;
         }
 
-        public async Task<string> GetLocalFilePathAsync(string dropboxPath, Progress<TransferProgressReport> progressCallback) {
-            await MaybeCacheFileAsync(dropboxPath, progressCallback);
+        public async Task<string> GetLocalFilePathAsync(string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken) {
+            await MaybeCacheFileAsync(dropboxPath, progressCallback, cancellationToken);
             return Utils.DropboxPathToLocalPath(dropboxPath, _config);
         }
 
-        private async Task MaybeCacheFileAsync(string dropboxPath, Progress<TransferProgressReport> progressCallback){
+        private async Task MaybeCacheFileAsync(string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken){
             var remoteMetadata = (await new GetMetadataRequest (new GetMetadataRequestParameters {
                     path = dropboxPath
                 }, _config).ExecuteAsync ()).GetMetadata ();            
@@ -34,7 +35,7 @@ namespace DBXSync {
             }
             
             // download file            
-            remoteMetadata = await _transferManager.DownloadFileAsync(remoteMetadata, localFilePath, progressCallback);
+            remoteMetadata = await _transferManager.DownloadFileAsync(remoteMetadata, localFilePath, progressCallback, cancellationToken);
 
             // write metadata if all went good
             WriteMetadata(remoteMetadata);
