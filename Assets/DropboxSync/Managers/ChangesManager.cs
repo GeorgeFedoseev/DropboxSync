@@ -122,17 +122,29 @@ namespace DBXSync {
                 Debug.LogWarning("CheckChangesInFolder: has_more");
 
                 // list_folder/continue
-                var listFolderContinueResponse = await new ListFolderContinueRequest(new CursorRequestParameters {
-                    cursor = cursor
-                }, _config).ExecuteAsync();
+                ListFolderResponse listFolderContinueResponse;
+                try {
+                    listFolderContinueResponse = await new ListFolderContinueRequest(new CursorRequestParameters {
+                        cursor = cursor
+                    }, _config).ExecuteAsync();    
 
-                // TODO: if get exception that cursor is not valid anymore == drop current cursor and call CheckChangesInFolderAsync()
+                    // TODO: if get exception that cursor is not valid anymore == drop current cursor and call CheckChangesInFolderAsync()
 
-                // process entries
-                listFolderContinueResponse.entries.ForEach(entry => ProcessReceivedMetadataForFolder(dropboxFolderPath, entry));
-                
-                has_more = listFolderContinueResponse.has_more;
-                cursor = listFolderContinueResponse.cursor;
+                    // process entries
+                    listFolderContinueResponse.entries.ForEach(entry => ProcessReceivedMetadataForFolder(dropboxFolderPath, entry));
+                    
+                    has_more = listFolderContinueResponse.has_more;
+                    cursor = listFolderContinueResponse.cursor;
+
+                }catch(DropboxResetCursorAPIException ex){
+                    Debug.LogWarning($"[DropboxSync] Resetting cursor for folder {dropboxFolderPath}");
+                    
+                    // cursor is invalid - need to reset it
+                    _folderCursors.Remove(dropboxFolderPath);
+
+                    // start listing folder from beginning
+                    await CheckChangesInFolderAsync(dropboxFolderPath);                                        
+                }                
             }
 
             // save latest cursor to the folder

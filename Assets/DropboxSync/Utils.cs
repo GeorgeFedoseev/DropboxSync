@@ -35,8 +35,14 @@ namespace DBXSync {
                     try {
                         var errorResponse = JsonUtility.FromJson<Response>(errorResponseString);
                         if(!string.IsNullOrEmpty(errorResponse.error_summary)){
-                            result = new DropboxAPIException($"error: {errorResponse.error_summary}; request parameters: {parameters}; endpoint: {endpoint}; full-response: {errorResponseString}",
+                            if(errorResponse.error.tag == "reset"){
+                                result = new DropboxResetCursorAPIException($"error: {errorResponse.error_summary}; request parameters: {parameters}; endpoint: {endpoint}; full-response: {errorResponseString}",
                                                                      errorResponse.error_summary, errorResponse.error.tag);
+                            }else{
+                                result = new DropboxAPIException($"error: {errorResponse.error_summary}; request parameters: {parameters}; endpoint: {endpoint}; full-response: {errorResponseString}",
+                                                                     errorResponse.error_summary, errorResponse.error.tag);
+                            }
+                            
                         }else{
                             // empty error-summary
                             result = new DropboxAPIException($"error: {errorResponseString}; request parameters: {parameters}; endpoint: {endpoint}", errorResponseString, null);                                            
