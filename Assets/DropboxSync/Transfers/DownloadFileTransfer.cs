@@ -189,5 +189,9 @@ namespace DBXSync {
                 ((IProgress<TransferProgressReport>)_progressCallback).Report(_latestProgressReport);
             }  
         }
+
+        public override string ToString() {
+            return $"[DownloadFileTransfer] {_dropboxPath}";
+        }
     }
 }

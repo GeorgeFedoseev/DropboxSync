@@ -67,7 +67,7 @@ public class UploadFileExampleScript : MonoBehaviour {
 		
 		
 		
-		var result = await originalUploadTask;
+		var results = await Task.WhenAll(originalUploadTask, duplicateUploadTask);
 		print("All file uploads completed");        
 
 		uploadButton.interactable = true;		

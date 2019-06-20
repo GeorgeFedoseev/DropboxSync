@@ -155,11 +155,10 @@ namespace DBXSync {
                 // dont wait for existing task if this duplicate was canceled     
                 try {
                     return await alreadyHave.CompletionSource.Task.WaitOrCancel(transfer.CancellationToken); 
-                }catch(OperationCanceledException ex) {
-                    Debug.LogError("Caught OperationCanceledException, stop progress reporting.");
+                }catch(OperationCanceledException ex) {                    
                     // stop sending progress to duplicate
                     alreadyHave.ProgressCallback.ProgressChanged -= reportProgressToDuplicateHandler;
-                    throw ex;
+                    throw new OperationCanceledException($"File transfer {transfer} was cancelled");
                 }        
             }
 
