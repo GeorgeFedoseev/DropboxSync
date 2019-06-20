@@ -12,12 +12,16 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Threading.Tasks;
+using System.Threading;
 
 public class UploadFileExampleScript : MonoBehaviour {
 
 	public InputField localFileInput;
 	public Button uploadButton;
+	public Button cancelDuplicateButton;
 	public Text statusText;
+
+	private CancellationTokenSource _duplicateCancellationTokenSource;
 
 	void Start(){
 		localFileInput.onValueChanged.AddListener((val) => {
@@ -26,8 +30,12 @@ public class UploadFileExampleScript : MonoBehaviour {
 
 		ValidateLocalFilePath();
 
-		uploadButton.onClick.AddListener(UploadFile);
-		// UploadFile();
+		uploadButton.onClick.AddListener(UploadFile);	
+
+		_duplicateCancellationTokenSource = new CancellationTokenSource();
+		cancelDuplicateButton.onClick.AddListener(() => {
+			_duplicateCancellationTokenSource.Cancel();
+		});
 	}	
 
 	void ValidateLocalFilePath(){
@@ -45,18 +53,21 @@ public class UploadFileExampleScript : MonoBehaviour {
 		var localFilePath = localFileInput.text;
 		var uploadDropboxPath = Path.Combine("/DropboxSyncExampleFolder/", Path.GetFileName(localFilePath));
 
-		
-		var uploadTasks = new List<Task<Metadata>>();
-        for(var i = 0; i < 5; i++){
-            uploadTasks.Add(DropboxSync.Main.TransferManager.UploadFileAsync(localFilePath, uploadDropboxPath, new Progress<TransferProgressReport>((report) => {
+		var originalUploadTask = DropboxSync.Main.TransferManager.UploadFileAsync(localFilePath, uploadDropboxPath, new Progress<TransferProgressReport>((report) => {
 				if(Application.isPlaying){
 					statusText.text = $"Uploading file {report.progress}% {report.bytesPerSecondFormatted}";
 				}				
-			})));
-        }
+		}));
 
+		var duplicateUploadTask = DropboxSync.Main.TransferManager.UploadFileAsync(localFilePath, uploadDropboxPath, new Progress<TransferProgressReport>((report) => {
+				if(Application.isPlaying){
+					Debug.Log($"Duplicate uploading file {report.progress}% {report.bytesPerSecondFormatted}");
+				}				
+		}), _duplicateCancellationTokenSource.Token);
 		
-		var results = await Task.WhenAll(uploadTasks);
+		
+		
+		var result = await originalUploadTask;
 		print("All file uploads completed");        
 
 		uploadButton.interactable = true;		

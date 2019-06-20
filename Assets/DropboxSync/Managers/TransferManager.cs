@@ -145,17 +145,22 @@ namespace DBXSync {
             if (alreadyHave != null) {
                 Debug.LogWarning("Duplicate upload trasfer.");
 
-                // subscribe to progress of existing transfer
-                alreadyHave.ProgressCallback.ProgressChanged += (sender, progress) => {
+                EventHandler<TransferProgressReport> reportProgressToDuplicateHandler = (sender, progress) => {
                     ((IProgress<TransferProgressReport>)transfer.ProgressCallback).Report(progress);
                 };
-                
-                // dont wait for existing task if this duplicate was canceled                
-                await Task.WhenAny(alreadyHave.CompletionSource.Task, transfer.CancellationToken.WhenCanceled());            
 
-                // WhenCanceled() should throw exception if duplicate transfer was cancelled
-                // so here we can only be if alreadyHave finished
-                return alreadyHave.CompletionSource.Task.Result;                
+                // subscribe to progress of existing transfer
+                alreadyHave.ProgressCallback.ProgressChanged += reportProgressToDuplicateHandler;
+                
+                // dont wait for existing task if this duplicate was canceled     
+                try {
+                    return await alreadyHave.CompletionSource.Task.WaitOrCancel(transfer.CancellationToken); 
+                }catch(OperationCanceledException ex) {
+                    Debug.LogError("Caught OperationCanceledException, stop progress reporting.");
+                    // stop sending progress to duplicate
+                    alreadyHave.ProgressCallback.ProgressChanged -= reportProgressToDuplicateHandler;
+                    throw ex;
+                }        
             }
 
             // otherwise put new transfer to queue

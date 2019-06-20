@@ -11,19 +11,9 @@ using UnityEngine;
 
 namespace DBXSync {
 
-    public static class Utils {
+    public static class Utils {        
 
-        public static Task WhenCanceled(this CancellationToken cancellationToken) {
-            var tcs = new TaskCompletionSource<bool>();
-            cancellationToken.Register(s => ((TaskCompletionSource<bool>)s).SetException(new OperationCanceledException()), tcs);
-            return tcs.Task;
-        }
-
-        public static T[] SubArray<T>(this T[] data, int index, int length) {
-            T[] result = new T[length];
-            Array.Copy(data, index, result, 0, length);
-            return result;
-        }
+        
 
 
         public static void RethrowDropboxRequestWebException(WebException ex, RequestParameters parameters, string endpoint){
