@@ -14,6 +14,12 @@ namespace DBXSync {
         public Action<EntryChange> fileChangeCallback;
     }
 
+    public class SyncSubscription {
+        public Action<EntryChange> changedCallback;
+        public List<Action<EntryChange>> syncedCallbacks = new List<Action<EntryChange>>();
+        public CancellationTokenSource syncCancellationTokenSource = new CancellationTokenSource();
+    }
+
     public class ChangesManager {
 
 
@@ -31,7 +37,7 @@ namespace DBXSync {
 
         private Dictionary<string, List<FileChangeSubscription>> _fileSubscriptions = new Dictionary<string, List<FileChangeSubscription>>();
 
-        private Dictionary<string, List<Action<EntryChange>>> _syncSubscriptions = new Dictionary<string, List<Action<EntryChange>>>();
+        private Dictionary<string, SyncSubscription> _syncSubscriptions = new Dictionary<string, SyncSubscription>();        
 
         public ChangesManager (CacheManager cacheManager, DropboxSyncConfiguration config) {
             _cacheManager = cacheManager;
@@ -83,25 +89,60 @@ namespace DBXSync {
 
         // SYNCRONIZATION
 
+        public bool IsKeepingInSync(string dropboxPath){
+            dropboxPath = Utils.UnifyDropboxPath(dropboxPath);
+
+            return _syncSubscriptions.ContainsKey(dropboxPath);
+        }
+
         public void KeepSynced(string dropboxPath, Action<EntryChange> callback){
             dropboxPath = Utils.UnifyDropboxPath(dropboxPath);
 
-            // add folder to dictionary
+            // start syncing if not already
             if(!_syncSubscriptions.ContainsKey(dropboxPath)){
-                _syncSubscriptions[dropboxPath] = new List<Action<EntryChange>>();
-            }
-            
-            // associate path with callback
-            if(!_syncSubscriptions[dropboxPath].Contains(callback)){
-                _syncSubscriptions[dropboxPath].Add(callback);
-            }
-            
+                _syncSubscriptions[dropboxPath] = new SyncSubscription();
 
+                Action<EntryChange> changedCallback = async (change) => {
+                    // sync
+                    Debug.Log(change);
 
+                    await _cacheManager.SyncChangeAsync(change, new Progress<TransferProgressReport>((progress) => {
+                        // Debug.Log($"Syncing {dropboxPath} {progress.progress}% {progress.bytesPerSecondFormatted}");
+                    }), _syncSubscriptions[dropboxPath].syncCancellationTokenSource.Token);
+
+                    // report that synced
+                    callback(change);                
+                };                
+                
+                _syncSubscriptions[dropboxPath] = new SyncSubscription {                    
+                    changedCallback = changedCallback
+                };
+
+                SubscribeToChanges(dropboxPath, changedCallback);
+            }
+
+            // add callback
+            if(!_syncSubscriptions[dropboxPath].syncedCallbacks.Contains(callback)){
+                _syncSubscriptions[dropboxPath].syncedCallbacks.Add(callback);
+            }            
+        }
+
+        public void StopKeepingInSync(string dropboxPath){
+            dropboxPath = Utils.UnifyDropboxPath(dropboxPath);
+
+            if(_syncSubscriptions.ContainsKey(dropboxPath)){
+                var sub = _syncSubscriptions[dropboxPath];
+                // cancel current file transfers
+                sub.syncCancellationTokenSource.Cancel();
+                // unsubscribe from changes notifications
+                UnsubscribeFromChanges(dropboxPath, sub.changedCallback);
+                _syncSubscriptions.Remove(dropboxPath);
+            }
         }
 
         // CHANGES NOTIFICATIONS
         public async void SubscribeToChanges(string dropboxPath, Action<EntryChange> callback){
+            Debug.LogWarning($"Check if a file or a folder {dropboxPath}");
             var metadata = (await new GetMetadataRequest(dropboxPath, _config).ExecuteAsync()).GetMetadata();
             if(metadata.IsFile){
                 SubscribeToFileChages(dropboxPath, callback);
@@ -161,6 +202,8 @@ namespace DBXSync {
         private async void SubscribeToFolderChanges(string dropboxFolderPath, Action<EntryChange> callback){
             dropboxFolderPath = Utils.UnifyDropboxPath(dropboxFolderPath);
 
+            Debug.LogWarning($"SubscribeToFolderChanges {dropboxFolderPath}");
+
             // add folder to dictionary
             if(!_folderSubscriptions.ContainsKey(dropboxFolderPath)){
                 _folderSubscriptions[dropboxFolderPath] = new List<Action<EntryChange>>();
@@ -215,6 +258,7 @@ namespace DBXSync {
             if(cursor == null){
                 // list_folder 
                 var listFolderResponse = await new ListFolderRequest(new ListFolderRequestParameters {
+                    path = dropboxFolderPath,
                     recursive = true,
                     include_deleted = true                
                 }, _config).ExecuteAsync();
@@ -298,8 +342,17 @@ namespace DBXSync {
         }
 
 
+        private void CancelAllCurrentSyncTransfers(){
+            foreach(var kv in _syncSubscriptions){
+                var sub = kv.Value;
+                sub.syncCancellationTokenSource.Cancel();
+            }
+        }
+
+
         public void Dispose () {            
-            _isDisposed = true;            
+            _isDisposed = true;      
+            CancelAllCurrentSyncTransfers();
         }
     }
     

@@ -27,7 +27,11 @@ namespace DBXSync {
                     path = dropboxPath
                 }, _config).ExecuteAsync ()).GetMetadata ();            
 
-            var localFilePath = Utils.DropboxPathToLocalPath(dropboxPath, _config);
+            await MaybeCacheFileAsync(remoteMetadata, progressCallback, cancellationToken);
+        }
+
+        private async Task MaybeCacheFileAsync(Metadata remoteMetadata, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken){
+            var localFilePath = Utils.DropboxPathToLocalPath(remoteMetadata.path_lower, _config);
 
             // decide if need to download a new version
             if(File.Exists(localFilePath) && !ShouldUpdateFileFromDropbox(remoteMetadata)){                
@@ -48,7 +52,11 @@ namespace DBXSync {
         public void RemoveFileFromCache(Metadata metadata){
             if(HaveFileLocally(metadata)){
                 var localPath = Utils.DropboxPathToLocalPath(metadata.path_lower, _config);
+                var localMetadataFilePath = Utils.GetMetadataLocalFilePath(metadata.path_lower, _config); 
+                // delete file
                 File.Delete(localPath);
+                // delete metadata
+                File.Delete(localMetadataFilePath);
             } 
         }
 
@@ -57,7 +65,7 @@ namespace DBXSync {
                 case EntryChangeType.Created:                
                 case EntryChangeType.Modified:
                 // download
-                await MaybeCacheFileAsync(entryChange.metadata.path_lower, progressCallback, cancellationToken);
+                await MaybeCacheFileAsync(entryChange.metadata, progressCallback, cancellationToken);
                 break;
                 case EntryChangeType.Removed:
                 // remove locally

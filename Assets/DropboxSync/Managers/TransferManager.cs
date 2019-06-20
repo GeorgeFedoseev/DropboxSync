@@ -13,10 +13,10 @@ namespace DBXSync {
         private DropboxSyncConfiguration _config;
 
         // queued
-        private Queue<DownloadFileTransfer> _downloadTransferQueue = new Queue<DownloadFileTransfer> ();
+        private List<DownloadFileTransfer> _downloadTransferQueue = new List<DownloadFileTransfer> ();
         public int CurrentQueuedDownloadTransfersNumber => _downloadTransferQueue.Count;
 
-        private Queue<UploadFileTransfer> _uploadTransferQueue = new Queue<UploadFileTransfer> ();
+        private List<UploadFileTransfer> _uploadTransferQueue = new List<UploadFileTransfer> ();
         public int CurrentQueuedUploadTransfersNumber => _uploadTransferQueue.Count;
 
         // current
@@ -61,7 +61,7 @@ namespace DBXSync {
                     if (addNum > 0) {
                         Debug.Log ($"[TransferManager] Adding {addNum} download transfers to process");
                         for (var i = 0; i < addNum; i++) {
-                            var transfer = _downloadTransferQueue.Dequeue ();
+                            var transfer = _downloadTransferQueue.First(); _downloadTransferQueue.RemoveAt (0);
                             // fire and forget
                             ProcessTransferAsync (transfer);
                             _currentDownloadTransfers.Add (transfer);
@@ -78,7 +78,7 @@ namespace DBXSync {
                     if (addNum > 0) {
                         Debug.Log ($"[TransferManager] Adding {addNum} upload transfers to process");
                         for (var i = 0; i < addNum; i++) {
-                            var transfer = _uploadTransferQueue.Dequeue ();
+                            var transfer = _uploadTransferQueue.First(); _uploadTransferQueue.RemoveAt (0);
                             // fire and forget
                             ProcessTransferAsync (transfer);
                             _currentUploadTransfers.Add (transfer);
@@ -88,8 +88,30 @@ namespace DBXSync {
             }
         }
 
+        private void ClearQueueFromCancelledTransfers(){
+            lock (_transfersLock) {
+                // downloads
+                foreach(var tr in _downloadTransferQueue.ToList()){
+                    if(tr.CancellationToken.IsCancellationRequested){
+                        tr.CompletionSource.SetException(new OperationCanceledException(tr.CancellationToken));   
+                        _downloadTransferQueue.Remove(tr);                     
+                    }
+                }
+
+                // uploads
+                foreach(var tr in _uploadTransferQueue.ToList()){
+                    if(tr.CancellationToken.IsCancellationRequested){
+                        tr.CompletionSource.SetException(new OperationCanceledException(tr.CancellationToken));   
+                        _uploadTransferQueue.Remove(tr);                     
+                    }
+                }
+                
+            }
+        }
+
         private void _backgroudWorker () {
             while (!_isDisposed) {
+                ClearQueueFromCancelledTransfers();
                 MaybeAddFromQueue ();
                 Thread.Sleep (100);
             }
@@ -122,7 +144,7 @@ namespace DBXSync {
 
             // otherwise put new transfer to queue
             lock (_transfersLock) {
-                _downloadTransferQueue.Enqueue (transfer);
+                _downloadTransferQueue.Add (transfer);
             }
             // and subscribe to completion
             return await transfer.CompletionSource.Task;
@@ -138,7 +160,7 @@ namespace DBXSync {
 
             // otherwise put new transfer to queue
             lock (_transfersLock) {
-                _uploadTransferQueue.Enqueue (transfer);
+                _uploadTransferQueue.Add (transfer);
             }
             // and subscribe to completion
             return await transfer.CompletionSource.Task;
@@ -201,8 +223,7 @@ namespace DBXSync {
         private async void ProcessTransferAsync (IFileTransfer transfer) {
 
             try {
-                var metadata = await transfer.ExecuteAsync ();
-                transfer.CompletionSource.SetResult (metadata);
+                var metadata = await transfer.ExecuteAsync ();               
 
                 // move to completed
                 lock (_transfersLock) {
@@ -215,6 +236,8 @@ namespace DBXSync {
 
                     Debug.Log ($"[TransferManager] Transfer completed, moving to completed (now {_completedTransfers.Count} completed)");
                 }
+
+                transfer.CompletionSource.SetResult (metadata);
             } catch (Exception ex) {
 
                 transfer.CompletionSource.SetException (ex);
