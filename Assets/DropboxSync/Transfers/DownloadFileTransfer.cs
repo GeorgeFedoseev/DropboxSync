@@ -13,7 +13,7 @@ namespace DBXSync {
         public string LocalPath => _localTargetPath;
         public int Progress => _progress; 
         public double BytesPerSecond => _bytesPerSecond;
-        public IProgress<TransferProgressReport> ProgressCallback => _progressCallback;
+        public Progress<TransferProgressReport> ProgressCallback => _progressCallback;
         public TaskCompletionSource<Metadata> CompletionSource => _completionSource;
 
         private string _dropboxPath;
@@ -22,11 +22,11 @@ namespace DBXSync {
         private DropboxSyncConfiguration _config;
         private int _progress;
         private double _bytesPerSecond;
-        private IProgress<TransferProgressReport> _progressCallback;
+        private Progress<TransferProgressReport> _progressCallback;
         private TaskCompletionSource<Metadata> _completionSource;
         private CancellationTokenSource _cancellationTokenSource;
 
-        public DownloadFileTransfer (string dropboxPath, string localTargetPath, IProgress<TransferProgressReport> progressCallback, 
+        public DownloadFileTransfer (string dropboxPath, string localTargetPath, Progress<TransferProgressReport> progressCallback, 
                                     TaskCompletionSource<Metadata> completionSource, DropboxSyncConfiguration config) {            
             _metadata = null;
             _dropboxPath = dropboxPath;
@@ -39,7 +39,7 @@ namespace DBXSync {
             _cancellationTokenSource = new CancellationTokenSource();
         }
 
-        public DownloadFileTransfer (Metadata metadata, string localTargetPath, IProgress<TransferProgressReport> progressCallback, 
+        public DownloadFileTransfer (Metadata metadata, string localTargetPath, Progress<TransferProgressReport> progressCallback, 
                                     TaskCompletionSource<Metadata> completionSource, DropboxSyncConfiguration config) {            
             _metadata = metadata;
             _dropboxPath = metadata.path_lower;
@@ -170,7 +170,7 @@ namespace DBXSync {
             if(progress != _progress || bytesPerSecond != _bytesPerSecond){
                 _progress = progress;
                 _bytesPerSecond = bytesPerSecond;                
-                _progressCallback.Report (new TransferProgressReport(_progress, bytesPerSecond));    
+                ((IProgress<TransferProgressReport>)_progressCallback).Report (new TransferProgressReport(_progress, bytesPerSecond));    
             }  
         }
     }

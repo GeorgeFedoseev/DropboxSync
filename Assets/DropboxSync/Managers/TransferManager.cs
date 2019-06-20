@@ -96,19 +96,19 @@ namespace DBXSync {
         }
 
         // METHODS
-        public async Task<Metadata> DownloadFileAsync (string dropboxPath, string localPath, IProgress<TransferProgressReport> progressCallback) {
+        public async Task<Metadata> DownloadFileAsync (string dropboxPath, string localPath, Progress<TransferProgressReport> progressCallback) {
             var completionSource = new TaskCompletionSource<Metadata> ();
             var downloadTransfer = new DownloadFileTransfer (dropboxPath, localPath, progressCallback, completionSource, _config);
             return await _DownloadFileAsync (downloadTransfer);
         }
 
-        public async Task<Metadata> DownloadFileAsync (Metadata metadata, string localPath, IProgress<TransferProgressReport> progressCallback) {
+        public async Task<Metadata> DownloadFileAsync (Metadata metadata, string localPath, Progress<TransferProgressReport> progressCallback) {
             var completionSource = new TaskCompletionSource<Metadata> ();
             var downloadTransfer = new DownloadFileTransfer (metadata, localPath, progressCallback, completionSource, _config);
             return await _DownloadFileAsync (downloadTransfer);
         }
 
-        public async Task<Metadata> UploadFileAsync(string localPath, string dropboxPath, IProgress<TransferProgressReport> progressCallback) {
+        public async Task<Metadata> UploadFileAsync(string localPath, string dropboxPath, Progress<TransferProgressReport> progressCallback) {
             var completionSource = new TaskCompletionSource<Metadata> ();
             var uploadTransfer = new UploadFileTransfer (localPath, dropboxPath, progressCallback, completionSource, _config);
             return await _UploadFileAsync (uploadTransfer);
@@ -118,7 +118,11 @@ namespace DBXSync {
             // check if transfer is already queued or in process
             // if so, subscribe to its completion
             var alreadyHave = GetQueuedOrExecutingDownloadTransfer (transfer.DropboxPath, transfer.LocalPath);
-            if (alreadyHave != null) {
+            if (alreadyHave != null) {                
+                // subscribe to progress of existing transfer
+                alreadyHave.ProgressCallback.ProgressChanged += (sender, progress) => {
+                    ((IProgress<TransferProgressReport>)transfer.ProgressCallback).Report(progress);
+                };
                 return await alreadyHave.CompletionSource.Task;
             }
             // otherwise put new transfer to queue
@@ -134,6 +138,10 @@ namespace DBXSync {
             // if so, subscribe to its completion
             var alreadyHave = GetQueuedOrExecutingUploadTransfer (transfer.DropboxPath, transfer.LocalPath);
             if (alreadyHave != null) {
+                // subscribe to progress of existing transfer
+                alreadyHave.ProgressCallback.ProgressChanged += (sender, progress) => {
+                    ((IProgress<TransferProgressReport>)transfer.ProgressCallback).Report(progress);
+                };
                 return await alreadyHave.CompletionSource.Task;
             }
             // otherwise put new transfer to queue

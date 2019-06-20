@@ -16,12 +16,12 @@ namespace DBXSync {
             _transferManager = transferManager;
         }
 
-        public async Task<string> GetLocalFilePathAsync(string dropboxPath, IProgress<TransferProgressReport> progressCallback) {
+        public async Task<string> GetLocalFilePathAsync(string dropboxPath, Progress<TransferProgressReport> progressCallback) {
             await MaybeCacheFileAsync(dropboxPath, progressCallback);
             return Utils.DropboxPathToLocalPath(dropboxPath, _config);
         }
 
-        private async Task MaybeCacheFileAsync(string dropboxPath, IProgress<TransferProgressReport> progressCallback){
+        private async Task MaybeCacheFileAsync(string dropboxPath, Progress<TransferProgressReport> progressCallback){
             var remoteMetadata = (await new GetMetadataRequest (new GetMetadataRequestParameters {
                     path = dropboxPath
                 }, _config).ExecuteAsync ()).GetMetadata ();            
