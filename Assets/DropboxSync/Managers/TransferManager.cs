@@ -242,36 +242,30 @@ namespace DBXSync {
 
                 transfer.CompletionSource.SetException (ex);
 
+                // if it's download trasnfer - remove *.download file
+                if(transfer is DownloadFileTransfer){
+                    var downloadTrasnfer = transfer as DownloadFileTransfer;
+                    if(downloadTrasnfer.Metadata != null){                            
+                        File.Delete(Utils.GetDownloadTempFilePath(transfer.LocalPath, downloadTrasnfer.Metadata.content_hash));
+                    }                        
+                }
+
+                // remove from current
+                lock (_transfersLock) {
+                    if(transfer is DownloadFileTransfer){
+                        _currentDownloadTransfers.Remove (transfer);
+                    }else if(transfer is UploadFileTransfer){
+                        _currentUploadTransfers.Remove (transfer);
+                    }
+                }
+
                 if(ex is OperationCanceledException){
                     // transfer cancelled
-                    Debug.Log ($"[TransferManager] Transfer was cancelled");
-                    // remove from current
-                    lock (_transfersLock) {
-                        if(transfer is DownloadFileTransfer){
-                            _currentDownloadTransfers.Remove (transfer);
-                        }else if(transfer is UploadFileTransfer){
-                            _currentUploadTransfers.Remove (transfer);
-                        }
-                    }
-
-                    // if it's download trasnfer - remove *.download file
-                    if(transfer is DownloadFileTransfer){
-                        var downloadTrasnfer = transfer as DownloadFileTransfer;
-                        if(downloadTrasnfer.Metadata != null){                            
-                            File.Delete(Utils.GetDownloadTempFilePath(transfer.LocalPath, downloadTrasnfer.Metadata.content_hash));
-                        }                        
-                    }                    
+                    Debug.Log ($"[TransferManager] Transfer was cancelled");                    
                 }else{
                     // move to failed
                     lock (_transfersLock) {
-                        if(transfer is DownloadFileTransfer){
-                            _currentDownloadTransfers.Remove (transfer);
-                        }else if(transfer is UploadFileTransfer){
-                            _currentUploadTransfers.Remove (transfer);
-                        }
-
                         _failedTransfers.Add (transfer);
-
                         Debug.Log ($"[TransferManager] Transfer failed, moving to failed (now {_failedTransfers.Count} failed)");
                     }
                 }
