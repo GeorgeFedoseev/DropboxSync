@@ -23,7 +23,7 @@ namespace DBXSync {
         // private Thread _backgroundThread;
         private volatile bool _isDisposed = false;
             
-        private List<SyncSubscription> _syncStartQueue = new List<SyncSubscription>();
+        // private List<SyncSubscription> _syncStartQueue = new List<SyncSubscription>();
         private Dictionary<string, SyncSubscription> _syncSubscriptions = new Dictionary<string, SyncSubscription>();
 
         // private object _syncSubscriptionsLock = new object();    
@@ -36,21 +36,23 @@ namespace DBXSync {
             // _backgroundThread = new Thread (_backgroudWorker);
             // _backgroundThread.IsBackground = true;
             // _backgroundThread.Start ();
-            _backgroudWorker();
+            // _backgroudWorker();
         }
         
 
-        private async void _backgroudWorker () {
-            while (!_isDisposed) {
+        // private async void _backgroudWorker () {
+        //     while (!_isDisposed) {
 
-                foreach(var sub in _syncStartQueue.ToList()){
-                    _syncStartQueue.Remove(sub); // dequeue                    
-                    _StartSync(sub);
-                }                   
+        //         // Debug.Log("SyncManager: _backgroudWorker");
 
-                await Task.Delay(1000);                
-            }
-        }
+        //         foreach(var sub in _syncStartQueue.ToList()){
+        //             _syncStartQueue.Remove(sub); // dequeue                    
+        //             _StartSync(sub);
+        //         }                   
+
+        //         await Task.Delay(1000);                
+        //     }
+        // }
 
         // SYNCRONIZATION
 
@@ -69,24 +71,15 @@ namespace DBXSync {
                 if(!_syncSubscriptions[dropboxPath].syncedCallbacks.Contains(callback)){
                     _syncSubscriptions[dropboxPath].syncedCallbacks.Add(callback);
                 }  
-            }
-            // if in queue to start - add callback to subscription
-            else if(_syncStartQueue.Any(sub => Utils.AreEqualDropboxPaths(sub.dropboxPath, dropboxPath))){
-                var queuedSub = _syncStartQueue.First(sub => Utils.AreEqualDropboxPaths(sub.dropboxPath, dropboxPath));
-                if(!queuedSub.syncedCallbacks.Contains(callback)){
-                    queuedSub.syncedCallbacks.Add(callback);
-                }                
-            }
-            // if not keeping in sync and not in queue to start - create sync subscription put to queue
-            else {
+            } else {
                 var syncSubscription = new SyncSubscription();
                 syncSubscription.dropboxPath = dropboxPath;
                 syncSubscription.syncedCallbacks.Add(callback);
-                _syncStartQueue.Add(syncSubscription);
+                _StartSync(syncSubscription);
             }                     
         }
 
-        private async void _StartSync(SyncSubscription syncSubscription){
+        private void _StartSync(SyncSubscription syncSubscription){
             var dropboxPath = syncSubscription.dropboxPath;
 
             Action<EntryChange> changedCallback = async (change) => {
@@ -94,9 +87,8 @@ namespace DBXSync {
                 // Debug.Log(change);
 
                 try {
-                    
                     await _cacheManager.SyncChangeAsync(change, new Progress<TransferProgressReport>((progress) => {
-                        // Debug.Log($"Syncing {dropboxPath} {progress.progress}% {progress.bytesPerSecondFormatted}");
+                        //Debug.Log($"Syncing {dropboxPath} {progress.progress}% {progress.bytesPerSecondFormatted}");
                     }), _syncSubscriptions[dropboxPath].syncCancellationTokenSource.Token);
 
                     // report to all callbacks that synced
@@ -112,7 +104,7 @@ namespace DBXSync {
                     // quiet
                 }catch(Exception ex){
                     // reset syncing
-                    // Debug.LogError($"Failed to sync change {change}; sync subscription: {syncSubscription.GetHashCode()}");
+                    Debug.LogWarning($"Failed to sync change {ex}\n {change}; sync subscription: {syncSubscription.GetHashCode()}");
                     // check if that subscription still going (cause can be already canceled by other transfer errors)
                     
                     bool needsReset = _syncSubscriptions.ContainsKey(dropboxPath) && _syncSubscriptions[dropboxPath] == syncSubscription;
@@ -125,17 +117,11 @@ namespace DBXSync {
                 }
             };                
             
-            try {
-                await _changesManager.SubscribeToChanges(dropboxPath, changedCallback);
-
-                syncSubscription.changedCallback = changedCallback;                
-                _syncSubscriptions[dropboxPath] = syncSubscription;                
-            }catch(Exception ex){
-                Debug.Log($"Failed to start sync of {dropboxPath}; Put back in start queue\nException: {ex}");
-                
-                _syncStartQueue.Add(syncSubscription);                
-            }
             
+            _changesManager.SubscribeToChanges(dropboxPath, changedCallback);
+
+            syncSubscription.changedCallback = changedCallback;                
+            _syncSubscriptions[dropboxPath] = syncSubscription;
         }
 
         public void StopKeepingInSync(string dropboxPath){
@@ -154,9 +140,6 @@ namespace DBXSync {
             
                 _syncSubscriptions.Remove(dropboxPath);
             }
-
-            // remove from queue
-            _syncStartQueue.RemoveAll(sub => Utils.AreEqualDropboxPaths(dropboxPath, sub.dropboxPath));                        
         }
 
         private void ResetSyncing(string dropboxPath){

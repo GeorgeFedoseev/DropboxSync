@@ -106,8 +106,8 @@ namespace DBXSync {
                             break;
                         }catch(Exception ex){
                             // dont retry if cancel request
-                            if(ex is OperationCanceledException){
-                                throw ex;
+                            if(ex is OperationCanceledException || ex is TaskCanceledException || ex is AggregateException && ((AggregateException)ex).InnerException is TaskCanceledException){
+                                throw new OperationCanceledException();
                             }
 
                             failedAttempts += 1;

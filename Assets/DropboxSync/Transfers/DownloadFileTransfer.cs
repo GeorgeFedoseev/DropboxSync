@@ -1,6 +1,8 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -85,13 +87,13 @@ namespace DBXSync {
 
             // download chunk by chunk to temp file
             Utils.EnsurePathFoldersExist (tempDownloadPath);
-            using (FileStream file = new FileStream (tempDownloadPath, FileMode.Create, FileAccess.Write, FileShare.Write)) {
+            using (FileStream fileStream = new FileStream (tempDownloadPath, FileMode.Create, FileAccess.Write, FileShare.Write)) {
 
                 long chunksDownloaded = 0;
                 long totalChunks = 1 + fileSize / _config.downloadChunkSizeBytes;
                 long totalBytesRead = 0;
                 
-                file.SetLength (fileSize); // set the length first
+                fileStream.SetLength (fileSize); // set the length first
 
                 foreach (long chunkIndex in Utils.LongRange (0, totalChunks)) {
 
@@ -107,25 +109,28 @@ namespace DBXSync {
 
                         try {
 
-                            HttpWebRequest request = (HttpWebRequest) WebRequest.Create (Endpoints.DOWNLOAD_FILE_ENDPOINT);
+                            using (var client = new HttpClient()){                               
 
-                            request.Headers.Set ("Authorization", "Bearer " + _config.accessToken);
-                            request.Headers.Set ("Dropbox-API-Arg", parametersJSONString);
-
-                            request.AddRange (chunkIndex * _config.downloadChunkSizeBytes,
+                                // if(cancellationToken != null){
+                                //     cancellationToken.Register(client.CancelPendingRequests);
+                                // }
+                                
+                                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _config.accessToken);
+                                client.DefaultRequestHeaders.Add("Dropbox-API-Arg", parametersJSONString);                                
+                                client.DefaultRequestHeaders.Range = new System.Net.Http.Headers.RangeHeaderValue(chunkIndex * _config.downloadChunkSizeBytes,
                                         chunkIndex * _config.downloadChunkSizeBytes + _config.downloadChunkSizeBytes - 1);
 
-                            var getResponseTask = request.GetResponseAsync ();
-                            if (await Task.WhenAny(getResponseTask, Task.Delay(_config.downloadChunkReadTimeoutMilliseconds)).ConfigureAwait(false) == getResponseTask) {
                                 
-                                using (HttpWebResponse response = (HttpWebResponse) getResponseTask.Result) {
+                                var getResponseTask = client.GetAsync(Endpoints.DOWNLOAD_FILE_ENDPOINT, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                                if (await Task.WhenAny(getResponseTask, Task.Delay(_config.downloadChunkReadTimeoutMilliseconds)) == getResponseTask) {
+                                    var response = getResponseTask.Result;
 
-                                    var fileMetadataJSONString = response.Headers["Dropbox-API-Result"];
+                                    var fileMetadataJSONString = response.Headers.GetValues("Dropbox-API-Result").First();
                                     latestMetadata = JsonUtility.FromJson<Metadata>(fileMetadataJSONString);
 
-                                    file.Seek (chunkIndex * _config.downloadChunkSizeBytes, SeekOrigin.Begin);
-                                    
-                                    using (Stream responseStream = response.GetResponseStream ()) {
+                                    fileStream.Seek (chunkIndex * _config.downloadChunkSizeBytes, SeekOrigin.Begin);
+
+                                    using (Stream responseStream = await response.Content.ReadAsStreamAsync ()) {
                                         byte[] buffer = new byte[8192];
                                         int bytesRead;                                    
 
@@ -142,7 +147,7 @@ namespace DBXSync {
 
                                                 cancellationToken.ThrowIfCancellationRequested();
 
-                                                await file.WriteAsync (buffer, 0, bytesRead);
+                                                await fileStream.WriteAsync (buffer, 0, bytesRead);
                                                 totalBytesRead += bytesRead;
 
                                                 speedTracker.SetBytesCompleted(totalBytesRead);
@@ -155,14 +160,71 @@ namespace DBXSync {
                                                 throw new TimeoutException("Download chunk read timed out");
                                             }
                                         }                                   
-                                    }                                    
-                                } 
-                            }else{                                
-                                cancellationToken.ThrowIfCancellationRequested();
+                                    }
+                                }else{                                
+                                    cancellationToken.ThrowIfCancellationRequested();
 
-                                // timeout
-                                throw new TimeoutException("Download chunk GetResponseAsync timed out");
+                                    // timeout
+                                    throw new TimeoutException("client.GetAsync timed out");
+                                }
                             }
+
+                            // HttpWebRequest request = (HttpWebRequest) WebRequest.Create (Endpoints.DOWNLOAD_FILE_ENDPOINT);
+
+                            // request.Headers.Set ("Authorization", "Bearer " + _config.accessToken);
+                            // request.Headers.Set ("Dropbox-API-Arg", parametersJSONString);
+
+                            // request.AddRange (chunkIndex * _config.downloadChunkSizeBytes,
+                            //             chunkIndex * _config.downloadChunkSizeBytes + _config.downloadChunkSizeBytes - 1);
+
+                            // var getResponseTask = request.GetResponseAsync ();
+                            // if (await Task.WhenAny(getResponseTask, Task.Delay(_config.downloadChunkReadTimeoutMilliseconds)).ConfigureAwait(false) == getResponseTask) {
+                                
+                            //     using (HttpWebResponse response = (HttpWebResponse) getResponseTask.Result) {
+
+                            //         var fileMetadataJSONString = response.Headers["Dropbox-API-Result"];
+                            //         latestMetadata = JsonUtility.FromJson<Metadata>(fileMetadataJSONString);
+
+                            //         fileStream.Seek (chunkIndex * _config.downloadChunkSizeBytes, SeekOrigin.Begin);
+                                    
+                            //         using (Stream responseStream = response.GetResponseStream ()) {
+                            //             byte[] buffer = new byte[8192];
+                            //             int bytesRead;                                    
+
+                            //             while(true){
+                            //                 var readToBufferTask = responseStream.ReadAsync (buffer, 0, buffer.Length);
+                            //                 if (await Task.WhenAny(readToBufferTask, Task.Delay(_config.downloadChunkReadTimeoutMilliseconds)) == readToBufferTask) {
+                            //                     // read completed within timeout
+                            //                     bytesRead = readToBufferTask.Result;
+
+                            //                     // exit loop condition
+                            //                     if(bytesRead <= 0){
+                            //                         break;
+                            //                     }
+
+                            //                     cancellationToken.ThrowIfCancellationRequested();
+
+                            //                     await fileStream.WriteAsync (buffer, 0, bytesRead);
+                            //                     totalBytesRead += bytesRead;
+
+                            //                     speedTracker.SetBytesCompleted(totalBytesRead);
+                            //                     ReportProgress((int)(totalBytesRead * 100 / fileSize), speedTracker.GetBytesPerSecond());  
+
+                            //                 } else { 
+                            //                     cancellationToken.ThrowIfCancellationRequested();
+
+                            //                     // timeout
+                            //                     throw new TimeoutException("Download chunk read timed out");
+                            //                 }
+                            //             }                                   
+                            //         }                                    
+                            //     } 
+                            // }else{                                
+                            //     cancellationToken.ThrowIfCancellationRequested();
+
+                            //     // timeout
+                            //     throw new TimeoutException("Download chunk GetResponseAsync timed out");
+                            // }
 
                             chunksDownloaded += 1;                 
 
@@ -173,8 +235,8 @@ namespace DBXSync {
                             // Debug.Log($"Chunk download exception: {ex}");
 
                             // dont retry if cancel request
-                            if(ex is OperationCanceledException){
-                                throw ex;
+                            if(ex is OperationCanceledException || ex is TaskCanceledException || ex is AggregateException && ((AggregateException)ex).InnerException is TaskCanceledException){
+                                throw new OperationCanceledException();
                             }
 
                             if(ex is WebException){

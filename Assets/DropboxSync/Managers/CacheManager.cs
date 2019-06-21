@@ -61,6 +61,7 @@ namespace DBXSync {
         }
 
         public async Task SyncChangeAsync(EntryChange entryChange, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken){
+            
             switch(entryChange.type){
                 case EntryChangeType.Created:                
                 case EntryChangeType.Modified:
