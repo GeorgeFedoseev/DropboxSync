@@ -150,14 +150,14 @@ namespace DBXSync {
 
                                             } else { 
                                                 cancellationToken.ThrowIfCancellationRequested();
-                                                
+
                                                 // timeout
                                                 throw new TimeoutException("Download chunk read timed out");
                                             }
                                         }                                   
                                     }                                    
                                 } 
-                            }else{
+                            }else{                                
                                 cancellationToken.ThrowIfCancellationRequested();
 
                                 // timeout

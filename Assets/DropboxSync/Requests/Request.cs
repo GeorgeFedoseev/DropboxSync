@@ -77,6 +77,8 @@ namespace DBXSync {
                         responseBytes = uploadDataTask.Result;
                     }else{
                         // timeout
+                        // cancel upload task
+                        client.CancelAsync();
                         throw new TimeoutException("Request timed out");
                     }
                 }catch (WebException ex){
