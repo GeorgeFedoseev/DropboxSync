@@ -107,7 +107,7 @@ namespace DBXSync {
                     // Debug.Log(change);
 
                     try {
-
+                        
                         await _cacheManager.SyncChangeAsync(change, new Progress<TransferProgressReport>((progress) => {
                             // Debug.Log($"Syncing {dropboxPath} {progress.progress}% {progress.bytesPerSecondFormatted}");
                         }), _syncSubscriptions[dropboxPath].syncCancellationTokenSource.Token);
@@ -115,9 +115,15 @@ namespace DBXSync {
                         // report that synced
                         callback(change);
 
+                    }catch(DropboxNotFoundAPIException){
+                        Debug.LogWarning($"[DropboxSync/KeepSynced] Didn't find file {change.metadata.path_display} during sync. Probably it was deleted on Dropbox during sync operation.");
                     }catch(OperationCanceledException){
                         // quiet
-                    }  
+                    }catch(Exception ex){
+                        // reset syncing
+                        Debug.LogWarning($"Resetting syncing of {dropboxPath} due to {ex}");
+                        ResetSyncing(dropboxPath);
+                    }
                 };                
                 
                 _syncSubscriptions[dropboxPath] = new SyncSubscription {                    
@@ -143,6 +149,20 @@ namespace DBXSync {
                 // unsubscribe from changes notifications
                 UnsubscribeFromChanges(dropboxPath, sub.changedCallback);
                 _syncSubscriptions.Remove(dropboxPath);
+            }
+        }
+
+        private void ResetSyncing(string dropboxPath){
+            if(_syncSubscriptions.ContainsKey(dropboxPath)){
+
+                StopKeepingInSync(dropboxPath);
+
+                var oldSub = _syncSubscriptions[dropboxPath];                
+
+                // start again and add all previous callbacks
+                foreach(var callback in oldSub.syncedCallbacks){
+                    KeepSynced(dropboxPath, callback);
+                }
             }
         }
 

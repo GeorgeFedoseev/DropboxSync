@@ -1243,7 +1243,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 15.0000305, y: -111}
+  m_AnchoredPosition: {x: 15, y: -111}
   m_SizeDelta: {x: -338.4, y: 34.3}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1542050140
@@ -1460,6 +1460,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   keepSyncedButton: {fileID: 1423666445}
   stopSyncingButton: {fileID: 1338075564}
+  dropboxPath: {fileID: 1542050140}
+  statusText: {fileID: 1883699805}
 --- !u!4 &2109333022
 Transform:
   m_ObjectHideFlags: 0
