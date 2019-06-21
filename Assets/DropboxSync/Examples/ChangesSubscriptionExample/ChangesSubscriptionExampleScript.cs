@@ -11,13 +11,13 @@ public class ChangesSubscriptionExampleScript : MonoBehaviour
     void Start() {
         var path = "/DropboxSyncExampleFolder/learning_c/file038.bin";
 
-        subscribeButton.onClick.AddListener(() => {
-            DropboxSync.Main.ChangesManager.SubscribeToChanges(path, OnChangeInFolder);        
-        });
+        // subscribeButton.onClick.AddListener(() => {
+        //     DropboxSync.Main.ChangesManager.SubscribeToChanges(path, OnChangeInFolder);        
+        // });
 
-        unsubscribeButton.onClick.AddListener(() => {
-            DropboxSync.Main.ChangesManager.UnsubscribeFromChanges(path, OnChangeInFolder);        
-        });       
+        // unsubscribeButton.onClick.AddListener(() => {
+        //     DropboxSync.Main.ChangesManager.UnsubscribeFromChanges(path, OnChangeInFolder);        
+        // });       
     }
 
 

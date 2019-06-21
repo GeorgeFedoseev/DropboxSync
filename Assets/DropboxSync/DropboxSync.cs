@@ -48,6 +48,13 @@ public class DropboxSync : MonoBehaviour {
         }
     }
 
+    private SyncManager _syncManager;
+    public SyncManager SyncManager {
+        get {
+            return _syncManager;
+        }
+    }
+
 
     void Awake(){        
         // set configuration based on inspector values
@@ -58,6 +65,7 @@ public class DropboxSync : MonoBehaviour {
         _transferManger = new TransferManager(_config);
         _cacheManager = new CacheManager(_transferManger, _config);
         _changesManager = new ChangesManager(_cacheManager, _config);
+        _syncManager = new SyncManager(_cacheManager, _changesManager, _config);
     }
 
 
@@ -91,6 +99,9 @@ public class DropboxSync : MonoBehaviour {
         }
         if(_changesManager != null){
             _changesManager.Dispose();
+        }
+        if(_syncManager != null){
+            _syncManager.Dispose();
         }
     }
 

@@ -16,10 +16,12 @@ namespace DBXSync {
 
         // downloading
         public long downloadChunkSizeBytes = 10000000;
+        public int downloadChunkReadTimeoutMilliseconds = 1000;
         public int downloadChunckedThreadNum = 2;
 
         // uploading
         public long uploadChunkSizeBytes = 150000000;
+        public int lightRequestTimeoutMilliseconds = 1000;
 
         // transfers
         public int maxSimultaneousDownloadFileTransfers = 3;

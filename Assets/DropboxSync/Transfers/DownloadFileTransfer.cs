@@ -95,40 +95,62 @@ namespace DBXSync {
 
                 foreach (long chunkIndex in Utils.LongRange (0, totalChunks)) {
 
-                    HttpWebRequest request = (HttpWebRequest) WebRequest.Create (Endpoints.DOWNLOAD_FILE_ENDPOINT);
-
                     var requestParameters = new PathParameters { path = $"rev:{_metadata.rev}"};
                     var parametersJSONString = requestParameters.ToString();
 
-                    request.Headers.Set ("Authorization", "Bearer " + _config.accessToken);
-                    request.Headers.Set ("Dropbox-API-Arg", parametersJSONString);
+                    Debug.Log($"{_dropboxPath}: Downloading chunk {chunkIndex}...");
 
-                    request.AddRange (chunkIndex * _config.downloadChunkSizeBytes,
-                                        chunkIndex * _config.downloadChunkSizeBytes + _config.downloadChunkSizeBytes - 1);
-
-                    //  Debug.LogWarning($"Downloading chunk {chunkIndex}...");
                     // retry loop
                     int failedAttempts = 0;
                     while(true){
                         try {
+
+                            HttpWebRequest request = (HttpWebRequest) WebRequest.Create (Endpoints.DOWNLOAD_FILE_ENDPOINT);
+
+                            request.Headers.Set ("Authorization", "Bearer " + _config.accessToken);
+                            request.Headers.Set ("Dropbox-API-Arg", parametersJSONString);
+
+                            request.AddRange (chunkIndex * _config.downloadChunkSizeBytes,
+                                        chunkIndex * _config.downloadChunkSizeBytes + _config.downloadChunkSizeBytes - 1);
+
+                    
                             using (HttpWebResponse response = (HttpWebResponse) await request.GetResponseAsync ()) {
                                 var fileMetadataJSONString = response.Headers["Dropbox-API-Result"];
                                 latestMetadata = JsonUtility.FromJson<Metadata>(fileMetadataJSONString);
 
                                 file.Seek (chunkIndex * _config.downloadChunkSizeBytes, SeekOrigin.Begin);
 
+                                Debug.Log($"{_dropboxPath}: Getting response stream for chunk {chunkIndex}...");
                                 using (Stream responseStream = response.GetResponseStream ()) {
                                     byte[] buffer = new byte[8192];
                                     int bytesRead;
-                                    while ((bytesRead = await responseStream.ReadAsync (buffer, 0, buffer.Length)) > 0) {
-                                        cancellationToken.ThrowIfCancellationRequested();
 
-                                        await file.WriteAsync (buffer, 0, bytesRead);
-                                        totalBytesRead += bytesRead;
+                                    Debug.Log($"{_dropboxPath}: Got response stream for chunk {chunkIndex}");
 
-                                        speedTracker.SetBytesCompleted(totalBytesRead);
-                                        ReportProgress((int)(totalBytesRead * 100 / fileSize), speedTracker.GetBytesPerSecond());                                      
-                                    }
+                                    while(true){
+                                        var readToBufferTask = responseStream.ReadAsync (buffer, 0, buffer.Length);
+                                        if (await Task.WhenAny(readToBufferTask, Task.Delay(_config.downloadChunkReadTimeoutMilliseconds)) == readToBufferTask) {
+                                            // read completed within timeout
+                                            bytesRead = readToBufferTask.Result;
+
+                                            // exit loop condition
+                                            if(bytesRead <= 0){
+                                                break;
+                                            }
+
+                                            cancellationToken.ThrowIfCancellationRequested();
+
+                                            await file.WriteAsync (buffer, 0, bytesRead);
+                                            totalBytesRead += bytesRead;
+
+                                            speedTracker.SetBytesCompleted(totalBytesRead);
+                                            ReportProgress((int)(totalBytesRead * 100 / fileSize), speedTracker.GetBytesPerSecond());  
+
+                                        } else { 
+                                            // timeout
+                                            throw new TimeoutException("Download chunk read timeout");
+                                        }
+                                    }                                   
                                 }
 
                                 chunksDownloaded += 1;
@@ -138,6 +160,8 @@ namespace DBXSync {
                             break;
 
                         }catch(Exception ex){
+                            Debug.Log($"Chunk download exception: {ex}");
+
                             // dont retry if cancel request
                             if(ex is OperationCanceledException){
                                 throw ex;
@@ -158,7 +182,9 @@ namespace DBXSync {
                                 throw ex;
                             }                                
                         }    
-                    }                    
+                    }
+
+                    Debug.Log($"{_dropboxPath}: Chunk  {chunkIndex} done");                   
                 }                
             }
             
