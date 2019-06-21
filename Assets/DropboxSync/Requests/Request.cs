@@ -71,7 +71,7 @@ namespace DBXSync {
                         // parameters are in header
                         uploadDataTask = client.UploadDataTaskAsync(new System.Uri(_endpoint), "POST", payload != null ? payload : new byte[0]);
                     }
-                    Debug.Log($"Request with timeout {_timeoutMilliseconds}ms");
+                    // Debug.Log($"Request with timeout {_timeoutMilliseconds}ms");
                     if (await Task.WhenAny(uploadDataTask, Task.Delay(_timeoutMilliseconds)) == uploadDataTask) {                
                         // get response bytes
                         responseBytes = uploadDataTask.Result;

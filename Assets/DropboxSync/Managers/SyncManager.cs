@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace DBXSync {
@@ -19,34 +20,35 @@ namespace DBXSync {
         private ChangesManager _changesManager;
         private DropboxSyncConfiguration _config;
 
-        private Thread _backgroundThread;
+        // private Thread _backgroundThread;
         private volatile bool _isDisposed = false;
             
         private List<SyncSubscription> _syncStartQueue = new List<SyncSubscription>();
         private Dictionary<string, SyncSubscription> _syncSubscriptions = new Dictionary<string, SyncSubscription>();
 
-        private object _syncSubscriptionsLock = new object();    
+        // private object _syncSubscriptionsLock = new object();    
 
         public SyncManager (CacheManager cacheManager, ChangesManager changesManager, DropboxSyncConfiguration config) {
             _cacheManager = cacheManager;
             _changesManager = changesManager;
             _config = config;
 
-            _backgroundThread = new Thread (_backgroudWorker);
-            _backgroundThread.IsBackground = true;
-            _backgroundThread.Start ();
+            // _backgroundThread = new Thread (_backgroudWorker);
+            // _backgroundThread.IsBackground = true;
+            // _backgroundThread.Start ();
+            _backgroudWorker();
         }
         
 
-        private void _backgroudWorker () {
+        private async void _backgroudWorker () {
             while (!_isDisposed) {
-                lock(_syncSubscriptionsLock) {
-                    foreach(var sub in _syncStartQueue.ToList()){
-                        _syncStartQueue.Remove(sub); // dequeue
-                        _StartSync(sub);
-                    }
-                }                
-                Thread.Sleep(1000);
+
+                foreach(var sub in _syncStartQueue.ToList()){
+                    _syncStartQueue.Remove(sub); // dequeue                    
+                    _StartSync(sub);
+                }                   
+
+                await Task.Delay(1000);                
             }
         }
 
@@ -110,9 +112,12 @@ namespace DBXSync {
                     // quiet
                 }catch(Exception ex){
                     // reset syncing
-                    Debug.LogError($"Failed to sync change {change}; sync subscription: {syncSubscription.GetHashCode()}");
+                    // Debug.LogError($"Failed to sync change {change}; sync subscription: {syncSubscription.GetHashCode()}");
                     // check if that subscription still going (cause can be already canceled by other transfer errors)
-                    if(_syncSubscriptions.ContainsKey(dropboxPath) && _syncSubscriptions[dropboxPath] == syncSubscription){
+                    
+                    bool needsReset = _syncSubscriptions.ContainsKey(dropboxPath) && _syncSubscriptions[dropboxPath] == syncSubscription;
+                    
+                    if(needsReset){
                         Debug.LogWarning($"Resetting syncing of {dropboxPath} due to {ex}");
                         // reset syncing
                         ResetSyncing(dropboxPath);
@@ -123,14 +128,12 @@ namespace DBXSync {
             try {
                 await _changesManager.SubscribeToChanges(dropboxPath, changedCallback);
 
-                syncSubscription.changedCallback = changedCallback;
-
-                _syncSubscriptions[dropboxPath] = syncSubscription;
+                syncSubscription.changedCallback = changedCallback;                
+                _syncSubscriptions[dropboxPath] = syncSubscription;                
             }catch(Exception ex){
                 Debug.Log($"Failed to start sync of {dropboxPath}; Put back in start queue\nException: {ex}");
-                lock(_syncSubscriptionsLock){
-                    _syncStartQueue.Add(syncSubscription);
-                }
+                
+                _syncStartQueue.Add(syncSubscription);                
             }
             
         }
@@ -138,17 +141,22 @@ namespace DBXSync {
         public void StopKeepingInSync(string dropboxPath){
             dropboxPath = Utils.UnifyDropboxPath(dropboxPath);
 
+            Debug.LogWarning($"StopKeepingInSync {dropboxPath}");
+
+            
             if(_syncSubscriptions.ContainsKey(dropboxPath)){
+            
                 var sub = _syncSubscriptions[dropboxPath];
                 // cancel current file transfers
                 sub.syncCancellationTokenSource.Cancel();
                 // unsubscribe from changes notifications
                 _changesManager.UnsubscribeFromChanges(dropboxPath, sub.changedCallback);
+            
                 _syncSubscriptions.Remove(dropboxPath);
             }
 
             // remove from queue
-            _syncStartQueue.RemoveAll(sub => Utils.AreEqualDropboxPaths(dropboxPath, sub.dropboxPath));
+            _syncStartQueue.RemoveAll(sub => Utils.AreEqualDropboxPaths(dropboxPath, sub.dropboxPath));                        
         }
 
         private void ResetSyncing(string dropboxPath){

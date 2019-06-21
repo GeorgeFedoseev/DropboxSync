@@ -22,7 +22,7 @@ namespace DBXSync {
         private CacheManager _cacheManager;
         private DropboxSyncConfiguration _config;
 
-        private Thread _backgroundThread;
+        // private Thread _backgroundThread;
         private volatile bool _isDisposed = false;
 
         // keep track of last cursor to longpoll on it for changes in whole account
@@ -39,9 +39,10 @@ namespace DBXSync {
             _cacheManager = cacheManager;
             _config = config;
 
-            _backgroundThread = new Thread (_backgroudWorker);
-            _backgroundThread.IsBackground = true;
-            _backgroundThread.Start ();
+            // _backgroundThread = new Thread (_backgroudWorker);
+            // _backgroundThread.IsBackground = true;
+            // _backgroundThread.Start ();
+            _backgroudWorker();
         }
         
 
@@ -50,12 +51,12 @@ namespace DBXSync {
                 // if _lastCursor != null start longpoll request on this cursor
                 if(_lastCursor != null){
                     try {
-                        Debug.LogWarning("Do longpoll request...");
+                        // Debug.LogWarning("Do longpoll request...");
                         var longpollResponse = await new ListFolderLongpollRequest(new ListFolderLongpollRequestParameters {
                             cursor = _lastCursor
                         }, _config).ExecuteAsync();
 
-                        Debug.LogWarning($"Longpoll response: {longpollResponse}");
+                        // Debug.LogWarning($"Longpoll response: {longpollResponse}");
                         
                         if(longpollResponse.changes){
                             await CheckChangesInFoldersAsync();                             
@@ -66,20 +67,20 @@ namespace DBXSync {
                         }
                         
                         // wait before making next longpoll
-                        Thread.Sleep(longpollResponse.backoff * 10000);
+                        await Task.Delay (longpollResponse.backoff * 10000);
 
                     }catch(DropboxResetCursorAPIException cursorResetException){
                         // if exception is because cursor is not valid anymore do CheckChangesInFoldersAsync() to get new cursor
                         await CheckChangesInFoldersAsync();                        
                     }catch(Exception ex){                        
-                        Debug.LogError($"Failed to request Dropbox changes: {ex}");
-                        Thread.Sleep(_config.requestErrorRetryDelaySeconds * 1000);                                                
+                        // Debug.LogError($"Failed to request Dropbox changes: {ex}");
+                        await Task.Delay (_config.requestErrorRetryDelaySeconds * 1000);                                                
                     }                    
                 }
                 
                 // if request returned changes = true call CheckChangesInFolders
                 // else start long poll again (after backoff timeout if needed)
-                Thread.Sleep (100);
+                await Task.Delay (100);
             }
         }
 
