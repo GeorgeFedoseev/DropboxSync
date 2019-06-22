@@ -70,7 +70,7 @@ namespace DBXSync {
         public async Task<Metadata> ExecuteAsync () {
             _startDateTime = DateTime.Now;
 
-            var cancellationToken = _internalCancellationTokenSource.Token;
+            var transferCancellationToken = _internalCancellationTokenSource.Token;
             
             if(_metadata == null){
                 _metadata = (await new GetMetadataRequest (new GetMetadataRequestParameters {
@@ -105,15 +105,11 @@ namespace DBXSync {
                     // retry loop
                     int failedAttempts = 0;
                     while(true){
-                        cancellationToken.ThrowIfCancellationRequested();
+                        transferCancellationToken.ThrowIfCancellationRequested();
 
                         try {
 
-                            using (var client = new HttpClient()){                               
-
-                                // if(cancellationToken != null){
-                                //     cancellationToken.Register(client.CancelPendingRequests);
-                                // }
+                            using (var client = new HttpClient()){
                                 
                                 client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _config.accessToken);
                                 client.DefaultRequestHeaders.Add("Dropbox-API-Arg", parametersJSONString);                                
@@ -121,110 +117,41 @@ namespace DBXSync {
                                         chunkIndex * _config.downloadChunkSizeBytes + _config.downloadChunkSizeBytes - 1);
 
                                 
-                                var getResponseTask = client.GetAsync(Endpoints.DOWNLOAD_FILE_ENDPOINT, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-                                if (await Task.WhenAny(getResponseTask, Task.Delay(_config.downloadChunkReadTimeoutMilliseconds)) == getResponseTask) {
-                                    var response = getResponseTask.Result;
+                                var getResponseCTS = CancellationTokenSource.CreateLinkedTokenSource(transferCancellationToken);
+                                getResponseCTS.CancelAfter(_config.downloadChunkReadTimeoutMilliseconds);
+                                var response = await client.GetAsync(Endpoints.DOWNLOAD_FILE_ENDPOINT, HttpCompletionOption.ResponseHeadersRead, getResponseCTS.Token);                                                                    
 
-                                    var fileMetadataJSONString = response.Headers.GetValues("Dropbox-API-Result").First();
-                                    latestMetadata = JsonUtility.FromJson<Metadata>(fileMetadataJSONString);
+                                var fileMetadataJSONString = response.Headers.GetValues("Dropbox-API-Result").First();
+                                latestMetadata = JsonUtility.FromJson<Metadata>(fileMetadataJSONString);
 
-                                    fileStream.Seek (chunkIndex * _config.downloadChunkSizeBytes, SeekOrigin.Begin);
+                                fileStream.Seek (chunkIndex * _config.downloadChunkSizeBytes, SeekOrigin.Begin);
 
-                                    using (Stream responseStream = await response.Content.ReadAsStreamAsync ()) {
-                                        byte[] buffer = new byte[8192];
-                                        int bytesRead;                                    
+                                using (Stream responseStream = await response.Content.ReadAsStreamAsync ()) {
+                                    byte[] buffer = new byte[8192];
+                                    int bytesRead;                                    
 
-                                        while(true){
-                                            var readToBufferTask = responseStream.ReadAsync (buffer, 0, buffer.Length);
-                                            if (await Task.WhenAny(readToBufferTask, Task.Delay(_config.downloadChunkReadTimeoutMilliseconds)) == readToBufferTask) {
-                                                // read completed within timeout
-                                                bytesRead = readToBufferTask.Result;
+                                    while(true){
+                                        var streamReadCTS = CancellationTokenSource.CreateLinkedTokenSource(transferCancellationToken);
+                                        streamReadCTS.CancelAfter(_config.downloadChunkReadTimeoutMilliseconds);
+                                        
+                                        var readToBufferTask = responseStream.ReadAsync (buffer, 0, buffer.Length, streamReadCTS.Token);
+                                        if ((bytesRead = await readToBufferTask) > 0) {
+                                                                                        
+                                            transferCancellationToken.ThrowIfCancellationRequested();
 
-                                                // exit loop condition
-                                                if(bytesRead <= 0){
-                                                    break;
-                                                }
+                                            await fileStream.WriteAsync (buffer, 0, bytesRead);
+                                            totalBytesRead += bytesRead;
 
-                                                cancellationToken.ThrowIfCancellationRequested();
+                                            speedTracker.SetBytesCompleted(totalBytesRead);
+                                            ReportProgress((int)(totalBytesRead * 100 / fileSize), speedTracker.GetBytesPerSecond());  
 
-                                                await fileStream.WriteAsync (buffer, 0, bytesRead);
-                                                totalBytesRead += bytesRead;
-
-                                                speedTracker.SetBytesCompleted(totalBytesRead);
-                                                ReportProgress((int)(totalBytesRead * 100 / fileSize), speedTracker.GetBytesPerSecond());  
-
-                                            } else { 
-                                                cancellationToken.ThrowIfCancellationRequested();
-
-                                                // timeout
-                                                throw new TimeoutException("Download chunk read timed out");
-                                            }
-                                        }                                   
-                                    }
-                                }else{                                
-                                    cancellationToken.ThrowIfCancellationRequested();
-
-                                    // timeout
-                                    throw new TimeoutException("client.GetAsync timed out");
-                                }
+                                        }else{
+                                            // exit loop condition
+                                            break;
+                                        }                                        
+                                    }                                   
+                                }                               
                             }
-
-                            // HttpWebRequest request = (HttpWebRequest) WebRequest.Create (Endpoints.DOWNLOAD_FILE_ENDPOINT);
-
-                            // request.Headers.Set ("Authorization", "Bearer " + _config.accessToken);
-                            // request.Headers.Set ("Dropbox-API-Arg", parametersJSONString);
-
-                            // request.AddRange (chunkIndex * _config.downloadChunkSizeBytes,
-                            //             chunkIndex * _config.downloadChunkSizeBytes + _config.downloadChunkSizeBytes - 1);
-
-                            // var getResponseTask = request.GetResponseAsync ();
-                            // if (await Task.WhenAny(getResponseTask, Task.Delay(_config.downloadChunkReadTimeoutMilliseconds)).ConfigureAwait(false) == getResponseTask) {
-                                
-                            //     using (HttpWebResponse response = (HttpWebResponse) getResponseTask.Result) {
-
-                            //         var fileMetadataJSONString = response.Headers["Dropbox-API-Result"];
-                            //         latestMetadata = JsonUtility.FromJson<Metadata>(fileMetadataJSONString);
-
-                            //         fileStream.Seek (chunkIndex * _config.downloadChunkSizeBytes, SeekOrigin.Begin);
-                                    
-                            //         using (Stream responseStream = response.GetResponseStream ()) {
-                            //             byte[] buffer = new byte[8192];
-                            //             int bytesRead;                                    
-
-                            //             while(true){
-                            //                 var readToBufferTask = responseStream.ReadAsync (buffer, 0, buffer.Length);
-                            //                 if (await Task.WhenAny(readToBufferTask, Task.Delay(_config.downloadChunkReadTimeoutMilliseconds)) == readToBufferTask) {
-                            //                     // read completed within timeout
-                            //                     bytesRead = readToBufferTask.Result;
-
-                            //                     // exit loop condition
-                            //                     if(bytesRead <= 0){
-                            //                         break;
-                            //                     }
-
-                            //                     cancellationToken.ThrowIfCancellationRequested();
-
-                            //                     await fileStream.WriteAsync (buffer, 0, bytesRead);
-                            //                     totalBytesRead += bytesRead;
-
-                            //                     speedTracker.SetBytesCompleted(totalBytesRead);
-                            //                     ReportProgress((int)(totalBytesRead * 100 / fileSize), speedTracker.GetBytesPerSecond());  
-
-                            //                 } else { 
-                            //                     cancellationToken.ThrowIfCancellationRequested();
-
-                            //                     // timeout
-                            //                     throw new TimeoutException("Download chunk read timed out");
-                            //                 }
-                            //             }                                   
-                            //         }                                    
-                            //     } 
-                            // }else{                                
-                            //     cancellationToken.ThrowIfCancellationRequested();
-
-                            //     // timeout
-                            //     throw new TimeoutException("Download chunk GetResponseAsync timed out");
-                            // }
 
                             chunksDownloaded += 1;                 
 

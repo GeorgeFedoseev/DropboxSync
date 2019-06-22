@@ -172,6 +172,7 @@ namespace DBXSync {
                 var dropboxFolderPath = Path.GetDirectoryName(dropboxFilePath);
 
                 Action<EntryChange> folderChangeCallback = (change) => {
+                     Debug.LogWarning($"SubscribeToFileChages {dropboxFilePath} folder change {change}");  
                     if(Utils.AreEqualDropboxPaths(change.metadata.path_lower, dropboxFilePath)){
                         _fileSubscriptions[dropboxFilePath].fileChangeCallbacks.ForEach(c => c(change));
                     }
@@ -256,7 +257,7 @@ namespace DBXSync {
 
         // called from longpoll when changes = true or after adding new folder subscription 
         private async Task CheckChangesInFolderAsync(string dropboxFolderPath){
-            Debug.LogWarning($"CheckChangesInFolderAsync {dropboxFolderPath}");
+            // Debug.LogWarning($"CheckChangesInFolderAsync {dropboxFolderPath}");
             string cursor = null;
             bool has_more = true;
 
@@ -311,7 +312,7 @@ namespace DBXSync {
             // update _lastCursor for next longpoll
             _lastCursor = cursor;
 
-            Debug.LogWarning($"CheckChangesInFolderAsync {dropboxFolderPath}. Done.");
+            // Debug.LogWarning($"CheckChangesInFolderAsync {dropboxFolderPath}. Done.");
         }
 
         private void ResetCursorForFolderAsync(string dropboxFolderPath){
