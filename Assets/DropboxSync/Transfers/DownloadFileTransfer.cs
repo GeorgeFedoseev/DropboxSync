@@ -128,15 +128,20 @@ namespace DBXSync {
 
                                 using (Stream responseStream = await response.Content.ReadAsStreamAsync ()) {
                                     byte[] buffer = new byte[8192];
-                                    int bytesRead;                                    
+                                    int bytesRead;
+
+                                    
 
                                     while(true){
-                                        var streamReadCTS = CancellationTokenSource.CreateLinkedTokenSource(transferCancellationToken);
-                                        streamReadCTS.CancelAfter(_config.downloadChunkReadTimeoutMilliseconds);
-                                        
-                                        var readToBufferTask = responseStream.ReadAsync (buffer, 0, buffer.Length, streamReadCTS.Token);
-                                        if ((bytesRead = await readToBufferTask) > 0) {
-                                                                                        
+                                        var readToBufferTask = responseStream.ReadAsync (buffer, 0, buffer.Length);
+                                        if(await Task.WhenAny(readToBufferTask, Task.Delay(_config.downloadChunkReadTimeoutMilliseconds)) == readToBufferTask){
+                                            bytesRead = readToBufferTask.Result;
+
+                                            // exit loop condition
+                                            if(bytesRead <= 0){
+                                                break;
+                                            }
+
                                             transferCancellationToken.ThrowIfCancellationRequested();
 
                                             await fileStream.WriteAsync (buffer, 0, bytesRead);
@@ -144,10 +149,12 @@ namespace DBXSync {
 
                                             speedTracker.SetBytesCompleted(totalBytesRead);
                                             ReportProgress((int)(totalBytesRead * 100 / fileSize), speedTracker.GetBytesPerSecond());  
-
                                         }else{
-                                            // exit loop condition
-                                            break;
+                                            // timed-out
+                                            // close stream
+                                            responseStream.Close();
+                                            // throw canceled exception
+                                            throw new TimeoutException("Read chunk to buffer timed-out");
                                         }                                        
                                     }                                   
                                 }                               
