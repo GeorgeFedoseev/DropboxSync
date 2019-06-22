@@ -127,15 +127,12 @@ namespace DBXSync {
                                 fileStream.Seek (chunkIndex * _config.downloadChunkSizeBytes, SeekOrigin.Begin);
 
                                 using (Stream responseStream = await response.Content.ReadAsStreamAsync ()) {
-                                    byte[] buffer = new byte[8192];
-                                    int bytesRead;
-
-                                    
+                                    byte[] buffer = new byte[8192];                                    
 
                                     while(true){
                                         var readToBufferTask = responseStream.ReadAsync (buffer, 0, buffer.Length);
                                         if(await Task.WhenAny(readToBufferTask, Task.Delay(_config.downloadChunkReadTimeoutMilliseconds)) == readToBufferTask){
-                                            bytesRead = readToBufferTask.Result;
+                                            int bytesRead = readToBufferTask.Result;
 
                                             // exit loop condition
                                             if(bytesRead <= 0){
