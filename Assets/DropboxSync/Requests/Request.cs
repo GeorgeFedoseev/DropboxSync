@@ -55,8 +55,8 @@ namespace DBXSync {
                 }
 
                 // TODO: add httpContent and set content type header
-                var streamContent = new ProgressableStreamContent(new MemoryStream(payload), (fromStream, uploadStream) => {
-                    // TODO: write buffered
+                var streamContent = new ProgressableStreamContent(new MemoryStream(payload), (sourceStream, uploadStream) => {
+                    // TODO: write to uploadStream buffered
                     // check timeouts when writing
                     // cancel if cancelation token requested
                 });

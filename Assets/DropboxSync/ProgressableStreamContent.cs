@@ -10,16 +10,16 @@ namespace DBXSync {
     {
         private const int defaultBufferSize = 4096;
 
-        private Stream content;
+        private Stream sourceStream;
         private int bufferSize;
         private bool contentConsumed;
         private Action<Stream, Stream> _serializeToStreamCallback;
 
-        public ProgressableStreamContent(Stream content, Action<Stream, Stream> serializeToStreamCallback) : this(content, defaultBufferSize, serializeToStreamCallback) {}
+        public ProgressableStreamContent(Stream sourceStream, Action<Stream, Stream> serializeToStreamCallback) : this(sourceStream, defaultBufferSize, serializeToStreamCallback) {}
 
-        public ProgressableStreamContent(Stream content, int bufferSize, Action<Stream, Stream> serializeToStreamCallback)
+        public ProgressableStreamContent(Stream sourceStream, int bufferSize, Action<Stream, Stream> serializeToStreamCallback)
         {
-            if(content == null)
+            if(sourceStream == null)
             {
                 throw new ArgumentNullException("content");
             }
@@ -28,20 +28,20 @@ namespace DBXSync {
                 throw new ArgumentOutOfRangeException("bufferSize");
             }
 
-            this.content = content;
+            this.sourceStream = sourceStream;
             this.bufferSize = bufferSize;
             this._serializeToStreamCallback = serializeToStreamCallback;
         }
 
-        protected override Task SerializeToStreamAsync(Stream stream, TransportContext context)
+        protected override Task SerializeToStreamAsync(Stream uploadStream, TransportContext context)
         {            
-            Contract.Assert(stream != null);
+            Contract.Assert(uploadStream != null);
 
             PrepareContent();
 
             return Task.Run(() =>
             {
-                _serializeToStreamCallback(content, stream);
+                _serializeToStreamCallback(sourceStream, uploadStream);
 
                 // var buffer = new Byte[this.bufferSize];
                 // var size = content.Length;
@@ -67,7 +67,7 @@ namespace DBXSync {
 
         protected override bool TryComputeLength(out long length)
         {
-            length = content.Length;
+            length = sourceStream.Length;
             return true;
         }
 
@@ -75,7 +75,7 @@ namespace DBXSync {
         {
             if(disposing)
             {
-                content.Dispose();
+                sourceStream.Dispose();
             }
             base.Dispose(disposing);
         }
@@ -88,9 +88,9 @@ namespace DBXSync {
                 // If the content needs to be written to a target stream a 2nd time, then the stream must support
                 // seeking (e.g. a FileStream), otherwise the stream can't be copied a second time to a target 
                 // stream (e.g. a NetworkStream).
-                if(content.CanSeek)
+                if(sourceStream.CanSeek)
                 {
-                    content.Position = 0;
+                    sourceStream.Position = 0;
                 }
                 else
                 {
