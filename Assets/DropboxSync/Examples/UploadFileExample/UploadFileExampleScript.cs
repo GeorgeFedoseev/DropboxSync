@@ -56,7 +56,7 @@ public class UploadFileExampleScript : MonoBehaviour {
 
 		var uploadTask = DropboxSync.Main.TransferManager.UploadFileAsync(localFilePath, uploadDropboxPath, new Progress<TransferProgressReport>((report) => {
 				if(Application.isPlaying){
-					print($"Upload progress {report.progress}%");
+					// print($"Upload progress {report.progress}%");
 					statusText.text = $"Uploading file {report.progress}% {report.bytesPerSecondFormatted}";
 				}				
 		}), _cancellationTokenSource.Token);

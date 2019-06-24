@@ -55,8 +55,7 @@ namespace DBXSync {
                 }
 
                 
-                var streamContent = new ProgressableStreamContent(new MemoryStream(payload), async (sourceStream, uploadStream) => {
-                    Debug.LogWarning($"ProgressableStreamContent: sourceStream.Length = {sourceStream.Length}");
+                var streamContent = new ProgressableStreamContent(new MemoryStream(payload), async (sourceStream, uploadStream) => {                    
                     // write to uploadStream buffered
                     long totalBytesSent = 0;
                     using(sourceStream) {
@@ -90,9 +89,9 @@ namespace DBXSync {
                             }                            
                         }
 
-                        // if(uploadProgress != null){
-                        //     uploadProgress.Report(100);
-                        // }
+                        if(uploadProgress != null){
+                            uploadProgress.Report(100);
+                        }
 
                         // Debug.Log($"Total bytes sent: {totalBytesSent}");
                     }                    
@@ -102,7 +101,7 @@ namespace DBXSync {
                 requestMessage.Content = streamContent;
 
                 // disable upload buffering
-                requestMessage.Headers.TransferEncodingChunked = true;
+                // requestMessage.Headers.TransferEncodingChunked = true;
                 streamContent.Headers.ContentLength = payload.Length;                
 
                 // GET RESPONSE HEADERS
@@ -117,21 +116,13 @@ namespace DBXSync {
                     await Utils.RethrowDropboxHttpRequestException(ex, headersResponse, _parameters, _endpoint);                    
                 }                
 
-                // get resposne size from headers
-                long? responseContentLength = null;                
-                if(headersResponse.Content.Headers.Any(h => h.Key.Equals("Content-Length"))){
-                    long parsed = 0;
-                    var contentLengthStringValue = headersResponse.Content.Headers.Single(h => h.Key.Equals("Content-Length")).Value.Single();
-                    if (long.TryParse(contentLengthStringValue, out parsed)) {
-                        responseContentLength = parsed;
-                    }
-                }
                 
-                Debug.Log($"Reponse size: {responseContentLength}");
+                var contentLength = headersResponse.Content.Headers.ContentLength;                
 
                 // READ RESPONSE BODY
                 using(MemoryStream memStream = new MemoryStream()){
-                    using (Stream responseStream = await headersResponse.Content.ReadAsStreamAsync ()) {
+                    using (Stream responseStream = await headersResponse.Content.ReadAsStreamAsync ()) {                        
+
                         byte[] buffer = new byte[_config.transferBufferSizeBytes];
                         long totalBytesRead = 0;
 
@@ -152,8 +143,8 @@ namespace DBXSync {
                                 await memStream.WriteAsync (buffer, 0, bytesRead);
                                 totalBytesRead += bytesRead;
 
-                                if(downloadProgress != null && responseContentLength.HasValue){
-                                    downloadProgress.Report((int)(totalBytesRead * 100 / responseContentLength.Value));
+                                if(downloadProgress != null && contentLength.HasValue){
+                                    downloadProgress.Report((int)(totalBytesRead * 100 / contentLength.Value));
                                 }
                                 
                             }else{
