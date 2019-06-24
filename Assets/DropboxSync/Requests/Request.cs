@@ -166,7 +166,7 @@ namespace DBXSync {
                         return default(RESP_T);
                     }
 
-                    Debug.Log($"Received request response: {responseString}");
+                    // Debug.Log($"Received request response: {responseString}");
 
                     responseString = Utils.FixDropboxJSONString(responseString);
 

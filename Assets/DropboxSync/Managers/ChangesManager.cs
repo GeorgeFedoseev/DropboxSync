@@ -172,7 +172,7 @@ namespace DBXSync {
                 var dropboxFolderPath = Path.GetDirectoryName(dropboxFilePath);
 
                 Action<EntryChange> folderChangeCallback = (change) => {
-                     Debug.LogWarning($"SubscribeToFileChages {dropboxFilePath} folder change {change}");  
+                    //  Debug.LogWarning($"SubscribeToFileChages {dropboxFilePath} folder change {change}");  
                     if(Utils.AreEqualDropboxPaths(change.metadata.path_lower, dropboxFilePath)){
                         _fileSubscriptions[dropboxFilePath].fileChangeCallbacks.ForEach(c => c(change));
                     }

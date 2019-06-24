@@ -18,7 +18,7 @@ namespace DBXSync {
 
         // requests
         public int lightRequestTimeoutMilliseconds = 1000;
-        public int uploadRequestWriteTimeoutMilliseconds = 1000;
+        public int uploadRequestWriteTimeoutMilliseconds = 5000;
 
         // downloading
         public long downloadChunkSizeBytes = 10000000;
