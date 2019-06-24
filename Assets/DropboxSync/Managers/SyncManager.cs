@@ -32,27 +32,8 @@ namespace DBXSync {
             _cacheManager = cacheManager;
             _changesManager = changesManager;
             _config = config;
-
-            // _backgroundThread = new Thread (_backgroudWorker);
-            // _backgroundThread.IsBackground = true;
-            // _backgroundThread.Start ();
-            // _backgroudWorker();
         }
         
-
-        // private async void _backgroudWorker () {
-        //     while (!_isDisposed) {
-
-        //         // Debug.Log("SyncManager: _backgroudWorker");
-
-        //         foreach(var sub in _syncStartQueue.ToList()){
-        //             _syncStartQueue.Remove(sub); // dequeue                    
-        //             _StartSync(sub);
-        //         }                   
-
-        //         await Task.Delay(1000);                
-        //     }
-        // }
 
         // SYNCRONIZATION
 
@@ -127,9 +108,8 @@ namespace DBXSync {
         public void StopKeepingInSync(string dropboxPath){
             dropboxPath = Utils.UnifyDropboxPath(dropboxPath);
 
-            Debug.LogWarning($"StopKeepingInSync {dropboxPath}");
+            // Debug.LogWarning($"StopKeepingInSync {dropboxPath}");
 
-            
             if(_syncSubscriptions.ContainsKey(dropboxPath)){
             
                 var sub = _syncSubscriptions[dropboxPath];

@@ -24,6 +24,7 @@ namespace DBXSync {
 
 
         private CacheManager _cacheManager;
+        private TransferManager _transferManager;
         private DropboxSyncConfiguration _config;
 
         // private Thread _backgroundThread;
@@ -39,8 +40,9 @@ namespace DBXSync {
 
         private List<PathChangeSubscription> _pathSubscriptionQueue = new List<PathChangeSubscription>();
 
-        public ChangesManager (CacheManager cacheManager, DropboxSyncConfiguration config) {
+        public ChangesManager (CacheManager cacheManager, TransferManager transferManager, DropboxSyncConfiguration config) {
             _cacheManager = cacheManager;
+            _transferManager = transferManager;
             _config = config;
 
             // _backgroundThread = new Thread (_backgroudWorker);
@@ -349,8 +351,8 @@ namespace DBXSync {
                 // can be folder or file path here, but we ignore folders:
                 // if path will be folder then HaveFileLocally will return false and we do nothing
 
-                // check if we also need to delete file
-                if(_cacheManager.HaveFileLocally(remoteMetadata)){                    
+                // check if we also need to delete file or cancel related transfers
+                if(_cacheManager.HaveFileLocally(remoteMetadata) || _transferManager.HaveQueuedOrExecutingDownloadsRelatedTo(remoteMetadata.path_lower)){                    
                     _folderSubscriptions[dropboxFolderPath].ForEach(a => a(new EntryChange {
                         type = EntryChangeType.Removed,
                         metadata = remoteMetadata

@@ -100,7 +100,7 @@ namespace DBXSync {
                     var requestParameters = new PathParameters { path = $"rev:{_metadata.rev}"};
                     var parametersJSONString = requestParameters.ToString();
 
-                    Debug.Log($"{_dropboxPath}: Downloading chunk {chunkIndex}...");
+                    // Debug.Log($"{_dropboxPath}: Downloading chunk {chunkIndex}...");
 
                     // retry loop
                     int failedAttempts = 0;
@@ -194,7 +194,7 @@ namespace DBXSync {
                         }    
                     }
 
-                    Debug.Log($"{_dropboxPath}: Chunk  {chunkIndex} done");                   
+                    // Debug.Log($"{_dropboxPath}: Chunk  {chunkIndex} done");                   
                 }                
             }
             
@@ -210,6 +210,9 @@ namespace DBXSync {
 
             // report complete progress
             ReportProgress(100, speedTracker.GetBytesPerSecond());
+
+            // wait for last progress report to deliver before returning the upload result
+            await Task.Delay(1);
 
             _endDateTime = DateTime.Now;
 

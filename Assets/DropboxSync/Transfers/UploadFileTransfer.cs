@@ -132,6 +132,7 @@ namespace DBXSync {
             // send finish request            
             var metadata = await new UploadFinishRequest(new UploadFinishRequestParameters(sessionId, totalBytesUploaded, _dropboxTargetPath), _config).ExecuteAsync(new byte[0]);
             
+            // report complete progress
             ReportProgress(100, speedTracker.GetBytesPerSecond());
 
             // wait for last progress report to deliver before returning the upload result

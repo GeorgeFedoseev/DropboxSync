@@ -21,19 +21,17 @@ namespace DBXSync {
         public int uploadRequestWriteTimeoutMilliseconds = 5000;
 
         // downloading
-        public long downloadChunkSizeBytes = 10000000;
+        public long downloadChunkSizeBytes = 10000000; // TODO: change to bigger
         public int downloadChunkReadTimeoutMilliseconds = 5000;
         public int downloadChunckedThreadNum = 2;
 
         // uploading
-        public long uploadChunkSizeBytes = 150000000;        
+        public long uploadChunkSizeBytes = 150000000;
         
 
         // transfers
         public int maxSimultaneousDownloadFileTransfers = 3;
         public int maxSimultaneousUploadFileTransfers = 3;
-
-        // public int dropboxReachabilityCheckIntervalMilliseconds = 5000;
 
         public void FillDefaultsAndValidate(){
             if(!Utils.IsAccessTokenValid(accessToken)) {

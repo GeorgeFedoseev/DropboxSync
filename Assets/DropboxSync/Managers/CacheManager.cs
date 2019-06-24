@@ -65,10 +65,14 @@ namespace DBXSync {
             switch(entryChange.type){
                 case EntryChangeType.Created:                
                 case EntryChangeType.Modified:
-                // download
+                // remove from current downloads or queue in TransferManager
+                _transferManager.CancelQueuedOrExecutingDownloadTransfer(entryChange.metadata.path_lower);
+                // then start download again                
                 await MaybeCacheFileAsync(entryChange.metadata, progressCallback, cancellationToken);
                 break;
                 case EntryChangeType.Removed:
+                // remove from queue or current downloads in TransferManager
+                _transferManager.CancelQueuedOrExecutingDownloadTransfer(entryChange.metadata.path_lower);
                 // remove locally
                 RemoveFileFromCache(entryChange.metadata);     
                 break;
@@ -103,7 +107,7 @@ namespace DBXSync {
             var localMetadataFilePath = Utils.GetMetadataLocalFilePath(metadata.path_lower, _config);			
 			// make sure containing directory exists
 			Utils.EnsurePathFoldersExist(localMetadataFilePath);			
-			File.WriteAllText(localMetadataFilePath, JsonUtility.ToJson(metadata));
+			File.WriteAllText(localMetadataFilePath, JsonUtility.ToJson(metadata));            
         }
     }
 }
