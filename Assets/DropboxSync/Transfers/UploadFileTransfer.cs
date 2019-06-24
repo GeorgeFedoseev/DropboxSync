@@ -95,12 +95,12 @@ namespace DBXSync {
                     int failedAttempts = 0;
                     while(true){
                         try {                           
-                            await uploadAppendRequest.ExecuteAsync(chunkDataBuffer.SubArray(0, chunkDataLength), new Progress<int>((chunkUploadProgress) => {
+                            await uploadAppendRequest.ExecuteAsync(chunkDataBuffer.SubArray(0, chunkDataLength), uploadProgress: new Progress<int>((chunkUploadProgress) => {
                                 // Debug.Log($"Chunk {chunksUploaded} upload progress: {progress}");
                                 long currentlyUploadedBytes = totalBytesUploaded + chunkDataLength/100*chunkUploadProgress;
                                 speedTracker.SetBytesCompleted(currentlyUploadedBytes);
                                 ReportProgress(Mathf.Clamp((int)(currentlyUploadedBytes * 100 / fileSize), 0, 100), speedTracker.GetBytesPerSecond());
-                            }), cancellationToken);
+                            }), cancellationToken: cancellationToken);
 
                             // success - exit retry loop
                             break;

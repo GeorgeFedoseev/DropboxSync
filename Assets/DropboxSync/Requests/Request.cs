@@ -29,7 +29,7 @@ namespace DBXSync {
         }      
 
 
-        public async Task<RESP_T> ExecuteAsync(byte[] payload = null, IProgress<int> progress = null, CancellationToken? cancellationToken = null, int timeoutMilliseconds = int.MaxValue){
+        public async Task<RESP_T> ExecuteAsync(byte[] payload = null, IProgress<int> uploadProgress = null, IProgress<int> downloadProgress = null, CancellationToken? cancellationToken = null, int timeoutMilliseconds = int.MaxValue){
 
             using (var client = new HttpClient()){
                 
@@ -37,7 +37,7 @@ namespace DBXSync {
 
                 var parametersJSONString = UnityEngine.JsonUtility.ToJson(_parameters);
 
-                // TODO: add auth parameters if needed
+                // add auth parameters if needed
                 if(_requiresAuthorization) {
                     requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _config.accessToken);
                 }
@@ -54,11 +54,46 @@ namespace DBXSync {
                     contentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
                 }
 
-                // TODO: add httpContent and set content type header
-                var streamContent = new ProgressableStreamContent(new MemoryStream(payload), (sourceStream, uploadStream) => {
-                    // TODO: write to uploadStream buffered
-                    // check timeouts when writing
-                    // cancel if cancelation token requested
+                
+                var streamContent = new ProgressableStreamContent(new MemoryStream(payload), async (sourceStream, uploadStream) => {
+
+                    // write to uploadStream buffered
+                    long totalBytesSent = 0;
+                    using(sourceStream) {
+                        while(true){
+                            // cancel if cancelation token requested
+                            if(cancellationToken.HasValue){
+                                cancellationToken.Value.ThrowIfCancellationRequested();
+                            }
+
+                            var buffer = new Byte[_config.transferBufferSizeBytes];
+                            var length = await sourceStream.ReadAsync(buffer, 0, buffer.Length);
+                            if(length <= 0) break;                                   
+
+                            // check timeouts when writing
+                            var uploadWriteTask = uploadStream.WriteAsync(buffer, 0, length);
+                            if(await Task.WhenAny(uploadWriteTask, Task.Delay(_config.uploadRequestWriteTimeoutMilliseconds)) == uploadWriteTask){
+                                // all good
+                            }else{
+                                // timed-out
+                                // close streams
+                                sourceStream.Close();
+                                uploadStream.Close();
+                                // throw canceled exception
+                                throw new TimeoutException("Upload write chunk timed-out");
+                            }                            
+
+                            totalBytesSent = length;
+
+                            if(uploadProgress != null){
+                                uploadProgress.Report((int)(totalBytesSent * 100 / payload.Length));
+                            }                            
+                        }
+
+                        if(uploadProgress != null){
+                            uploadProgress.Report(100);
+                        }
+                    }                    
                 });
 
                 streamContent.Headers.ContentType = contentType;                
@@ -68,11 +103,85 @@ namespace DBXSync {
                 requestMessage.Headers.TransferEncodingChunked = true;
                 streamContent.Headers.ContentLength = payload.Length;                
 
-                var headersResponse = await client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead);
+                // GET RESPONSE HEADERS
+                var getHeadersCTS = cancellationToken.HasValue ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken.Value) : new CancellationTokenSource();
+                getHeadersCTS.CancelAfter(_config.lightRequestTimeoutMilliseconds);
+                var headersResponse = await client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead);        
+
+                try {
+                    // throw exception if not success status code
+                    headersResponse.EnsureSuccessStatusCode();       
+                }catch(HttpRequestException ex){
+                    await Utils.RethrowDropboxHttpRequestException(ex, headersResponse, _parameters, _endpoint);                    
+                }
                 
 
-                // TODO: get response stream, read to buffer with timeouts and measure download progress
+                // get resposne size from headers
+                long? responseContentLength = null;                
+                if(headersResponse.Headers.Any(h => h.Key.Equals("Content-Length"))){
+                    long parsed = 0;
+                    var contentLengthStringValue = headersResponse.Headers.Single(h => h.Key.Equals("Content-Length")).Value.Single();
+                    if (long.TryParse(contentLengthStringValue, out parsed)) {
+                        responseContentLength = parsed;
+                    }
+                }
+                Debug.Log($"Reponse size: {responseContentLength}");
 
+                // READ RESPONSE BODY
+                using(MemoryStream memStream = new MemoryStream()){
+                    using (Stream responseStream = await headersResponse.Content.ReadAsStreamAsync ()) {
+                        byte[] buffer = new byte[_config.transferBufferSizeBytes];
+                        long totalBytesRead = 0;
+
+                        while(true){
+                            var readToBufferTask = responseStream.ReadAsync (buffer, 0, buffer.Length);
+                            if(await Task.WhenAny(readToBufferTask, Task.Delay(_config.downloadChunkReadTimeoutMilliseconds)) == readToBufferTask){
+                                int bytesRead = readToBufferTask.Result;
+
+                                // exit loop condition
+                                if(bytesRead <= 0){
+                                    break;
+                                }
+
+                                if(cancellationToken.HasValue){
+                                    cancellationToken.Value.ThrowIfCancellationRequested();
+                                }                            
+
+                                await memStream.WriteAsync (buffer, 0, bytesRead);
+                                totalBytesRead += bytesRead;
+
+                                if(downloadProgress != null && responseContentLength.HasValue){
+                                    downloadProgress.Report((int)(totalBytesRead * 100 / responseContentLength.Value));
+                                }
+                                
+                            }else{
+                                // timed-out
+                                // close stream
+                                responseStream.Close();
+                                // throw canceled exception
+                                throw new TimeoutException("Read chunk to buffer timed-out");
+                            }                                        
+                        }                                   
+                    }
+
+                    var responseBytes = memStream.ToArray();
+
+                    // interpret bytes from memStream
+                    var responseString = Encoding.UTF8.GetString(responseBytes);
+
+                    if(string.IsNullOrWhiteSpace(responseString) || responseString == "null"){
+                        return default(RESP_T);
+                    }
+
+                    Debug.Log($"Received request response: {responseString}");
+
+                    responseString = Utils.FixDropboxJSONString(responseString);
+
+                    var response = UnityEngine.JsonUtility.FromJson<RESP_T>(responseString);
+
+                    return response;
+                }
+                
             }
 
             // using (var client = new WebClientWithTimeout()){

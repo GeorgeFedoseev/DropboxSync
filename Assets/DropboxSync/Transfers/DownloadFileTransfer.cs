@@ -119,15 +119,22 @@ namespace DBXSync {
                                 
                                 var getResponseCTS = CancellationTokenSource.CreateLinkedTokenSource(transferCancellationToken);
                                 getResponseCTS.CancelAfter(_config.downloadChunkReadTimeoutMilliseconds);
-                                var response = await client.GetAsync(Endpoints.DOWNLOAD_FILE_ENDPOINT, HttpCompletionOption.ResponseHeadersRead, getResponseCTS.Token);                                                                    
+                                var headersResponse = await client.GetAsync(Endpoints.DOWNLOAD_FILE_ENDPOINT, HttpCompletionOption.ResponseHeadersRead, getResponseCTS.Token);                                                                    
 
-                                var fileMetadataJSONString = response.Headers.GetValues("Dropbox-API-Result").First();
+                                try {
+                                    // throw exception if not success status code
+                                    headersResponse.EnsureSuccessStatusCode();       
+                                }catch(HttpRequestException ex){
+                                    await Utils.RethrowDropboxHttpRequestException(ex, headersResponse, requestParameters, Endpoints.DOWNLOAD_FILE_ENDPOINT);                    
+                                }
+
+                                var fileMetadataJSONString = headersResponse.Headers.GetValues("Dropbox-API-Result").First();
                                 latestMetadata = JsonUtility.FromJson<Metadata>(fileMetadataJSONString);
 
                                 fileStream.Seek (chunkIndex * _config.downloadChunkSizeBytes, SeekOrigin.Begin);
 
-                                using (Stream responseStream = await response.Content.ReadAsStreamAsync ()) {
-                                    byte[] buffer = new byte[8192];                                    
+                                using (Stream responseStream = await headersResponse.Content.ReadAsStreamAsync ()) {
+                                    byte[] buffer = new byte[_config.transferBufferSizeBytes];                                    
 
                                     while(true){
                                         var readToBufferTask = responseStream.ReadAsync (buffer, 0, buffer.Length);
@@ -170,9 +177,9 @@ namespace DBXSync {
                                 throw new OperationCanceledException();
                             }
 
-                            if(ex is WebException){
-                                ex = Utils.DecorateDropboxRequestWebException(ex as WebException, requestParameters, Endpoints.DOWNLOAD_FILE_ENDPOINT);
-                            }                            
+                            // if(ex is WebException){
+                            //     ex = Utils.DecorateDropboxRequestWebException(ex as WebException, requestParameters, Endpoints.DOWNLOAD_FILE_ENDPOINT);
+                            // }                            
 
                             failedAttempts += 1;
                             if(failedAttempts <= _config.chunkTransferMaxFailedAttempts){

@@ -10,9 +10,15 @@ namespace DBXSync {
         public string accessToken;
         public string cacheDirecoryPath;
 
+        public int transferBufferSizeBytes = 8192;
+
         // retry chunk transfers
         public int chunkTransferMaxFailedAttempts = 3;
         public int requestErrorRetryDelaySeconds = 3;
+
+        // requests
+        public int lightRequestTimeoutMilliseconds = 1000;
+        public int uploadRequestWriteTimeoutMilliseconds = 1000;
 
         // downloading
         public long downloadChunkSizeBytes = 10000000;
@@ -20,8 +26,8 @@ namespace DBXSync {
         public int downloadChunckedThreadNum = 2;
 
         // uploading
-        public long uploadChunkSizeBytes = 150000000;
-        public int lightRequestTimeoutMilliseconds = 1000;
+        public long uploadChunkSizeBytes = 150000000;        
+        
 
         // transfers
         public int maxSimultaneousDownloadFileTransfers = 3;
