@@ -13,11 +13,11 @@ namespace DBXSync {
         private Stream sourceStream;
         private int bufferSize;
         private bool contentConsumed;
-        private Action<Stream, Stream> _serializeToStreamCallback;
+        private Func<Stream, Stream, Task> _serializeToStreamCallback;
 
-        public ProgressableStreamContent(Stream sourceStream, Action<Stream, Stream> serializeToStreamCallback) : this(sourceStream, defaultBufferSize, serializeToStreamCallback) {}
+        public ProgressableStreamContent(Stream sourceStream, Func<Stream, Stream, Task>  serializeToStreamCallback) : this(sourceStream, defaultBufferSize, serializeToStreamCallback) {}
 
-        public ProgressableStreamContent(Stream sourceStream, int bufferSize, Action<Stream, Stream> serializeToStreamCallback)
+        public ProgressableStreamContent(Stream sourceStream, int bufferSize, Func<Stream, Stream, Task>  serializeToStreamCallback)
         {
             if(sourceStream == null)
             {
@@ -39,9 +39,11 @@ namespace DBXSync {
 
             PrepareContent();
 
-            return Task.Run(() =>
-            {
-                _serializeToStreamCallback(sourceStream, uploadStream);
+            return _serializeToStreamCallback(sourceStream, uploadStream);
+
+            // return Task.Run(() =>
+            // {
+                // await _serializeToStreamCallback(sourceStream, uploadStream);
 
                 // var buffer = new Byte[this.bufferSize];
                 // var size = content.Length;
@@ -62,7 +64,7 @@ namespace DBXSync {
                 // }
 
                 // downloader.ChangeState(DownloadState.PendingResponse);
-            });
+            // });
         }
 
         protected override bool TryComputeLength(out long length)

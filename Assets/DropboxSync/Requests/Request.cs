@@ -56,7 +56,7 @@ namespace DBXSync {
 
                 
                 var streamContent = new ProgressableStreamContent(new MemoryStream(payload), async (sourceStream, uploadStream) => {
-
+                    Debug.LogWarning($"ProgressableStreamContent: sourceStream.Length = {sourceStream.Length}");
                     // write to uploadStream buffered
                     long totalBytesSent = 0;
                     using(sourceStream) {
@@ -73,7 +73,7 @@ namespace DBXSync {
                             // check timeouts when writing
                             var uploadWriteTask = uploadStream.WriteAsync(buffer, 0, length);
                             if(await Task.WhenAny(uploadWriteTask, Task.Delay(_config.uploadRequestWriteTimeoutMilliseconds)) == uploadWriteTask){
-                                // all good
+                                // all good                               
                             }else{
                                 // timed-out
                                 // close streams
@@ -83,16 +83,18 @@ namespace DBXSync {
                                 throw new TimeoutException("Upload write chunk timed-out");
                             }                            
 
-                            totalBytesSent = length;
+                            totalBytesSent += length;
 
                             if(uploadProgress != null){
                                 uploadProgress.Report((int)(totalBytesSent * 100 / payload.Length));
                             }                            
                         }
 
-                        if(uploadProgress != null){
-                            uploadProgress.Report(100);
-                        }
+                        // if(uploadProgress != null){
+                        //     uploadProgress.Report(100);
+                        // }
+
+                        // Debug.Log($"Total bytes sent: {totalBytesSent}");
                     }                    
                 });
 
@@ -113,18 +115,18 @@ namespace DBXSync {
                     headersResponse.EnsureSuccessStatusCode();       
                 }catch(HttpRequestException ex){
                     await Utils.RethrowDropboxHttpRequestException(ex, headersResponse, _parameters, _endpoint);                    
-                }
-                
+                }                
 
                 // get resposne size from headers
                 long? responseContentLength = null;                
-                if(headersResponse.Headers.Any(h => h.Key.Equals("Content-Length"))){
+                if(headersResponse.Content.Headers.Any(h => h.Key.Equals("Content-Length"))){
                     long parsed = 0;
-                    var contentLengthStringValue = headersResponse.Headers.Single(h => h.Key.Equals("Content-Length")).Value.Single();
+                    var contentLengthStringValue = headersResponse.Content.Headers.Single(h => h.Key.Equals("Content-Length")).Value.Single();
                     if (long.TryParse(contentLengthStringValue, out parsed)) {
                         responseContentLength = parsed;
                     }
                 }
+                
                 Debug.Log($"Reponse size: {responseContentLength}");
 
                 // READ RESPONSE BODY

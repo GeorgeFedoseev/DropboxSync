@@ -134,6 +134,9 @@ namespace DBXSync {
             
             ReportProgress(100, speedTracker.GetBytesPerSecond());
 
+            // wait for last progress report to deliver before returning the upload result
+            await Task.Delay(1);
+
             _endDateTime = DateTime.Now;
 
             Debug.LogWarning($"Upload done.");
