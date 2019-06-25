@@ -31,6 +31,7 @@ namespace DBXSync {
         // DELAYS
         public int pathSubscriptionFailedDelaySeconds = 5;
         public int requestErrorRetryDelaySeconds = 3; 
+        public int chunkTransferErrorRetryDelaySeconds = 7; 
         
 
         public void FillDefaultsAndValidate(){

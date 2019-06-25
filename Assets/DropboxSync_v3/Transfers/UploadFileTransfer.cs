@@ -114,9 +114,9 @@ namespace DBXSync {
 
                             failedAttempts += 1;
                             if(failedAttempts <= _config.chunkTransferMaxFailedAttempts){
-                                Debug.LogWarning($"[DropboxSync/UploadFileTransfer] Failed to upload chunk of data. Retry {failedAttempts}/{_config.chunkTransferMaxFailedAttempts}\nException: {ex}");
+                                Debug.LogWarning($"[DropboxSync/UploadFileTransfer] Failed to upload chunk {chunkIndex} to {_dropboxTargetPath}. Retry {failedAttempts}/{_config.chunkTransferMaxFailedAttempts} in {_config.chunkTransferErrorRetryDelaySeconds} seconds...\nException: {ex}");
                                 // wait before attempting again
-                                await new WaitForSeconds(_config.requestErrorRetryDelaySeconds);
+                                await Task.Delay(TimeSpan.FromSeconds(_config.chunkTransferErrorRetryDelaySeconds));
                                 continue;                                
                             }else{
                                 // attempts exceeded - exit retry loop

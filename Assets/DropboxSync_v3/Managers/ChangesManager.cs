@@ -104,12 +104,12 @@ namespace DBXSync {
                         // wait before making next longpoll
                         await Task.Delay (longpollResponse.backoff * 10000);
 
-                    }catch(DropboxResetCursorAPIException cursorResetException){
+                    }catch(DropboxResetCursorAPIException){
                         // if exception is because cursor is not valid anymore do CheckChangesInFoldersAsync() to get new cursor
                         await CheckChangesInFoldersAsync();
                     }catch(Exception ex){                        
                         // Debug.LogError($"Failed to request Dropbox changes: {ex}");
-                        await Task.Delay (_config.requestErrorRetryDelaySeconds * 1000);                                                
+                        await Task.Delay (TimeSpan.FromSeconds(_config.requestErrorRetryDelaySeconds));
                     }                    
                 }else if(_folderSubscriptions.Count > 0){
                     // need to get cursor
