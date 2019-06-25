@@ -221,7 +221,6 @@ namespace DBXSync {
         }        
 
         public void Cancel() {
-            Debug.Log("_internalCancellationTokenSource.Cancel();");
             _internalCancellationTokenSource.Cancel();
         }
 
