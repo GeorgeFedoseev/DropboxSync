@@ -26,6 +26,13 @@ namespace DBXSync {
         private List<IFileTransfer> _currentUploadTransfers = new List<IFileTransfer> ();
         public int CurrentUploadTransferNumber => _currentUploadTransfers.Count;
 
+        // speed
+        public double CurrentTotalDownloadSpeedBytesPerSecond => _currentDownloadTransfers.Select(t => t.Progress.bytesPerSecondSpeed).Sum();
+        public string CurrentTotalDownloadSpeedFormatted => TransferSpeedTracker.FormatBytesPerSecond(CurrentTotalDownloadSpeedBytesPerSecond);
+
+        public double CurrentTotalUploadSpeedBytesPerSecond => _currentUploadTransfers.Select(t => t.Progress.bytesPerSecondSpeed).Sum();
+        public string CurrentTotalUploadSpeedFormatted => TransferSpeedTracker.FormatBytesPerSecond(CurrentTotalUploadSpeedBytesPerSecond);
+
         // failed
         private List<IFileTransfer> _failedTransfers = new List<IFileTransfer> ();
         public int FailedTransfersNumber => _failedTransfers.Count;
@@ -258,7 +265,7 @@ namespace DBXSync {
 
                 transfer.CompletionSource.SetResult (metadata);
             } catch (Exception ex) {
-                
+
                 transfer.CompletionSource.SetException (ex);
 
                 // if it's download trasnfer - remove *.download file
