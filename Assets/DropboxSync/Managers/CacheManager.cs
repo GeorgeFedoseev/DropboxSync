@@ -45,8 +45,12 @@ namespace DBXSync {
             WriteMetadata(remoteMetadata);
         }
 
-        public bool HaveFileLocally(Metadata remoteMetadata){
-            return GetLocalMetadataForDropboxPath(remoteMetadata.path_lower) != null;
+        private bool HaveFileLocally(Metadata remoteMetadata){
+            return HaveFileLocally(remoteMetadata.path_lower);
+        }
+
+        public bool HaveFileLocally(string dropboxPath){
+            return GetLocalMetadataForDropboxPath(dropboxPath) != null;
         }
 
         public void RemoveFileFromCache(Metadata metadata){
@@ -90,7 +94,7 @@ namespace DBXSync {
             return localMetadata == null || localMetadata.content_hash != remoteMetadata.content_hash;
         }
 
-        private Metadata GetLocalMetadataForDropboxPath(string dropboxPath){
+        public Metadata GetLocalMetadataForDropboxPath(string dropboxPath){
             var localMetadataFilePath = Utils.GetMetadataLocalFilePath(dropboxPath, _config);			
 			if(File.Exists(localMetadataFilePath)){				
 				var metadataJSONString = File.ReadAllText(localMetadataFilePath);

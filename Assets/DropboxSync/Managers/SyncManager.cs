@@ -122,6 +122,22 @@ namespace DBXSync {
             }
         }
 
+        public void UnsubscribeFromKeepSyncCallback(string dropboxPath, Action<EntryChange> callback){
+            dropboxPath = Utils.UnifyDropboxPath(dropboxPath);
+
+            if(_syncSubscriptions.ContainsKey(dropboxPath)){
+                var sub = _syncSubscriptions[dropboxPath];
+                if(sub.syncedCallbacks.Contains(callback)){
+                    sub.syncedCallbacks.Remove(callback);
+                    // check if anyone is listening
+                    if(sub.syncedCallbacks.Count == 0){
+                        // stop keeping in sync cause no one interested
+                        StopKeepingInSync(dropboxPath);
+                    }
+                }
+            }
+        }
+
         private void ResetSyncing(string dropboxPath){
             if(_syncSubscriptions.ContainsKey(dropboxPath)){
                 

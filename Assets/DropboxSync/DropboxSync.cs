@@ -6,6 +6,7 @@ using DBXSync;
 using System.Threading.Tasks;
 using System;
 using System.Threading;
+using System.IO;
 
 public class DropboxSync : MonoBehaviour {
 
@@ -93,13 +94,63 @@ public class DropboxSync : MonoBehaviour {
         return await _cacheManager.GetLocalFilePathAsync(dropboxPath, progressCallback, cancellationToken);
     }
 
-    public async void GetFileAsLocalCachedPath(string dropboxPath, Progress<TransferProgressReport> progressCallback, Action<string> successCallback, Action<Exception> errorCallback, CancellationToken? cancellationToken){
+    public async void GetFileAsLocalCachedPath(string dropboxPath, Progress<TransferProgressReport> progressCallback,
+                                                 Action<string> successCallback, Action<Exception> errorCallback,
+                                                 bool useCachedFirst = false, bool useCachedIfOffline = true, bool receiveUpdates = false,
+                                                 CancellationToken? cancellationToken = null)
+    {
         try {
+            Metadata lastServedMetadata = null;
+            var serveCachedFirst = useCachedFirst || (Application.internetReachability == NetworkReachability.NotReachable && useCachedIfOffline);
+            if(serveCachedFirst && _cacheManager.HaveFileLocally(dropboxPath)){
+                lastServedMetadata = _cacheManager.GetLocalMetadataForDropboxPath(dropboxPath);
+                successCallback(Utils.DropboxPathToLocalPath(dropboxPath, _config));
+            }
+            
             var resultPath = await GetFileAsLocalCachedPathAsync(dropboxPath, progressCallback, cancellationToken);
-            successCallback(resultPath);
+            var latestMetadata = _cacheManager.GetLocalMetadataForDropboxPath(dropboxPath);
+            bool shouldServe = lastServedMetadata == null || lastServedMetadata.content_hash != latestMetadata.content_hash;
+            // don't serve same version again
+            if(shouldServe){
+                successCallback(resultPath);
+            }            
+
+            if(receiveUpdates){                
+                Action<EntryChange> syncedChangecallback = async (change) => {
+                    // serve updated version
+                    var updatedResultPath = await GetFileAsLocalCachedPathAsync(dropboxPath, progressCallback, cancellationToken);
+                    successCallback(updatedResultPath);
+                };
+
+                KeepSynced(dropboxPath, syncedChangecallback);
+
+                // unsubscribe from receiving updates when canceling requested
+                if(cancellationToken.HasValue){
+                    cancellationToken.Value.Register(() => {
+                        _syncManager.UnsubscribeFromKeepSyncCallback(dropboxPath, syncedChangecallback);
+                    });
+                }
+            }            
+            
         }catch(Exception ex){
             errorCallback(ex);
         }
+    }
+
+    // as bytes
+    public async Task<byte[]> GetFileAsBytesAsync(string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken){
+        var cachedFilePath = await GetFileAsLocalCachedPathAsync(dropboxPath, progressCallback, cancellationToken);
+        return File.ReadAllBytes(cachedFilePath);
+    }
+
+    public void GetFileAsBytes(string dropboxPath, Progress<TransferProgressReport> progressCallback,
+                                        Action<byte[]> successCallback, Action<Exception> errorCallback,
+                                        bool useCachedFirst = false, bool useCachedIfOffline = true, bool receiveUpdates = false,
+                                        CancellationToken? cancellationToken = null)
+    {
+        GetFileAsLocalCachedPath(dropboxPath, progressCallback, (localPath) => {
+            successCallback(File.ReadAllBytes(localPath));
+        }, errorCallback, useCachedFirst, useCachedIfOffline, receiveUpdates, cancellationToken);
     }
 
     // KEEP SYNCED
