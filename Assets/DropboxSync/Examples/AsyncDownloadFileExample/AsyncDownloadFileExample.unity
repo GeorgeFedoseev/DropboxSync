@@ -335,7 +335,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: Downloading file
+  m_Text: Downloading file (async code)
 --- !u!222 &443322304
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -978,7 +978,7 @@ GameObject:
   - component: {fileID: 1058493601}
   - component: {fileID: 1058493602}
   m_Layer: 0
-  m_Name: DownloadFileExampleScript
+  m_Name: AsyncDownloadFileExampleScript
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1007,7 +1007,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1058493600}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8070a5cf5fe0b42dfb0547dd83de53e7, type: 3}
+  m_Script: {fileID: 11500000, guid: 4efd9283914d64780890081c53863eb4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   inputField: {fileID: 484057767}

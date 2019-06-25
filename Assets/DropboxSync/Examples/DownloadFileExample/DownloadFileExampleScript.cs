@@ -17,7 +17,7 @@ public class DownloadFileExampleScript : MonoBehaviour
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
     // Start is called before the first frame update
-    async void Start() {
+    void Start() {
         downloadButton.onClick.AddListener(DownloadFile);	
 
 		cancelButton.onClick.AddListener(() => {
@@ -25,28 +25,29 @@ public class DownloadFileExampleScript : MonoBehaviour
 		});
     }
 
-    private async void DownloadFile(){
+    private void DownloadFile(){
         _cancellationTokenSource = new CancellationTokenSource();
 
-        try {
-			var localPath = await DropboxSync.Main.CacheManager.GetLocalFilePathAsync(inputField.text, 
+        DropboxSync.Main.GetFileAsLocalCachedPath(inputField.text, 
                                 new Progress<TransferProgressReport>((report) => {                        
                                     statusText.text = $"Downloading: {report.progress}% {report.bytesPerSecondFormatted}";
-                                }), _cancellationTokenSource.Token);
-
-			print($"Completed");
-			statusText.text = $"<color=green>Local path: {localPath}</color>";
-
-		}catch(Exception ex){
-			if(ex is OperationCanceledException){
-				Debug.Log("Download cancelled");
-				statusText.text = $"<color=orange>Download canceled.</color>";
-			}else{
-				Debug.LogException(ex);
-				statusText.text = $"<color=red>Download failed.</color>";
-			}
-		}
-
+                                }),
+                                (localPath) => {
+                                    // success
+                                    print($"Completed");
+			                        statusText.text = $"<color=green>Local path: {localPath}</color>";
+                                },
+                                (ex) => {
+                                    // exception
+                                    if(ex is OperationCanceledException){
+                                        Debug.Log("Download cancelled");
+                                        statusText.text = $"<color=orange>Download canceled.</color>";
+                                    }else{
+                                        Debug.LogException(ex);
+                                        statusText.text = $"<color=red>Download failed.</color>";
+                                    }
+                                },
+                                _cancellationTokenSource.Token);
         
     }
 }

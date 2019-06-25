@@ -5,6 +5,7 @@ using UnityEngine;
 using DBXSync;
 using System.Threading.Tasks;
 using System;
+using System.Threading;
 
 public class DropboxSync : MonoBehaviour {
 
@@ -35,25 +36,25 @@ public class DropboxSync : MonoBehaviour {
     }
 
     private CacheManager _cacheManager;
-    public CacheManager CacheManager {
-        get {
-            return _cacheManager;
-        }
-    }
+    // public CacheManager CacheManager {
+    //     get {
+    //         return _cacheManager;
+    //     }
+    // }
 
     private ChangesManager _changesManager;
-    public ChangesManager ChangesManager {
-        get {
-            return _changesManager;
-        }
-    }
+    // public ChangesManager ChangesManager {
+    //     get {
+    //         return _changesManager;
+    //     }
+    // }
 
     private SyncManager _syncManager;
-    public SyncManager SyncManager {
-        get {
-            return _syncManager;
-        }
-    }
+    // public SyncManager SyncManager {
+    //     get {
+    //         return _syncManager;
+    //     }
+    // }
 
 
     void Awake(){        
@@ -74,18 +75,46 @@ public class DropboxSync : MonoBehaviour {
     public void SetConfiguration(DropboxSyncConfiguration config){
         _config = config;
         _config.FillDefaultsAndValidate();        
-
-        // DropboxReachability.Main.SetPingInterval(_configuration.dropboxReachabilityCheckIntervalMilliseconds);
     }
     
+    
+    // public async Task<Metadata> GetMetadataAsync(string dropboxPath){
+    //     var request = new GetMetadataRequest(new GetMetadataRequestParameters {
+    //         path = dropboxPath
+    //     }, _config);
 
-    public async Task<Metadata> GetFileMetadataAsync(string dropboxFilePath){
-        var request = new GetMetadataRequest(new GetMetadataRequestParameters {
-            path = dropboxFilePath
-        }, _config);
+    //     return (await request.ExecuteAsync()).GetMetadata();
+    // }    
 
-        return (await request.ExecuteAsync()).GetMetadata();
+    // DOWNLOADING
+
+    // as cached path
+    public async Task<string> GetFileAsLocalCachedPathAsync(string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken){
+        return await _cacheManager.GetLocalFilePathAsync(dropboxPath, progressCallback, cancellationToken);
     }
+
+    public async void GetFileAsLocalCachedPath(string dropboxPath, Progress<TransferProgressReport> progressCallback, Action<string> successCallback, Action<Exception> errorCallback, CancellationToken? cancellationToken){
+        try {
+            var resultPath = await GetFileAsLocalCachedPathAsync(dropboxPath, progressCallback, cancellationToken);
+            successCallback(resultPath);
+        }catch(Exception ex){
+            errorCallback(ex);
+        }
+    }
+
+    // KEEP SYNCED
+    public void KeepSynced(string dropboxPath, Action<EntryChange> callback){
+        _syncManager.KeepSynced(dropboxPath, callback);
+    }
+
+    public void StopKeepingInSync(string dropboxPath){
+        _syncManager.StopKeepingInSync(dropboxPath);
+    }
+
+    public bool IsKeepingInSync(string dropboxPath){
+        return _syncManager.IsKeepingInSync(dropboxPath);
+    }
+
 
     
 
@@ -93,7 +122,7 @@ public class DropboxSync : MonoBehaviour {
 
     void OnApplicationQuit(){
         print("OnApplicationQuit()");
-        // DropboxReachability.Main.Dispose();
+        
         if(_transferManger != null){
             _transferManger.Dispose();
         }
@@ -104,6 +133,4 @@ public class DropboxSync : MonoBehaviour {
             _syncManager.Dispose();
         }
     }
-
-
 }
