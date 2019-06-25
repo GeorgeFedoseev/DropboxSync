@@ -21,7 +21,7 @@ public class TransferManagerWidgetScript : MonoBehaviour {
     void Update() {
         var dropboxSync = _dropboxSyncInstance != null ? _dropboxSyncInstance : DropboxSync.Main;
 
-        if(dropboxSync != null){
+        if(dropboxSync != null && dropboxSync.TransferManager != null){
             _statusText.text = $"Downloads: {dropboxSync.TransferManager.CurrentDownloadTransferNumber} ({dropboxSync.TransferManager.CurrentQueuedDownloadTransfersNumber} queued)"
                                 + $"\nUploads: {dropboxSync.TransferManager.CurrentUploadTransferNumber} ({dropboxSync.TransferManager.CurrentQueuedUploadTransfersNumber} queued)"
                                 + $"\nCompleted: {dropboxSync.TransferManager.CompletedTransferNumber}"

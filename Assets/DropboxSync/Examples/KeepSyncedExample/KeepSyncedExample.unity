@@ -149,7 +149,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6e58b23c8a844a6f825316a97d52120, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _dropboxAccessToken: sVawC-LSz14AAAAAAAAKQTgQh3ngYiMKjGt09fOlAGV8hsPswah-6l6wCGSIaOTe
+  _dropboxAccessToken: <your-access-token>
 --- !u!4 &58947194
 Transform:
   m_ObjectHideFlags: 0
@@ -464,7 +464,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: /DropboxSyncExampleFolder/sync_folder
+  m_Text: /DropboxSyncExampleFolder
 --- !u!222 &579674036
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1316,7 +1316,7 @@ MonoBehaviour:
   m_CaretColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
   m_CustomCaretColor: 0
   m_SelectionColor: {r: 0.65882355, g: 0.80784315, b: 1, a: 0.7529412}
-  m_Text: /DropboxSyncExampleFolder/sync_folder
+  m_Text: /DropboxSyncExampleFolder
   m_CaretBlinkRate: 0.85
   m_CaretWidth: 1
   m_ReadOnly: 0
