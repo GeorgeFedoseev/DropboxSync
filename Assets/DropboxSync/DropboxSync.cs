@@ -29,6 +29,12 @@ public class DropboxSync : MonoBehaviour {
     private string _dropboxAccessToken;
 
     private DropboxSyncConfiguration _config;
+    public DropboxSyncConfiguration Config {
+        get {
+            return _config;
+        }
+    }
+
     private TransferManager _transferManger;
     public TransferManager TransferManager {
         get {
@@ -59,33 +65,15 @@ public class DropboxSync : MonoBehaviour {
 
 
     void Awake(){        
-        // set configuration based on inspector values
-        SetConfiguration(new DropboxSyncConfiguration { accessToken = _dropboxAccessToken});
-
-        // DropboxReachability.Main.Initialize(_configuration.dropboxReachabilityCheckIntervalMilliseconds);
+        // set configuration based on inspector values        
+        _config = new DropboxSyncConfiguration { accessToken = _dropboxAccessToken};
+        _config.FillDefaultsAndValidate();        
 
         _transferManger = new TransferManager(_config);
         _cacheManager = new CacheManager(_transferManger, _config);
         _changesManager = new ChangesManager(_cacheManager, _transferManger, _config);
         _syncManager = new SyncManager(_cacheManager, _changesManager, _config);
     }
-
-
-    // METHODS
-
-    public void SetConfiguration(DropboxSyncConfiguration config){
-        _config = config;
-        _config.FillDefaultsAndValidate();        
-    }
-    
-    
-    // public async Task<Metadata> GetMetadataAsync(string dropboxPath){
-    //     var request = new GetMetadataRequest(new GetMetadataRequestParameters {
-    //         path = dropboxPath
-    //     }, _config);
-
-    //     return (await request.ExecuteAsync()).GetMetadata();
-    // }    
 
     // DOWNLOADING
 
@@ -168,6 +156,9 @@ public class DropboxSync : MonoBehaviour {
             successCallback(Utils.ConvertBytesTo<T>(bytes));
         }, errorCallback, useCachedFirst, useCachedIfOffline, receiveUpdates, cancellationToken);
     }
+
+    // UPLOADING
+    
 
     // KEEP SYNCED
     public void KeepSynced(string dropboxPath, Action<EntryChange> syncedCallback){

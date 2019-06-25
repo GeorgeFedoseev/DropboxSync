@@ -47,7 +47,7 @@ public class DownloadFileExampleScript : MonoBehaviour
                                         statusText.text = $"<color=red>Download failed.</color>";
                                     }
                                 },
-                                _cancellationTokenSource.Token);
+                                cancellationToken: _cancellationTokenSource.Token);
         
     }
 }

@@ -45,7 +45,7 @@ namespace DBXSync {
             WriteMetadata(remoteMetadata);
         }
 
-        private bool HaveFileLocally(Metadata remoteMetadata){
+        public bool HaveFileLocally(Metadata remoteMetadata){
             return HaveFileLocally(remoteMetadata.path_lower);
         }
 
