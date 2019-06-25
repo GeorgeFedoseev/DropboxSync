@@ -124,10 +124,10 @@ public class DropboxSync : MonoBehaviour {
 
                 KeepSynced(dropboxPath, syncedChangecallback);
 
-                // unsubscribe from receiving updates when canceling requested
+                // unsubscribe from receiving updates when cancellation requested
                 if(cancellationToken.HasValue){
                     cancellationToken.Value.Register(() => {
-                        _syncManager.UnsubscribeFromKeepSyncCallback(dropboxPath, syncedChangecallback);
+                        UnsubscribeFromKeepSyncCallback(dropboxPath, syncedChangecallback);
                     });
                 }
             }            
@@ -153,9 +153,29 @@ public class DropboxSync : MonoBehaviour {
         }, errorCallback, useCachedFirst, useCachedIfOffline, receiveUpdates, cancellationToken);
     }
 
+    // as T
+    public async Task<T> GetFile<T>(string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken) where T : class{
+        var bytes = await GetFileAsBytesAsync(dropboxPath, progressCallback, cancellationToken);
+        return Utils.ConvertBytesTo<T>(bytes);
+    }
+
+    public void GetFile<T>(string dropboxPath, Progress<TransferProgressReport> progressCallback,
+                                        Action<T> successCallback, Action<Exception> errorCallback,
+                                        bool useCachedFirst = false, bool useCachedIfOffline = true, bool receiveUpdates = false,
+                                        CancellationToken? cancellationToken = null) where T : class
+    {
+        GetFileAsBytes(dropboxPath, progressCallback, (bytes) => {
+            successCallback(Utils.ConvertBytesTo<T>(bytes));
+        }, errorCallback, useCachedFirst, useCachedIfOffline, receiveUpdates, cancellationToken);
+    }
+
     // KEEP SYNCED
-    public void KeepSynced(string dropboxPath, Action<EntryChange> callback){
-        _syncManager.KeepSynced(dropboxPath, callback);
+    public void KeepSynced(string dropboxPath, Action<EntryChange> syncedCallback){
+        _syncManager.KeepSynced(dropboxPath, syncedCallback);
+    }
+
+    public void UnsubscribeFromKeepSyncCallback(string dropboxPath, Action<EntryChange> syncedCallback){
+        _syncManager.UnsubscribeFromKeepSyncCallback(dropboxPath, syncedCallback);
     }
 
     public void StopKeepingInSync(string dropboxPath){

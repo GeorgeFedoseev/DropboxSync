@@ -14,7 +14,38 @@ namespace DBXSync {
 
     public static class Utils {        
 
-        
+        public static T ConvertBytesTo<T>(byte[] bytes) where T:class {
+            if(typeof(T) == typeof(string)){
+                // TEXT DATA
+				return GetAutoDetectedEncodingStringFromBytes(bytes) as T;				
+			} else if(typeof(T) == typeof(Texture2D)){				
+				// IMAGE DATA
+                return LoadImageToTexture2D(bytes) as T;				
+			} else{
+                // TRY DESERIALIZE JSON
+                var str = GetAutoDetectedEncodingStringFromBytes(bytes);
+                return JsonUtility.FromJson<T>(str);                
+            }
+        }
+
+        public static Texture2D LoadImageToTexture2D(byte[] data) {
+            Texture2D tex = null;
+            tex = new Texture2D(2, 2);                     
+            
+            tex.LoadImage(data);
+            //tex.filterMode = FilterMode.Trilinear; 	
+            //tex.wrapMode = TextureWrapMode.Clamp;
+            //tex.anisoLevel = 9;
+
+            return tex;
+        }
+
+        public static string GetAutoDetectedEncodingStringFromBytes(byte[] bytes){
+            using (var reader = new System.IO.StreamReader(new System.IO.MemoryStream(bytes), true)){
+                var detectedEncoding = reader.CurrentEncoding;
+                return detectedEncoding.GetString(bytes);
+            }	
+        }
 
 
         public static async Task RethrowDropboxHttpRequestException(HttpRequestException ex, HttpResponseMessage responseMessage,  RequestParameters parameters, string endpoint){
