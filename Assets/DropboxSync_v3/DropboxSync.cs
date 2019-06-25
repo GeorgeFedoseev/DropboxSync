@@ -1,0 +1,333 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+using DBXSync;
+using System.Threading.Tasks;
+using System;
+using System.Threading;
+using System.IO;
+
+public class DropboxSync : MonoBehaviour {
+
+    private static DropboxSync _instance;
+		public static DropboxSync Main {
+			get {
+				if(_instance == null){
+					_instance = FindObjectOfType<DropboxSync>();
+					if(_instance != null){						
+					}else{
+						Debug.LogError("[DropboxSync] DropboxSync script wasn't found on the scene.");						
+					}
+				}
+				return _instance;				
+			}
+		}
+
+    // inspector
+    [SerializeField]
+    private string _dropboxAccessToken;
+
+    private DropboxSyncConfiguration _config;
+    public DropboxSyncConfiguration Config {
+        get {
+            return _config;
+        }
+    }
+
+    private TransferManager _transferManger;
+    public TransferManager TransferManager {
+        get {
+            return _transferManger;
+        }
+    }
+
+    private CacheManager _cacheManager;
+    private ChangesManager _changesManager;
+    private SyncManager _syncManager;   
+
+
+    void Awake(){        
+        // set configuration based on inspector values        
+        _config = new DropboxSyncConfiguration { accessToken = _dropboxAccessToken};
+        _config.FillDefaultsAndValidate();        
+
+        _transferManger = new TransferManager(_config);
+        _cacheManager = new CacheManager(_transferManger, _config);
+        _changesManager = new ChangesManager(_cacheManager, _transferManger, _config);
+        _syncManager = new SyncManager(_cacheManager, _changesManager, _config);
+    }
+
+    // DOWNLOADING
+
+    // as cached path
+
+    /// <summary>
+    /// Asynchronously retrieves file from Dropbox and returns path to local filesystem cached copy
+    /// </summary>
+    /// <param name="dropboxPath">Path to file on Dropbox</param>
+    /// <param name="progressCallback">Progress callback with download percentage and speed</param>
+    /// <param name="cancellationToken">Cancellation token that can be used to cancel download</param>
+    /// <returns>Task that produces path to downloaded file</returns>
+    public async Task<string> GetFileAsLocalCachedPathAsync(string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken = null){
+        return await _cacheManager.GetLocalFilePathAsync(dropboxPath, progressCallback, cancellationToken);
+    }
+
+    /// <summary>
+    /// Asynchronously retrieves file from Dropbox and returns path to local filesystem cached copy
+    /// </summary>
+    /// <param name="dropboxPath">Path to file on Dropbox</param>
+    /// <param name="progressCallback">Progress callback with download percentage and speed</param>
+    /// <param name="successCallback">Callback for receiving downloaded file path</param>
+    /// <param name="errorCallback">Callback that is triggered if any exception happened</param>
+    /// <param name="useCachedFirst">Serve cached version (if it exists) before event checking Dropbox for newer version?</param>
+    /// <param name="useCachedIfOffline">Use cached version if no Internet connection?</param>
+    /// <param name="receiveUpdates">If `true`, then when there are remote updates on Dropbox, callback function `successCallback ` will be triggered again with updated version of the file.</param>
+    /// <param name="cancellationToken">Cancellation token that can be used to cancel download</param>
+    /// <returns></returns>
+    public async void GetFileAsLocalCachedPath(string dropboxPath, Progress<TransferProgressReport> progressCallback,
+                                                 Action<string> successCallback, Action<Exception> errorCallback,
+                                                 bool useCachedFirst = false, bool useCachedIfOffline = true, bool receiveUpdates = false,
+                                                 CancellationToken? cancellationToken = null)
+    {
+        try {
+            Metadata lastServedMetadata = null;
+            var serveCachedFirst = useCachedFirst || (Application.internetReachability == NetworkReachability.NotReachable && useCachedIfOffline);
+            if(serveCachedFirst && _cacheManager.HaveFileLocally(dropboxPath)){
+                lastServedMetadata = _cacheManager.GetLocalMetadataForDropboxPath(dropboxPath);
+                successCallback(Utils.DropboxPathToLocalPath(dropboxPath, _config));
+            }
+            
+            var resultPath = await GetFileAsLocalCachedPathAsync(dropboxPath, progressCallback, cancellationToken);
+            var latestMetadata = _cacheManager.GetLocalMetadataForDropboxPath(dropboxPath);
+            bool shouldServe = lastServedMetadata == null || lastServedMetadata.content_hash != latestMetadata.content_hash;
+            // don't serve same version again
+            if(shouldServe){
+                successCallback(resultPath);
+            }            
+
+            if(receiveUpdates){                
+                Action<EntryChange> syncedChangecallback = async (change) => {
+                    // serve updated version
+                    var updatedResultPath = await GetFileAsLocalCachedPathAsync(dropboxPath, progressCallback, cancellationToken);
+                    successCallback(updatedResultPath);
+                };
+
+                KeepSynced(dropboxPath, syncedChangecallback);
+
+                // unsubscribe from receiving updates when cancellation requested
+                if(cancellationToken.HasValue){                    
+                    cancellationToken.Value.Register(() => {                        
+                        UnsubscribeFromKeepSyncCallback(dropboxPath, syncedChangecallback);
+                    });
+                }
+            }            
+            
+        }catch(Exception ex){
+            errorCallback(ex);
+        }
+    }
+
+    // as bytes
+
+    /// <summary>
+    /// Asynchronously retrieves file from Dropbox and returns it as byte array
+    /// </summary>
+    /// <param name="dropboxPath">Path to file on Dropbox</param>
+    /// <param name="progressCallback">Progress callback with download percentage and speed</param>
+    /// <param name="cancellationToken">Cancellation token that can be used to cancel download</param>
+    /// <returns>Task that produces byte array</returns>
+    public async Task<byte[]> GetFileAsBytesAsync(string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken){
+        var cachedFilePath = await GetFileAsLocalCachedPathAsync(dropboxPath, progressCallback, cancellationToken);
+        return File.ReadAllBytes(cachedFilePath);
+    }
+
+    /// <summary>
+    /// Asynchronously retrieves file from Dropbox and returns it as byte array
+    /// </summary>
+    /// <param name="dropboxPath">Path to file on Dropbox</param>
+    /// <param name="progressCallback">Progress callback with download percentage and speed</param>
+    /// <param name="successCallback">Callback for receiving downloaded file bytes</param>
+    /// <param name="errorCallback">Callback that is triggered if any exception happened</param>
+    /// <param name="useCachedFirst">Serve cached version (if it exists) before event checking Dropbox for newer version?</param>
+    /// <param name="useCachedIfOffline">Use cached version if no Internet connection?</param>
+    /// <param name="receiveUpdates">If `true`, then when there are remote updates on Dropbox, callback function `successCallback ` will be triggered again with updated version of the file.</param>
+    /// <param name="cancellationToken">Cancellation token that can be used to cancel download</param>
+    /// <returns></returns>
+    public void GetFileAsBytes(string dropboxPath, Progress<TransferProgressReport> progressCallback,
+                                        Action<byte[]> successCallback, Action<Exception> errorCallback,
+                                        bool useCachedFirst = false, bool useCachedIfOffline = true, bool receiveUpdates = false,
+                                        CancellationToken? cancellationToken = null)
+    {
+        GetFileAsLocalCachedPath(dropboxPath, progressCallback, (localPath) => {
+            successCallback(File.ReadAllBytes(localPath));
+        }, errorCallback, useCachedFirst, useCachedIfOffline, receiveUpdates, cancellationToken);
+    }
+
+    // as T
+
+    /// <summary>
+    /// Retrieves file from Dropbox and returns it as T (T can be string, Texture2D or any type that can be deserialized from text using JsonUtility)
+    /// </summary>
+    /// <param name="dropboxPath">Path to file on Dropbox</param>
+    /// <param name="progressCallback">Progress callback with download percentage and speed</param>
+    /// <param name="cancellationToken">Cancellation token that can be used to cancel download</param>
+    /// <returns>Task that produces object of type T</returns>
+    public async Task<T> GetFile<T>(string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken) where T : class{        
+        var bytes = await GetFileAsBytesAsync(dropboxPath, progressCallback, cancellationToken);
+        return Utils.ConvertBytesTo<T>(bytes);
+    }
+
+    /// <summary>
+    /// Retrieves file from Dropbox and returns it as T (T can be string, Texture2D or any type that can be deserialized from text using JsonUtility)
+    /// </summary>
+    /// <param name="dropboxPath">Path to file on Dropbox</param>
+    /// <param name="progressCallback">Progress callback with download percentage and speed</param>
+    /// <param name="successCallback">Callback for receiving downloaded object T (T can be string, Texture2D or any type that can be deserialized from text using JsonUtility)</param>
+    /// <param name="errorCallback">Callback that is triggered if any exception happened</param>
+    /// <param name="useCachedFirst">Serve cached version (if it exists) before event checking Dropbox for newer version?</param>
+    /// <param name="useCachedIfOffline">Use cached version if no Internet connection?</param>
+    /// <param name="receiveUpdates">If `true`, then when there are remote updates on Dropbox, callback function `successCallback ` will be triggered again with updated version of the file.</param>
+    /// <param name="cancellationToken">Cancellation token that can be used to cancel download</param>
+    /// <returns></returns>
+    public void GetFile<T>(string dropboxPath, Progress<TransferProgressReport> progressCallback,
+                                        Action<T> successCallback, Action<Exception> errorCallback,
+                                        bool useCachedFirst = false, bool useCachedIfOffline = true, bool receiveUpdates = false,
+                                        CancellationToken? cancellationToken = null) where T : class
+    {
+        GetFileAsBytes(dropboxPath, progressCallback, (bytes) => {
+            successCallback(Utils.ConvertBytesTo<T>(bytes));
+        }, errorCallback, useCachedFirst, useCachedIfOffline, receiveUpdates, cancellationToken);
+    }
+
+    // UPLOADING
+    // from local file path
+
+    /// <summary>
+    /// Uploads file from specified filepath in local filesystem to Dropbox
+    /// </summary>
+    /// <param name="localFilePath">Path to local file</param>
+    /// <param name="dropboxPath">Upload path on Dropbox</param>
+    /// <param name="progressCallback">Progress callback with upload percentage and speed</param>
+    /// <param name="cancellationToken">Cancellation token that can be used to cancel the upload</param>
+    /// <returns>Task that produces Metadata object for the uploaded file</returns>
+    public async Task<Metadata> UploadFileAsync(string localFilePath, string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken) {
+        return await DropboxSync.Main.TransferManager.UploadFileAsync(localFilePath, dropboxPath, progressCallback, cancellationToken);        
+    }
+
+    /// <summary>
+    /// Uploads file from specified filepath in local filesystem to Dropbox
+    /// </summary>
+    /// <param name="localFilePath">Path to local file</param>
+    /// <param name="dropboxPath">Upload path on Dropbox</param>
+    /// <param name="progressCallback">Progress callback with upload percentage and speed</param>
+    /// <param name="successCallback">Callback for receiving uploaded file Metadata</param>
+    /// <param name="errorCallback">Callback that is triggered if any exception happened</param>
+    /// <param name="cancellationToken">Cancellation token that can be used to cancel the upload</param>
+    /// <returns></returns>
+    public async void UploadFile(string localFilePath, string dropboxPath, Progress<TransferProgressReport> progressCallback,
+                                    Action<Metadata> successCallback, Action<Exception> errorCallback, CancellationToken? cancellationToken) 
+    {
+        try {
+            successCallback(await UploadFileAsync(localFilePath, dropboxPath, progressCallback, cancellationToken));
+        }catch(Exception ex){
+            errorCallback(ex);
+        }
+    }
+
+    // from bytes
+
+    /// <summary>
+    /// Uploads byte array to Dropbox
+    /// </summary>
+    /// <param name="bytes">Bytes to upload</param>
+    /// <param name="dropboxPath">Upload path on Dropbox</param>
+    /// <param name="progressCallback">Progress callback with upload percentage and speed</param>
+    /// <param name="cancellationToken">Cancellation token that can be used to cancel the upload</param>
+    /// <returns>Task that produces Metadata object for the uploaded file</returns>
+    public async Task<Metadata> UploadFileAsync(byte[] bytes, string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken) {
+        // write bytes to temp location
+        var tempPath = Path.Combine(Application.temporaryCachePath,  Path.GetRandomFileName());
+        File.WriteAllBytes(tempPath, bytes);
+        var metadata = await DropboxSync.Main.TransferManager.UploadFileAsync(tempPath, dropboxPath, progressCallback, cancellationToken);        
+        // remove temp file
+        File.Delete(tempPath);
+        return metadata;
+    }
+    
+    /// <summary>
+    /// Uploads byte array to Dropbox
+    /// </summary>
+    /// <param name="bytes">Bytes to upload</param>
+    /// <param name="dropboxPath">Upload path on Dropbox</param>
+    /// <param name="progressCallback">Progress callback with upload percentage and speed</param>    
+    /// <param name="successCallback">Callback for receiving uploaded file Metadata</param>
+    /// <param name="errorCallback">Callback that is triggered if any exception happened</param>
+    /// <param name="cancellationToken">Cancellation token that can be used to cancel the upload</param>
+    /// <returns></returns>
+    public async void UploadFile(byte[] bytes, string dropboxPath, Progress<TransferProgressReport> progressCallback,
+                                    Action<Metadata> successCallback, Action<Exception> errorCallback, CancellationToken? cancellationToken) 
+    {
+        try {
+            successCallback(await UploadFileAsync(bytes, dropboxPath, progressCallback, cancellationToken));
+        }catch(Exception ex){
+            errorCallback(ex);
+        }
+    }
+
+    // KEEP SYNCED
+
+    /// <summary>
+    /// Keep Dropbox file or folder synced (one-way: from Dropbox to Local cache)
+    /// </summary>
+    /// <param name="dropboxPath">File or folder path on Dropbox</param>
+    /// <param name="syncedCallback">Callback that is triggered after change is synced from Dropbox</param>
+    public void KeepSynced(string dropboxPath, Action<EntryChange> syncedCallback){
+        _syncManager.KeepSynced(dropboxPath, syncedCallback);
+    }
+
+    /// <summary>
+    /// Unsubscribe specified callback from getting synced changes (if there will be no callbacks listening then syncing will automatically stop as well)
+    /// </summary>
+    /// <param name="dropboxPath">File or folder path on Dropbox</param>
+    /// <param name="syncedCallback">Callback that you wish to unsubscribe</param>
+    public void UnsubscribeFromKeepSyncCallback(string dropboxPath, Action<EntryChange> syncedCallback){
+        _syncManager.UnsubscribeFromKeepSyncCallback(dropboxPath, syncedCallback);
+    }
+
+    /// <summary>
+    /// Stop keeping in sync Dropbox file or folder
+    /// </summary>
+    /// <param name="dropboxPath">File or folder path on Dropbox</param>
+    public void StopKeepingInSync(string dropboxPath){
+        _syncManager.StopKeepingInSync(dropboxPath);
+    }
+
+    /// <summary>
+    /// Checks if currently keeping Dropbox file of folder in sync
+    /// </summary>
+    /// <param name="dropboxPath">File or folder path on Dropbox</param>
+    /// <returns></returns>
+    public bool IsKeepingInSync(string dropboxPath){
+        return _syncManager != null && _syncManager.IsKeepingInSync(dropboxPath);
+    }
+
+
+    
+
+    // EVENTS
+
+    void OnApplicationQuit(){
+        print("[DropboxSync] Cleanup");
+        
+        if(_transferManger != null){
+            _transferManger.Dispose();
+        }
+        if(_changesManager != null){
+            _changesManager.Dispose();
+        }
+        if(_syncManager != null){
+            _syncManager.Dispose();
+        }
+    }
+}
