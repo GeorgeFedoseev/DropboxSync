@@ -99,7 +99,9 @@ namespace DBXSync {
                                 // Debug.Log($"Chunk {chunksUploaded} upload progress: {progress}");
                                 long currentlyUploadedBytes = totalBytesUploaded + chunkDataLength/100*chunkUploadProgress;
                                 speedTracker.SetBytesCompleted(currentlyUploadedBytes);
-                                ReportProgress(Mathf.Clamp((int)(currentlyUploadedBytes * 100 / fileSize), 0, 100), speedTracker.GetBytesPerSecond());
+                                if(fileSize > 0){
+                                    ReportProgress(Mathf.Clamp((int)(currentlyUploadedBytes * 100 / fileSize), 0, 100), speedTracker.GetBytesPerSecond());
+                                }                                
                             }), cancellationToken: cancellationToken);
 
                             // success - exit retry loop

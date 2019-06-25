@@ -123,6 +123,7 @@ namespace DBXSync {
         }
 
         public void UnsubscribeFromKeepSyncCallback(string dropboxPath, Action<EntryChange> callback){
+            Debug.LogWarning($"UnsubscribeFromKeepSyncCallback {dropboxPath}");
             dropboxPath = Utils.UnifyDropboxPath(dropboxPath);
 
             if(_syncSubscriptions.ContainsKey(dropboxPath)){

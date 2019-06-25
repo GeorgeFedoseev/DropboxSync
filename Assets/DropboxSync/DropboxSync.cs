@@ -114,7 +114,9 @@ public class DropboxSync : MonoBehaviour {
 
                 // unsubscribe from receiving updates when cancellation requested
                 if(cancellationToken.HasValue){
+                    Debug.LogWarning("cancellationToken.Value.Register(() => { UnsubscribeFromKeepSyncCallback");
                     cancellationToken.Value.Register(() => {
+                        Debug.LogWarning("cancellationToken.Value.Register(() => { Happened!");
                         UnsubscribeFromKeepSyncCallback(dropboxPath, syncedChangecallback);
                     });
                 }
@@ -168,6 +170,27 @@ public class DropboxSync : MonoBehaviour {
     {
         try {
             successCallback(await UploadFileAsync(localFilePath, dropboxPath, progressCallback, cancellationToken));
+        }catch(Exception ex){
+            errorCallback(ex);
+        }
+    }
+
+    // from bytes
+    public async Task<Metadata> UploadFileAsync(byte[] bytes, string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken) {
+        // write bytes to temp location
+        var tempPath = Path.Combine(Application.temporaryCachePath,  Path.GetRandomFileName());
+        File.WriteAllBytes(tempPath, bytes);
+        var metadata = await DropboxSync.Main.TransferManager.UploadFileAsync(tempPath, dropboxPath, progressCallback, cancellationToken);        
+        // remove temp file
+        File.Delete(tempPath);
+        return metadata;
+    }
+    
+    public async void UploadFile(byte[] bytes, string dropboxPath, Progress<TransferProgressReport> progressCallback,
+                                    Action<Metadata> successCallback, Action<Exception> errorCallback, CancellationToken? cancellationToken) 
+    {
+        try {
+            successCallback(await UploadFileAsync(bytes, dropboxPath, progressCallback, cancellationToken));
         }catch(Exception ex){
             errorCallback(ex);
         }

@@ -99,7 +99,7 @@ namespace DBXSync {
                 // uploads
                 foreach(var tr in _uploadTransferQueue.ToList()){
                     if(tr.CancellationToken.IsCancellationRequested){
-                        Debug.Log($"ClearQueueFromCancelledTransfers: {tr}");
+                        // Debug.Log($"ClearQueueFromCancelledTransfers: {tr}");
                         tr.CompletionSource.SetException(new OperationCanceledException(tr.CancellationToken));   
                         _uploadTransferQueue.Remove(tr);                     
                     }

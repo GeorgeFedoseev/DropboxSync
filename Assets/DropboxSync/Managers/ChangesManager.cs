@@ -252,7 +252,7 @@ namespace DBXSync {
         // called from longpoll thread when changes = true
         private async Task CheckChangesInFoldersAsync(){
             var folders = _folderSubscriptions.Select(x => x.Key);
-            foreach(var folder in folders){
+            foreach(var folder in folders.ToList()){
                 await CheckChangesInFolderAsync(folder);
             }
         }      
@@ -330,35 +330,39 @@ namespace DBXSync {
 
 //            Debug.Log($"Process remote metadata: {remoteMetadata}");
 
-            if(remoteMetadata.EntryType == DropboxEntryType.File){
-                // file created or modified
-                if(_cacheManager.HaveFileLocally(remoteMetadata)){
-                    if(_cacheManager.ShouldUpdateFileFromDropbox(remoteMetadata)){
-                        // file modified
+            if(_folderSubscriptions.ContainsKey(dropboxFolderPath)){
+                if(remoteMetadata.EntryType == DropboxEntryType.File){
+                    // file created or modified
+                    if(_cacheManager.HaveFileLocally(remoteMetadata)){
+                        if(_cacheManager.ShouldUpdateFileFromDropbox(remoteMetadata)){
+                            // file modified
+                            _folderSubscriptions[dropboxFolderPath].ForEach(a => a(new EntryChange {
+                                type = EntryChangeType.Modified,
+                                metadata = remoteMetadata
+                            }));
+                        }
+                    }else{
+                        // file created
                         _folderSubscriptions[dropboxFolderPath].ForEach(a => a(new EntryChange {
-                            type = EntryChangeType.Modified,
+                            type = EntryChangeType.Created,
                             metadata = remoteMetadata
                         }));
                     }
-                }else{
-                    // file created
-                    _folderSubscriptions[dropboxFolderPath].ForEach(a => a(new EntryChange {
-                        type = EntryChangeType.Created,
-                        metadata = remoteMetadata
-                    }));
-                }
-            }else if(remoteMetadata.EntryType == DropboxEntryType.Deleted){
-                // can be folder or file path here, but we ignore folders:
-                // if path will be folder then HaveFileLocally will return false and we do nothing
+                }else if(remoteMetadata.EntryType == DropboxEntryType.Deleted){
+                    // can be folder or file path here, but we ignore folders:
+                    // if path will be folder then HaveFileLocally will return false and we do nothing
 
-                // check if we also need to delete file or cancel related transfers
-                if(_cacheManager.HaveFileLocally(remoteMetadata) || _transferManager.HaveQueuedOrExecutingDownloadsRelatedTo(remoteMetadata.path_lower)){                    
-                    _folderSubscriptions[dropboxFolderPath].ForEach(a => a(new EntryChange {
-                        type = EntryChangeType.Removed,
-                        metadata = remoteMetadata
-                    }));
+                    // check if we also need to delete file or cancel related transfers
+                    if(_cacheManager.HaveFileLocally(remoteMetadata) || _transferManager.HaveQueuedOrExecutingDownloadsRelatedTo(remoteMetadata.path_lower)){                    
+                        _folderSubscriptions[dropboxFolderPath].ForEach(a => a(new EntryChange {
+                            type = EntryChangeType.Removed,
+                            metadata = remoteMetadata
+                        }));
+                    }
                 }
             }
+
+            
         }
 
 
