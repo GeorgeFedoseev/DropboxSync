@@ -34,7 +34,7 @@ namespace DBXSync {
         private List<IFileTransfer> _completedTransfers = new List<IFileTransfer> ();
         public int CompletedTransferNumber => _completedTransfers.Count;
 
-        private object _transfersLock = new object ();
+        // private object _transfersLock = new object ();
         
         private volatile bool _isDisposed = false;
 
@@ -48,7 +48,7 @@ namespace DBXSync {
         }
 
         public void MaybeAddFromQueue () {
-            lock (_transfersLock) {
+            // lock (_transfersLock) {
                 // download
                 if (_currentDownloadTransfers.Count < _config.maxSimultaneousDownloadFileTransfers) {
                     // can add more
@@ -82,11 +82,11 @@ namespace DBXSync {
                         }
                     }
                 }
-            }
+            // }
         }
 
         private void ClearQueueFromCancelledTransfers(){
-            lock (_transfersLock) {
+            // lock (_transfersLock) {
                 // downloads
                 foreach(var tr in _downloadTransferQueue.ToList()){
                     if(tr.CancellationToken.IsCancellationRequested){
@@ -104,7 +104,7 @@ namespace DBXSync {
                         _uploadTransferQueue.Remove(tr);                     
                     }
                 }                
-            }
+            // }
         }
 
         private async void _queueSpinner () {
@@ -141,9 +141,9 @@ namespace DBXSync {
             }
 
             // otherwise put new transfer to queue
-            lock (_transfersLock) {
+            // lock (_transfersLock) {
                 _downloadTransferQueue.Add (transfer);
-            }
+            // }
             // and subscribe to completion
             return await transfer.CompletionSource.Task;
         }
@@ -157,9 +157,9 @@ namespace DBXSync {
             }
 
             // otherwise put new transfer to queue
-            lock (_transfersLock) {
+            // lock (_transfersLock) {
                 _uploadTransferQueue.Add (transfer);
-            }
+            // }
             // and subscribe to completion
             return await transfer.CompletionSource.Task;
         }
@@ -190,7 +190,7 @@ namespace DBXSync {
         }
 
         public void CancelQueuedOrExecutingDownloadTransfer(string dropboxPath){
-            lock (_transfersLock) {
+            // lock (_transfersLock) {
                 var executing = _currentDownloadTransfers.FirstOrDefault (t => Utils.AreEqualDropboxPaths (t.DropboxPath, dropboxPath));
                 if (executing != null) {
                     // cancel
@@ -202,11 +202,11 @@ namespace DBXSync {
                     // remove from queue
                     _downloadTransferQueue.Remove(queued);
                 }
-            }
+            // }
         }
 
         private DownloadFileTransfer GetQueuedOrExecutingDownloadTransfer (string dropboxPath, string localPath) {
-            lock (_transfersLock) {
+            // lock (_transfersLock) {
                 var executing = _currentDownloadTransfers.FirstOrDefault (t => Utils.AreEqualDropboxPaths (t.DropboxPath, dropboxPath) 
                                 && t.LocalPath == localPath);
                 if (executing != null) {
@@ -217,13 +217,13 @@ namespace DBXSync {
                 if (queued != null) {
                     return queued;
                 }
-            }
+            // }
 
             return null;
         }
 
         private UploadFileTransfer GetQueuedOrExecutingUploadTransfer (string dropboxPath, string localPath) {
-            lock (_transfersLock) {
+            // lock (_transfersLock) {
                 var executing = _currentUploadTransfers.FirstOrDefault (t => Utils.AreEqualDropboxPaths (t.DropboxPath, dropboxPath) 
                                     && t.LocalPath == localPath);
                 if (executing != null) {
@@ -234,7 +234,7 @@ namespace DBXSync {
                 if (queued != null) {
                     return queued;
                 }
-            }
+            // }
 
             return null;
         }
@@ -245,7 +245,7 @@ namespace DBXSync {
                 var metadata = await transfer.ExecuteAsync ();               
 
                 // move to completed
-                lock (_transfersLock) {
+                // lock (_transfersLock) {
                     if(transfer is DownloadFileTransfer){
                         _currentDownloadTransfers.Remove (transfer);
                     }else if(transfer is UploadFileTransfer){
@@ -254,11 +254,11 @@ namespace DBXSync {
                     _completedTransfers.Add (transfer);
 
                     Debug.Log ($"[DropboxSync/TransferManager] Transfer completed, moving to completed (now {_completedTransfers.Count} completed)");
-                }
+                // }
 
                 transfer.CompletionSource.SetResult (metadata);
             } catch (Exception ex) {
-
+                
                 transfer.CompletionSource.SetException (ex);
 
                 // if it's download trasnfer - remove *.download file
@@ -270,23 +270,23 @@ namespace DBXSync {
                 }
 
                 // remove from current
-                lock (_transfersLock) {
+                // lock (_transfersLock) {
                     if(transfer is DownloadFileTransfer){
                         _currentDownloadTransfers.Remove (transfer);
                     }else if(transfer is UploadFileTransfer){
                         _currentUploadTransfers.Remove (transfer);
                     }
-                }
+                // }
 
                 if(ex is OperationCanceledException){
                     // transfer cancelled
                     Debug.Log ($"[DropboxSync/TransferManager] Transfer was cancelled");                    
                 }else{
                     // move to failed
-                    lock (_transfersLock) {
+                    // lock (_transfersLock) {
                         _failedTransfers.Add (transfer);
                         Debug.Log ($"[DropboxSync/TransferManager] Transfer failed, moving to failed (now {_failedTransfers.Count} failed)");
-                    }
+                    // }
                 }
             }
         }
@@ -303,10 +303,10 @@ namespace DBXSync {
             // stop adding new transfers
             _isDisposed = true;
             // cancel current tranfers
-            lock (_transfersLock) {
+            // lock (_transfersLock) {
                 _currentDownloadTransfers.ForEach (x => x.Cancel ());
                 _currentUploadTransfers.ForEach (x => x.Cancel ());
-            }
+            // }
         }
     }
 

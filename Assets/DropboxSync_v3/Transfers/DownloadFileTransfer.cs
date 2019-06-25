@@ -92,13 +92,11 @@ namespace DBXSync {
                 File.WriteAllBytes(tempDownloadPath, new byte[0]);
             }else{
                 // download chunk by chunk to temp file                
-                using (FileStream fileStream = new FileStream (tempDownloadPath, FileMode.Create, FileAccess.Write, FileShare.Write)) {
+                using (FileStream fileStream = new FileStream (tempDownloadPath, FileMode.Create, FileAccess.Write, FileShare.Write)) {                
 
                     long chunksDownloaded = 0;
                     long totalChunks = 1 + fileSize / _config.downloadChunkSizeBytes;
                     long totalBytesRead = 0;
-                    
-                    fileStream.SetLength (fileSize); // set the length first
 
                     foreach (long chunkIndex in Utils.LongRange (0, totalChunks)) {
 
@@ -139,11 +137,12 @@ namespace DBXSync {
                                     fileStream.Seek (chunkIndex * _config.downloadChunkSizeBytes, SeekOrigin.Begin);
 
                                     using (Stream responseStream = await headersResponse.Content.ReadAsStreamAsync ()) {
-                                        byte[] buffer = new byte[_config.transferBufferSizeBytes];                                    
+                                        
+                                        byte[] buffer = new byte[_config.transferBufferSizeBytes];
 
                                         while(true){
                                             var readToBufferTask = responseStream.ReadAsync (buffer, 0, buffer.Length);
-                                            if(await Task.WhenAny(readToBufferTask, Task.Delay(_config.downloadChunkReadTimeoutMilliseconds)) == readToBufferTask){
+                                            if(await Task.WhenAny(readToBufferTask, Task.Delay(_config.downloadChunkReadTimeoutMilliseconds)).ConfigureAwait(false) == readToBufferTask){
                                                 int bytesRead = readToBufferTask.Result;
 
                                                 // exit loop condition
@@ -153,7 +152,8 @@ namespace DBXSync {
 
                                                 transferCancellationToken.ThrowIfCancellationRequested();
 
-                                                await fileStream.WriteAsync (buffer, 0, bytesRead);
+                                                await fileStream.WriteAsync (buffer, 0, bytesRead).ConfigureAwait(false);
+                                                // fileStream.Write(buffer, 0, bytesRead);
                                                 totalBytesRead += bytesRead;
 
                                                 speedTracker.SetBytesCompleted(totalBytesRead);
@@ -167,7 +167,7 @@ namespace DBXSync {
                                                 // throw canceled exception
                                                 throw new TimeoutException("Read chunk to buffer timed-out");
                                             }                                        
-                                        }                                   
+                                        }                                       
                                     }                               
                                 }
 
@@ -180,28 +180,22 @@ namespace DBXSync {
                                 // Debug.Log($"Chunk download exception: {ex}");
 
                                 // dont retry if cancel request
-                                if(ex is OperationCanceledException || ex is TaskCanceledException || ex is AggregateException && ((AggregateException)ex).InnerException is TaskCanceledException){
+                                if(ex is OperationCanceledException || ex is TaskCanceledException || ex is AggregateException && ((AggregateException)ex).InnerException is TaskCanceledException){                                    
                                     throw new OperationCanceledException();
-                                }
-
-                                // if(ex is WebException){
-                                //     ex = Utils.DecorateDropboxRequestWebException(ex as WebException, requestParameters, Endpoints.DOWNLOAD_FILE_ENDPOINT);
-                                // }                            
+                                }           
 
                                 failedAttempts += 1;
                                 if(failedAttempts <= _config.chunkTransferMaxFailedAttempts){
                                     Debug.LogWarning($"[DropboxSync/DownloadFileTransfer] Failed to download chunk {chunkIndex}. Retry {failedAttempts}/{_config.chunkTransferMaxFailedAttempts} ({_dropboxPath})\nException: {ex}");
                                     // wait before attempting again
-                                    await new WaitForSeconds(_config.requestErrorRetryDelaySeconds);
+                                    await Task.Delay(TimeSpan.FromSeconds(_config.requestErrorRetryDelaySeconds));
                                     continue;                                
                                 }else{
                                     // attempts exceeded - exit retry loop
                                     throw ex;
                                 }                                
                             }    
-                        }
-
-                        // Debug.Log($"{_dropboxPath}: Chunk  {chunkIndex} done");                   
+                        }                        
                     }                
                 }
             }            
@@ -228,6 +222,7 @@ namespace DBXSync {
         }        
 
         public void Cancel() {
+            Debug.Log("_internalCancellationTokenSource.Cancel();");
             _internalCancellationTokenSource.Cancel();
         }
 

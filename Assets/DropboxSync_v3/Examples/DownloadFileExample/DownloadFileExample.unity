@@ -1084,7 +1084,7 @@ PrefabInstance:
     - target: {fileID: 2347674589622332960, guid: 82e3393d9837f4b8380b46c0940322ac,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -10.000092
+      value: -10.000122
       objectReference: {fileID: 0}
     - target: {fileID: 2347674589622332960, guid: 82e3393d9837f4b8380b46c0940322ac,
         type: 3}
@@ -1242,7 +1242,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6e58b23c8a844a6f825316a97d52120, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _dropboxAccessToken: <your-access-token>
+  _dropboxAccessToken: sVawC-LSz14AAAAAAAAME4LGj24N3pxShmbd_A6gbCxahcYQihj_crwDk0QbgxZG
 --- !u!4 &1731302035
 Transform:
   m_ObjectHideFlags: 0

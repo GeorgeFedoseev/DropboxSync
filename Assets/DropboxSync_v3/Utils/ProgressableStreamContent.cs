@@ -39,7 +39,13 @@ namespace DBXSync {
 
             PrepareContent();
 
-            return _serializeToStreamCallback(sourceStream, uploadStream);
+            
+
+            
+            return _serializeToStreamCallback(sourceStream, uploadStream);            
+            
+
+            
 
             // return Task.Run(() =>
             // {
