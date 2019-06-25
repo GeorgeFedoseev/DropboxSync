@@ -991,7 +991,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: /Users/gosha/Downloads/Typora.dmg
+  m_Text: <local-file-path>
 --- !u!222 &1421504377
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1275,7 +1275,7 @@ GameObject:
   - component: {fileID: 1686903681}
   - component: {fileID: 1686903680}
   m_Layer: 0
-  m_Name: DropboxUploadFileExampleScript
+  m_Name: UploadFileExampleScript
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1290,7 +1290,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1686903679}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7caeb9bfca0040747bfdca40989abaac, type: 3}
+  m_Script: {fileID: 11500000, guid: 3cbd50b1923ac41d08b6eeea43803518, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   localFileInput: {fileID: 1807044547}
@@ -1414,7 +1414,7 @@ MonoBehaviour:
   m_CaretColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
   m_CustomCaretColor: 0
   m_SelectionColor: {r: 0.65882355, g: 0.80784315, b: 1, a: 0.7529412}
-  m_Text: /Users/gosha/Downloads/Typora.dmg
+  m_Text: <local-file-path>
   m_CaretBlinkRate: 0.85
   m_CaretWidth: 1
   m_ReadOnly: 0

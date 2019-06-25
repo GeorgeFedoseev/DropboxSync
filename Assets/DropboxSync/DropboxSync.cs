@@ -158,7 +158,20 @@ public class DropboxSync : MonoBehaviour {
     }
 
     // UPLOADING
-    
+    // from local file path
+    public async Task<Metadata> UploadFileAsync(string localFilePath, string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken) {
+        return await DropboxSync.Main.TransferManager.UploadFileAsync(localFilePath, dropboxPath, progressCallback, cancellationToken);        
+    }
+
+    public async void UploadFile(string localFilePath, string dropboxPath, Progress<TransferProgressReport> progressCallback,
+                                    Action<Metadata> successCallback, Action<Exception> errorCallback, CancellationToken? cancellationToken) 
+    {
+        try {
+            successCallback(await UploadFileAsync(localFilePath, dropboxPath, progressCallback, cancellationToken));
+        }catch(Exception ex){
+            errorCallback(ex);
+        }
+    }
 
     // KEEP SYNCED
     public void KeepSynced(string dropboxPath, Action<EntryChange> syncedCallback){
@@ -183,7 +196,7 @@ public class DropboxSync : MonoBehaviour {
     // EVENTS
 
     void OnApplicationQuit(){
-        print("OnApplicationQuit()");
+        print("[DropboxSync] Cleanup");
         
         if(_transferManger != null){
             _transferManger.Dispose();

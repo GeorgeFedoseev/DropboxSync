@@ -14,7 +14,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Threading;
 
-public class UploadFileExampleScript : MonoBehaviour {
+public class AsyncUploadFileExampleScript : MonoBehaviour {
 
 	public InputField localFileInput;
 	public Button uploadButton;
@@ -50,24 +50,23 @@ public class UploadFileExampleScript : MonoBehaviour {
 		}
 	}
 
-	void UploadFile(){
+	async void UploadFile(){
 		_cancellationTokenSource  = new CancellationTokenSource();
+
 		uploadButton.interactable = false;
 		var localFilePath = localFileInput.text;
+				
 		
-
-		DropboxSync.Main.UploadFile(localFilePath, _uploadDropboxPath, new Progress<TransferProgressReport>((report) => {
+		try {
+			var metadata = await DropboxSync.Main.UploadFileAsync(localFilePath, _uploadDropboxPath, new Progress<TransferProgressReport>((report) => {
 				if(Application.isPlaying){					
 					statusText.text = $"Uploading file {report.progress}% {report.bytesPerSecondFormatted}";
 				}				
-		}), (metadata) => {
-			// success			
+			}), _cancellationTokenSource.Token);
+
 			print($"Upload completed:\n{metadata}");
 			statusText.text = $"<color=green>Uploaded. {metadata.id}</color>";
-
-			uploadButton.interactable = true;		
-		}, (ex) => {
-			// exception
+		}catch(Exception ex){
 			if(ex is OperationCanceledException){
 				Debug.Log("Upload cancelled");
 				statusText.text = $"<color=orange>Upload canceled.</color>";
@@ -75,10 +74,9 @@ public class UploadFileExampleScript : MonoBehaviour {
 				Debug.LogException(ex);
 				statusText.text = $"<color=red>Upload failed.</color>";
 			}
+		}
 
-			uploadButton.interactable = true;		
-		}, _cancellationTokenSource.Token);
-		
+		uploadButton.interactable = true;		
 	}
 
 }
