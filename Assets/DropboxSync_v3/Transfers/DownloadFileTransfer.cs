@@ -83,7 +83,7 @@ namespace DBXSync {
             long fileSize = _metadata.size;
             Metadata latestMetadata = _metadata;
 
-            var speedTracker = new TransferSpeedTracker(1000, TimeSpan.FromMilliseconds(1000));  
+            var speedTracker = new TransferSpeedTracker(_config.speedTrackerSampleSize, TimeSpan.FromMilliseconds(_config.speedTrackerSampleIntervalMilliseconds));  
 
             Utils.EnsurePathFoldersExist (tempDownloadPath);
 

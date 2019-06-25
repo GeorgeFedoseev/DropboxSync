@@ -16,6 +16,9 @@ namespace DBXSync {
         public int maxSimultaneousUploadFileTransfers = 3;
         public int chunkTransferMaxFailedAttempts = 3;
 
+        public int speedTrackerSampleSize = 50;
+        public int speedTrackerSampleIntervalMilliseconds = 500;
+
         // downloading
         public long downloadChunkSizeBytes = 100000000; // 100MB
         public int downloadChunkReadTimeoutMilliseconds = 5000;        

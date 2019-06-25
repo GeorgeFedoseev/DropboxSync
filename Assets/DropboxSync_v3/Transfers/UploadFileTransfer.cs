@@ -64,7 +64,7 @@ namespace DBXSync {
                 throw new FileNotFoundException($"Uploading file not found: {_localPath}");
             }
 
-            var speedTracker = new TransferSpeedTracker(50, TimeSpan.FromMilliseconds(500));
+            var speedTracker = new TransferSpeedTracker(_config.speedTrackerSampleSize, TimeSpan.FromMilliseconds(_config.speedTrackerSampleIntervalMilliseconds));
 
             long fileSize = new FileInfo(_localPath).Length;            
 
