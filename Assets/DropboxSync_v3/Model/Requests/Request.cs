@@ -66,12 +66,12 @@ namespace DBXSync {
                             }
 
                             var buffer = new Byte[_config.transferBufferSizeBytes];
-                            var length = await sourceStream.ReadAsync(buffer, 0, buffer.Length);
+                            var length = await sourceStream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
                             if(length <= 0) break;                                   
 
                             // check timeouts when writing
                             var uploadWriteTask = uploadStream.WriteAsync(buffer, 0, length);
-                            if(await Task.WhenAny(uploadWriteTask, Task.Delay(_config.uploadRequestWriteTimeoutMilliseconds)) == uploadWriteTask){
+                            if(await Task.WhenAny(uploadWriteTask, Task.Delay(_config.uploadRequestWriteTimeoutMilliseconds)).ConfigureAwait(false) == uploadWriteTask){
                                 // all good                               
                             }else{
                                 // timed-out
@@ -105,9 +105,8 @@ namespace DBXSync {
                 streamContent.Headers.ContentLength = payload.Length;                
 
                 // GET RESPONSE HEADERS
-                var getHeadersCTS = cancellationToken.HasValue ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken.Value) : new CancellationTokenSource();
-                getHeadersCTS.CancelAfter(_config.lightRequestTimeoutMilliseconds);
-                var headersResponse = await client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead);        
+                var getHeadersCTS = cancellationToken.HasValue ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken.Value) : new CancellationTokenSource();                
+                var headersResponse = await client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, getHeadersCTS.Token);        
 
                 try {
                     // throw exception if not success status code

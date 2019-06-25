@@ -152,8 +152,7 @@ namespace DBXSync {
 
                                                 transferCancellationToken.ThrowIfCancellationRequested();
 
-                                                await fileStream.WriteAsync (buffer, 0, bytesRead).ConfigureAwait(false);
-                                                // fileStream.Write(buffer, 0, bytesRead);
+                                                await fileStream.WriteAsync (buffer, 0, bytesRead).ConfigureAwait(false);                                                
                                                 totalBytesRead += bytesRead;
 
                                                 speedTracker.SetBytesCompleted(totalBytesRead);
