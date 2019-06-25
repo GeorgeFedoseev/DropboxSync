@@ -56,7 +56,7 @@ namespace DBXSync {
                     int addNum = Math.Min (canAddNum, _downloadTransferQueue.Count);
 
                     if (addNum > 0) {
-                        Debug.Log ($"[TransferManager] Adding {addNum} download transfers to process");
+                        Debug.Log ($"[DropboxSync/TransferManager] Adding {addNum} download transfers to process");
                         for (var i = 0; i < addNum; i++) {
                             var transfer = _downloadTransferQueue.First(); _downloadTransferQueue.RemoveAt (0);
                             // fire and forget
@@ -73,7 +73,7 @@ namespace DBXSync {
                     int addNum = Math.Min (canAddNum, _uploadTransferQueue.Count);
 
                     if (addNum > 0) {
-                        Debug.Log ($"[TransferManager] Adding {addNum} upload transfers to process");
+                        Debug.Log ($"[DropboxSync/TransferManager] Adding {addNum} upload transfers to process");
                         for (var i = 0; i < addNum; i++) {
                             var transfer = _uploadTransferQueue.First(); _uploadTransferQueue.RemoveAt (0);
                             // fire and forget
@@ -165,7 +165,7 @@ namespace DBXSync {
         }
 
         private async Task<Metadata> ProcessDuplicateAsync(IFileTransfer originalTransfer, IFileTransfer duplicateTransfer) {
-            Debug.LogWarning($"Duplicate {(duplicateTransfer is DownloadFileTransfer ? "download" : "upload")} trasfer.");
+            Debug.LogWarning($"[DropboxSync/TransferManager] Duplicate {(duplicateTransfer is DownloadFileTransfer ? "download" : "upload")} trasfer.");
 
             EventHandler<TransferProgressReport> reportProgressToDuplicateHandler = (sender, progress) => {
                 ((IProgress<TransferProgressReport>)duplicateTransfer.ProgressCallback).Report(progress);
@@ -253,7 +253,7 @@ namespace DBXSync {
                     }                    
                     _completedTransfers.Add (transfer);
 
-                    Debug.Log ($"[TransferManager] Transfer completed, moving to completed (now {_completedTransfers.Count} completed)");
+                    Debug.Log ($"[DropboxSync/TransferManager] Transfer completed, moving to completed (now {_completedTransfers.Count} completed)");
                 }
 
                 transfer.CompletionSource.SetResult (metadata);
@@ -280,12 +280,12 @@ namespace DBXSync {
 
                 if(ex is OperationCanceledException){
                     // transfer cancelled
-                    Debug.Log ($"[TransferManager] Transfer was cancelled");                    
+                    Debug.Log ($"[DropboxSync/TransferManager] Transfer was cancelled");                    
                 }else{
                     // move to failed
                     lock (_transfersLock) {
                         _failedTransfers.Add (transfer);
-                        Debug.Log ($"[TransferManager] Transfer failed, moving to failed (now {_failedTransfers.Count} failed)");
+                        Debug.Log ($"[DropboxSync/TransferManager] Transfer failed, moving to failed (now {_failedTransfers.Count} failed)");
                     }
                 }
             }

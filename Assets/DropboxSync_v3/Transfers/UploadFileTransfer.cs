@@ -69,11 +69,11 @@ namespace DBXSync {
             long fileSize = new FileInfo(_localPath).Length;            
 
             // send start request
-            Debug.LogWarning($"Sending start upload request..."); 
+            // Debug.LogWarning($"Sending start upload request..."); 
             var startUploadResponse = await new UploadStartRequest(new UploadStartRequestParameters(), _config).ExecuteAsync(new byte[0]);
             string sessionId = startUploadResponse.session_id;      
 
-            Debug.LogWarning($"Starting upload with session id {sessionId}");     
+            // Debug.LogWarning($"Starting upload with session id {sessionId}");     
 
             long chunksUploaded = 0;
             long totalChunks = 1 + fileSize / _config.uploadChunkSizeBytes;
@@ -114,7 +114,7 @@ namespace DBXSync {
 
                             failedAttempts += 1;
                             if(failedAttempts <= _config.chunkTransferMaxFailedAttempts){
-                                Debug.LogWarning($"Failed to upload chunk of data. Retry {failedAttempts}/{_config.chunkTransferMaxFailedAttempts}\nException: {ex}");
+                                Debug.LogWarning($"[DropboxSync/UploadFileTransfer] Failed to upload chunk of data. Retry {failedAttempts}/{_config.chunkTransferMaxFailedAttempts}\nException: {ex}");
                                 // wait before attempting again
                                 await new WaitForSeconds(_config.requestErrorRetryDelaySeconds);
                                 continue;                                
@@ -130,7 +130,7 @@ namespace DBXSync {
                 }                
             }
 
-            Debug.LogWarning($"Committing upload...");
+            // Debug.LogWarning($"Committing upload...");
             // send finish request            
             var metadata = await new UploadFinishRequest(new UploadFinishRequestParameters(sessionId, totalBytesUploaded, _dropboxTargetPath), _config).ExecuteAsync(new byte[0]);
             
@@ -142,7 +142,7 @@ namespace DBXSync {
 
             _endDateTime = DateTime.Now;
 
-            Debug.LogWarning($"Upload done.");
+            // Debug.LogWarning($"Upload done.");
 
             return metadata;
         }

@@ -12,6 +12,8 @@ namespace DBXSync {
 
         public int transferBufferSizeBytes = 8192;
 
+        public int pathSubscriptionFailedDelaySeconds = 5;
+
         // retry chunk transfers
         public int chunkTransferMaxFailedAttempts = 3;
         public int requestErrorRetryDelaySeconds = 3;

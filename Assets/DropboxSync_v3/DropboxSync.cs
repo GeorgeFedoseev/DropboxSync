@@ -17,7 +17,7 @@ public class DropboxSync : MonoBehaviour {
 					_instance = FindObjectOfType<DropboxSync>();
 					if(_instance != null){						
 					}else{
-						Debug.LogError("DropboxSync script wasn't found on the scene.");						
+						Debug.LogError("[DropboxSync] DropboxSync script wasn't found on the scene.");						
 					}
 				}
 				return _instance;				
@@ -116,10 +116,8 @@ public class DropboxSync : MonoBehaviour {
                 KeepSynced(dropboxPath, syncedChangecallback);
 
                 // unsubscribe from receiving updates when cancellation requested
-                if(cancellationToken.HasValue){
-                    Debug.LogWarning("cancellationToken.Value.Register(() => { UnsubscribeFromKeepSyncCallback");
-                    cancellationToken.Value.Register(() => {
-                        Debug.LogWarning("cancellationToken.Value.Register(() => { Happened!");
+                if(cancellationToken.HasValue){                    
+                    cancellationToken.Value.Register(() => {                        
                         UnsubscribeFromKeepSyncCallback(dropboxPath, syncedChangecallback);
                     });
                 }

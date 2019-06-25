@@ -80,18 +80,18 @@ namespace DBXSync {
                     }
 
                 }catch(DropboxNotFoundAPIException){
-                    Debug.LogWarning($"[DropboxSync/KeepSynced] Didn't find file {change.metadata.path_display} during sync. Probably it was deleted on Dropbox during sync operation.");
+                    Debug.LogWarning($"[DropboxSync/SyncManager] Didn't find file {change.metadata.path_display} during sync. Probably it was deleted on Dropbox during sync operation.");
                 }catch(OperationCanceledException){
                     // quiet
                 }catch(Exception ex){
                     // reset syncing
-                    Debug.LogWarning($"Failed to sync change {ex}\n {change}; sync subscription: {syncSubscription.GetHashCode()}");
+                    // Debug.LogWarning($"[DropboxSync/SyncManager] Failed to sync change {ex}\n {change}; sync subscription: {syncSubscription.GetHashCode()}");
                     // check if that subscription still going (cause can be already canceled by other transfer errors)
                     
                     bool needsReset = _syncSubscriptions.ContainsKey(dropboxPath) && _syncSubscriptions[dropboxPath] == syncSubscription;
                     
                     if(needsReset){
-                        Debug.LogWarning($"Resetting syncing of {dropboxPath} due to {ex}");
+                        Debug.LogWarning($"[DropboxSync/SyncManager] Resetting syncing of {dropboxPath} due to {ex}");
                         // reset syncing
                         ResetSyncing(dropboxPath);
                     }                        
@@ -123,7 +123,7 @@ namespace DBXSync {
         }
 
         public void UnsubscribeFromKeepSyncCallback(string dropboxPath, Action<EntryChange> callback){
-            Debug.LogWarning($"UnsubscribeFromKeepSyncCallback {dropboxPath}");
+            // Debug.LogWarning($"UnsubscribeFromKeepSyncCallback {dropboxPath}");
             dropboxPath = Utils.UnifyDropboxPath(dropboxPath);
 
             if(_syncSubscriptions.ContainsKey(dropboxPath)){

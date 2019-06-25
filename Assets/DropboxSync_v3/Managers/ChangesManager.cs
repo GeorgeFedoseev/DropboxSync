@@ -71,11 +71,11 @@ namespace DBXSync {
                             }
                         }                        
                     }catch(Exception ex){
-                        Debug.LogWarning($"Failed to subscribe for path {sub.dropboxPath}\n{ex}");
+                        Debug.LogWarning($"[DropboxSync/ChangesManager] Failed to subscribe for changes on path {sub.dropboxPath}\n{ex}. Retrying in {_config.pathSubscriptionFailedDelaySeconds} seconds...");
                     }
                 }
 
-                await Task.Delay(5000);
+                await Task.Delay(TimeSpan.FromSeconds(_config.pathSubscriptionFailedDelaySeconds));
             }
         }
         
@@ -98,7 +98,7 @@ namespace DBXSync {
                         }
 
                         if(longpollResponse.backoff > 0){
-                            Debug.LogWarning($"longpollResponse.backoff = {longpollResponse.backoff}");
+                            // Debug.LogWarning($"longpollResponse.backoff = {longpollResponse.backoff}");
                         }
                         
                         // wait before making next longpoll
@@ -167,7 +167,7 @@ namespace DBXSync {
         private void SubscribeToFileChanges(string dropboxFilePath, Action<EntryChange> callback){
             dropboxFilePath = Utils.UnifyDropboxPath(dropboxFilePath);
 
-            Debug.Log($"SubscribeToFileChages {dropboxFilePath}");            
+            // Debug.Log($"SubscribeToFileChages {dropboxFilePath}");            
             
             if(!_fileSubscriptions.ContainsKey(dropboxFilePath)){
                 // get folder path from file path
@@ -213,7 +213,7 @@ namespace DBXSync {
         private void SubscribeToFolderChanges(string dropboxFolderPath, Action<EntryChange> callback){
             dropboxFolderPath = Utils.UnifyDropboxPath(dropboxFolderPath);
 
-            Debug.LogWarning($"SubscribeToFolderChanges {dropboxFolderPath}");
+            // Debug.LogWarning($"SubscribingToFolderChanges {dropboxFolderPath}");
 
             // add folder to dictionary
             if(!_folderSubscriptions.ContainsKey(dropboxFolderPath)){
@@ -299,7 +299,7 @@ namespace DBXSync {
                     cursor = listFolderContinueResponse.cursor;
 
                 }catch(DropboxResetCursorAPIException ex){
-                    Debug.LogWarning($"[DropboxSync] Resetting cursor for folder {dropboxFolderPath}");
+                    // Debug.LogWarning($"[DropboxSync] Resetting cursor for folder {dropboxFolderPath}");
 
                     // cursor is invalid - need to reset it
                     ResetCursorForFolderAsync(dropboxFolderPath);
