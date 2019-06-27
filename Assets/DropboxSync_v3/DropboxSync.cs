@@ -359,6 +359,19 @@ public class DropboxSync : MonoBehaviour {
         
     }
 
+    // delete
+    public async Task<Metadata> DeleteAsync(string dropboxPath) {
+        return (await new DeleteRequest(new PathParameters(dropboxPath), _config).ExecuteAsync()).metadata;
+    }
+
+    public async void Delete(string dropboxPath, Action<Metadata> successCallback, Action<Exception> errorCallback) {
+        try {
+            successCallback(await DeleteAsync(dropboxPath));
+        }catch(Exception ex){
+            errorCallback(ex);
+        }
+    }
+
     
 
     // EVENTS
