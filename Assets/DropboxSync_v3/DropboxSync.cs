@@ -91,21 +91,6 @@ public class DropboxSync : MonoBehaviour {
                                                  CancellationToken? cancellationToken = null)
     {
         try {
-            Metadata lastServedMetadata = null;
-            var serveCachedFirst = useCachedFirst || (Application.internetReachability == NetworkReachability.NotReachable && useCachedIfOffline);
-            if(serveCachedFirst && _cacheManager.HaveFileLocally(dropboxPath)){
-                lastServedMetadata = _cacheManager.GetLocalMetadataForDropboxPath(dropboxPath);
-                successCallback(Utils.DropboxPathToLocalPath(dropboxPath, _config));
-            }
-            
-            var resultPath = await GetFileAsLocalCachedPathAsync(dropboxPath, progressCallback, cancellationToken);
-            var latestMetadata = _cacheManager.GetLocalMetadataForDropboxPath(dropboxPath);
-            bool shouldServe = lastServedMetadata == null || lastServedMetadata.content_hash != latestMetadata.content_hash;
-            // don't serve same version again
-            if(shouldServe){
-                successCallback(resultPath);
-            }            
-
             if(receiveUpdates){                
                 Action<EntryChange> syncedChangecallback = async (change) => {
                     // serve updated version
@@ -121,7 +106,22 @@ public class DropboxSync : MonoBehaviour {
                         UnsubscribeFromKeepSyncCallback(dropboxPath, syncedChangecallback);
                     });
                 }
-            }            
+            }
+            
+            Metadata lastServedMetadata = null;
+            var serveCachedFirst = useCachedFirst || (Application.internetReachability == NetworkReachability.NotReachable && useCachedIfOffline);
+            if(serveCachedFirst && _cacheManager.HaveFileLocally(dropboxPath)){
+                lastServedMetadata = _cacheManager.GetLocalMetadataForDropboxPath(dropboxPath);
+                successCallback(Utils.DropboxPathToLocalPath(dropboxPath, _config));
+            }
+            
+            var resultPath = await GetFileAsLocalCachedPathAsync(dropboxPath, progressCallback, cancellationToken);
+            var latestMetadata = _cacheManager.GetLocalMetadataForDropboxPath(dropboxPath);
+            bool shouldServe = lastServedMetadata == null || lastServedMetadata.content_hash != latestMetadata.content_hash;
+            // don't serve same version again
+            if(shouldServe){
+                successCallback(resultPath);
+            }           
             
         }catch(Exception ex){
             errorCallback(ex);
