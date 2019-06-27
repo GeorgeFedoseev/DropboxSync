@@ -16,7 +16,9 @@ public class FileExplorerExampleScript : MonoBehaviour {
         await DropboxSync.Main.MoveAsync(folderPath, moveToFolderPath, autorename: true);
 
         // delete test
-        await DropboxSync.Main.DeleteAsync(moveToFolderPath);
+        // await DropboxSync.Main.DeleteAsync(moveToFolderPath);
+
+        Debug.Log($"Path {moveToFolderPath} exists: {await DropboxSync.Main.PathExistsAsync(moveToFolderPath)}");
 
         Debug.LogWarning("All done");
 

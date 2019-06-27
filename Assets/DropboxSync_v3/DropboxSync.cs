@@ -372,6 +372,48 @@ public class DropboxSync : MonoBehaviour {
         }
     }
 
+    // get metadata
+    public async Task<Metadata> GetMetadataAsync(string dropboxPath, bool include_media_info = false,
+                             bool include_deleted = false, bool include_has_explicit_shared_members = false)
+    {
+        return (await new GetMetadataRequest(new GetMetadataRequestParameters {
+            path = dropboxPath,
+            include_media_info = include_media_info,
+            include_deleted = include_deleted,
+            include_has_explicit_shared_members = include_has_explicit_shared_members
+        }, _config).ExecuteAsync()).GetMetadata();
+    }
+
+    public async void GetMetadata(string dropboxPath,
+                            Action<Metadata> successCallback, Action<Exception> errorCallback,
+                            bool include_media_info = false,
+                            bool include_deleted = false, bool include_has_explicit_shared_members = false)
+    {
+        try {
+            successCallback(await GetMetadataAsync(dropboxPath, include_media_info, include_deleted, include_has_explicit_shared_members));
+        }catch(Exception ex){
+            errorCallback(ex);
+        }
+    }
+
+    // check if path exists
+    public async Task<bool> PathExistsAsync(string dropboxPath){
+        try {
+            await GetMetadataAsync(dropboxPath);
+            return true;
+        }catch(DropboxNotFoundAPIException){
+            return false;
+        }
+    }
+
+    public async void PathExists(string dropboxPath, Action<bool> successCallback, Action<Exception> errorCallback){
+        try {
+            successCallback(await PathExistsAsync(dropboxPath));
+        }catch(Exception ex){
+            errorCallback(ex);
+        }
+    }
+
     
 
     // EVENTS

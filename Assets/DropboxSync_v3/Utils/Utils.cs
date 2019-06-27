@@ -64,7 +64,7 @@ namespace DBXSync {
                             if(errorResponse.error.tag == "reset"){
                                 result = new DropboxResetCursorAPIException($"error: {errorResponse.error_summary}; request parameters: {parameters}; endpoint: {endpoint}; full-response: {errorResponseString}",
                                                                      errorResponse.error_summary, errorResponse.error.tag);
-                            }else if(errorResponse.error.tag == "not_found"){
+                            }else if(errorResponse.error_summary.Contains("not_found")){
                                 result = new DropboxNotFoundAPIException($"error: {errorResponse.error_summary}; request parameters: {parameters}; endpoint: {endpoint}; full-response: {errorResponseString}",
                                                                      errorResponse.error_summary, errorResponse.error.tag);
                             }else{
