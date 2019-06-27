@@ -332,6 +332,33 @@ public class DropboxSync : MonoBehaviour {
         }
     }
 
+    // move
+    public async Task<Metadata> MoveAsync(string fromDropboxPath, string toDropboxPath,
+                                     bool autorename = false, bool allow_shared_folder = false,
+                                     bool allow_ownership_transfer = false)
+    {
+        return (await new MoveRequest(new MoveRequestParameters {
+            from_path = fromDropboxPath,
+            to_path = toDropboxPath,
+            autorename = autorename,
+            allow_shared_folder = allow_shared_folder,
+            allow_ownership_transfer = allow_ownership_transfer
+        }, _config).ExecuteAsync()).metadata;
+    }
+
+    public async void Move(string fromDropboxPath, string toDropboxPath, 
+                            Action<Metadata> successCallback, Action<Exception> errorCallback,
+                            bool autorename = false, bool allow_shared_folder = false,
+                            bool allow_ownership_transfer = false) 
+    {
+        try {
+            successCallback(await MoveAsync(fromDropboxPath, toDropboxPath, autorename, allow_shared_folder, allow_ownership_transfer));
+        }catch(Exception ex){
+            errorCallback(ex);
+        }
+        
+    }
+
     
 
     // EVENTS

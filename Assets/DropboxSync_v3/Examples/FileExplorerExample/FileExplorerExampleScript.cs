@@ -6,9 +6,18 @@ public class FileExplorerExampleScript : MonoBehaviour {
     // Start is called before the first frame update
     async void Start() {
 
-        // create folder test
-        // var folderMetadata = await DropboxSync.Main.CreateFolderAsync("/nested/folder/path", autorename: true);
+        // // create folder test
+        // var folderPath = "/nested/folder/path";
+        // var folderMetadata = await DropboxSync.Main.CreateFolderAsync(folderPath, autorename: true);
         // Debug.Log($"Created folder: {folderMetadata}");
+
+        // // move dat folder
+        // var moveToFolderPath = "/moved/nested/folder/path";
+        // DropboxSync.Main.Move(folderPath, moveToFolderPath, (metadata) => {
+        //     Debug.Log($"Moved from {folderPath} to {moveToFolderPath}");
+        // }, (ex) => {
+        //     Debug.LogError($"Failed to move: {ex}");
+        // });
 
     }
     

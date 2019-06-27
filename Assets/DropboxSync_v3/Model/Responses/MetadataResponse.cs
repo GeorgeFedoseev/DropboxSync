@@ -1,7 +1,7 @@
 namespace DBXSync {
 
     [System.Serializable]
-    public class CreateFolderResponse : Response {
+    public class MetadataResponse : Response {
         public Metadata metadata;
     }
 
