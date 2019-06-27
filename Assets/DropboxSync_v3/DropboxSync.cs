@@ -312,6 +312,25 @@ public class DropboxSync : MonoBehaviour {
         return _syncManager != null && _syncManager.IsKeepingInSync(dropboxPath);
     }
 
+    // OPERATIONS
+
+    // create folder
+    public async Task<Metadata> CreateFolderAsync(string dropboxPath, bool autorename = false){
+        return (await new CreateFolderRequest(new CreateFolderRequestParameters {
+            path = dropboxPath,
+            autorename = autorename
+        }, _config).ExecuteAsync()).metadata;
+    }
+
+    public async void CreateFolder(string dropboxPath, Action<Metadata> successCallback,
+                                 Action<Exception> errorCallback, bool autorename = false)
+    {
+        try {
+            successCallback(await CreateFolderAsync(dropboxPath, autorename));
+        }catch(Exception ex){
+            errorCallback(ex);
+        }
+    }
 
     
 
