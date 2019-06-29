@@ -414,6 +414,49 @@ public class DropboxSync : MonoBehaviour {
         }
     }
 
+    // list folder
+    public async Task<List<Metadata>> ListFolderAsync(string dropboxFolderPath, bool recursive = false){
+        dropboxFolderPath = Utils.UnifyDropboxPath(dropboxFolderPath);
+        
+        var result = new List<Metadata>();
+        
+        var listFolderResponse = await new ListFolderRequest(new ListFolderRequestParameters{
+            path = dropboxFolderPath,
+            recursive = recursive
+        }, _config).ExecuteAsync();
+
+        result.AddRange(listFolderResponse.entries);
+
+        bool has_more = listFolderResponse.has_more;
+        string cursor = listFolderResponse.cursor;
+
+        while(has_more){
+            // list_folder/continue
+            var continueResponse = await new ListFolderContinueRequest(new CursorRequestParameters {
+                cursor = cursor
+            }, _config).ExecuteAsync();
+
+            result.AddRange(continueResponse.entries);
+
+            has_more = continueResponse.has_more;
+            cursor = continueResponse.cursor;            
+        }
+
+
+        return result;
+    }
+
+    public async void ListFolder(string dropboxFolderPath, 
+                                    Action<List<Metadata>> successCallback, Action<Exception> errorCallback,
+                                    bool recursive = false) 
+    {
+        try {
+            successCallback(await ListFolderAsync(dropboxFolderPath, recursive));
+        }catch(Exception ex){
+            errorCallback(ex);
+        }
+    }
+
     
 
     // EVENTS

@@ -163,6 +163,11 @@ namespace DBXSync {
 				dropboxPath = dropboxPath.Substring(1, dropboxPath.Length-1);
 			}
 
+            // API: 'Specify the root folder as an empty string rather than as "/"'
+            if(dropboxPath == "/"){
+                dropboxPath = "";
+            }
+
             return dropboxPath;
         }
 
