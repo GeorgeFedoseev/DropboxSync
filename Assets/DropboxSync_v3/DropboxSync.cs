@@ -442,7 +442,6 @@ public class DropboxSync : MonoBehaviour {
             cursor = continueResponse.cursor;            
         }
 
-
         return result;
     }
 
@@ -452,6 +451,24 @@ public class DropboxSync : MonoBehaviour {
     {
         try {
             successCallback(await ListFolderAsync(dropboxFolderPath, recursive));
+        }catch(Exception ex){
+            errorCallback(ex);
+        }
+    }
+
+
+    public async Task<bool> ShouldUpdateFromDropboxAsync(string dropboxFilePath){
+        var metadata = await GetMetadataAsync(dropboxFilePath);
+        if(!metadata.IsFile){
+            throw new ArgumentException("Please specify Dropbox file path, not folder.");
+        }
+
+        return _cacheManager.ShouldUpdateFileFromDropbox(metadata);
+    }
+
+    public async void ShouldUpdateFileFromDropbox(string dropboxFilePath, Action<bool> successCallback, Action<Exception> errorCallback){
+        try {
+            successCallback(await ShouldUpdateFromDropboxAsync(dropboxFilePath));
         }catch(Exception ex){
             errorCallback(ex);
         }
