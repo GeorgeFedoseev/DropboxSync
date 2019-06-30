@@ -130,7 +130,7 @@ namespace DBXSync {
 
         // CHANGES NOTIFICATIONS
         public void SubscribeToChanges(string dropboxPath, Action<EntryChange> callback){
-            Debug.Log($"[DropboxSync/ChangesManager] SubscribeToChanges {dropboxPath}");
+            // Debug.Log($"[DropboxSync/ChangesManager] SubscribeToChanges {dropboxPath}");
 
             dropboxPath = Utils.UnifyDropboxPath(dropboxPath);
             if(_folderSubscriptions.ContainsKey(dropboxPath)){

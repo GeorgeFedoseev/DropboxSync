@@ -582,7 +582,7 @@ public class DropboxSync : MonoBehaviour {
     // EVENTS
 
     void OnApplicationQuit(){
-        print("[DropboxSync] Cleanup");
+        // print("[DropboxSync] Cleanup");
         
         if(_transferManger != null){
             _transferManger.Dispose();
