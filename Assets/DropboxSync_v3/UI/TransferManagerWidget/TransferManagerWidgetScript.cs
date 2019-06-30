@@ -85,7 +85,6 @@ public class TransferManagerWidgetScript : MonoBehaviour {
 
     // METHODS
     private void Maximize(){
-        Debug.Log("Maximize");
         _popUpWindow.SetActive(true);
         ReloadTransfersList();
     }

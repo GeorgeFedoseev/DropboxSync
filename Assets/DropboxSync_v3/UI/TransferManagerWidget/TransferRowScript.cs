@@ -29,6 +29,7 @@ namespace DBXSync {
 
             switch(rowType){
                 case TransferManagerWidgetScript.TransferRowType.Active:
+                    statusText.text = $"{(_transfer is DownloadFileTransfer ? "Downloading" : "Uploading")}";
                     transfer.ProgressCallback.ProgressChanged += OnProgress;                    
                     actionButton.GetComponentInChildren<Text>().text = "Cancel";
                     actionButton.onClick.AddListener(_transfer.Cancel);
