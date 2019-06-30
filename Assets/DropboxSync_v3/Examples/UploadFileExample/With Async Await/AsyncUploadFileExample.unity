@@ -349,7 +349,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6e58b23c8a844a6f825316a97d52120, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _dropboxAccessToken: sVawC-LSz14AAAAAAAAME4LGj24N3pxShmbd_A6gbCxahcYQihj_crwDk0QbgxZG
+  _dropboxAccessToken: <your-access-token>
 --- !u!4 &996569776
 Transform:
   m_ObjectHideFlags: 0
