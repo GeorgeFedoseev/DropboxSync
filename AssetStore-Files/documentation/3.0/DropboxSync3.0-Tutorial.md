@@ -19,11 +19,8 @@
 * [Setting up Dropbox App Folder](#Setting up Dropbox App Folder)
 * [Copying Example content for Example scenes](#Copying Example content for Example scenes)
 * [Running Example scenes](#Running Example scenes)
-  * [Example scene 1 - DownloadExample](#Example scene 1 - DownloadExample)
-  * [Example scene 2 - FileExplorerExample](#Example scene 2 - FileExplorerExample)
-  * [Example scene 3 - UploadFileExample](#Example scene 3 - UploadFileExample)
-  * [Example scene 4 - UploadTextExample](#Example scene 4 - UploadTextExample)
-  * [Example scene 5 -  TestMainMethods](#Example scene 5 -  TestMainMethods)
+  * [DownloadFileExample](#DownloadFileExample)
+  * [FileExplorerExample](#FileExplorerExample)
 * [Setting up Custom Scene](#Setting up Custom Scene)
 
 
@@ -44,18 +41,18 @@ After creation you will be redirected to `https://www.dropbox.com/developers/app
 <img src="http://georgefedoseev.com/dropbox-sync/assets/tutorial-assets/3.png" width=700/>
 
 #### Step 4
-Copy generated access token and paste into **DropboxSync Script** inspector field in **DownloadExample**  scene in Unity.  
-<img src="http://georgefedoseev.com/dropbox-sync/assets/tutorial-assets/4.png" width=800/>
+Copy generated access token and paste into **DropboxSync Script** inspector field in **DownloadFileExample**  scene in Unity (you will find the scene in /DropboxSync_v3/Examples/).  
+<img src="tutorial-assets/4.png" width=800/>
 
 
 
 
 
-<img src="http://georgefedoseev.com/dropbox-sync/assets/tutorial-assets/DropboxSync_gameobject.PNG" width=500/>
+<img src="tutorial-assets/5.png?" width=500/>
 
 
 
-<img src="http://georgefedoseev.com/dropbox-sync/assets/tutorial-assets/DropboxSync_inspector_access_token.PNG" width=400/>
+<img src="tutorial-assets/6.png?" width=400/>
 
 Now you have example scene connected to your app folder. To run example scenes you need to copy example content to your created app folder. 
 
@@ -67,41 +64,20 @@ Save <a href="https://www.dropbox.com/sh/u9yubr1rcydaf9s/AAD5Sf2MTKVTMjZCX8A2t3o
 
 
 ### Running Example scenes
-#### Example scene 1 - DownloadExample
-Now when you run **DownloadExample** scene you should see something like this:  
-<img src="http://georgefedoseev.com/dropbox-sync/assets/tutorial-assets/DownloadExample.PNG" width=800/>
 
+**NOTE:** for each scene you'll need to insert accessCode of your Dropbox app.
 
+#### DownloadFileExample
+Now when you run **DownloadFileExample** scene you should see something like this:  
+<img src="tutorial-assets/download_example.png?" width=800/>
 
-#### Example scene 2 - FileExplorerExample
+*(to open **Transfers pop-up** click on the button on the top right)*
+
+#### FileExplorerExample
 
 To run other example scene (**FileExplorerExample**) copy **accessToken** to DropboxSync inspector field same way and click play. You should see something like this:
 
-<img src="http://georgefedoseev.com/dropbox-sync/assets/tutorial-assets/FileExplorerExample.PNG" width=800/>
-
-
-
-#### Example scene 3 - UploadFileExample
-
-This scene demonstrates ability to upload file to Dropbox from local filesystem. Same as with previous scenes - **don't forget to input your valid accessToken** into DropboxSync script. 
-
-<img src="http://georgefedoseev.com/dropbox-sync/assets/tutorial-assets/UploadFileExample.PNG" width=800>
-
-
-
-#### Example scene 4 - UploadTextExample
-
-This scene demonstrates uploading byte array of text to Dropbox as a text file.
-
-<img src="http://georgefedoseev.com/dropbox-sync/assets/tutorial-assets/UploadTextExample.PNG" width=800>
-
-
-
-#### Example scene 5 -  TestMainMethods
-
-This scene allows to test all main methods like uploading, downloading, moving and deleting in one run. **Don't forget to input valid accessToken** or you will get Bad Request error.
-
-<img src="http://georgefedoseev.com/dropbox-sync/assets/tutorial-assets/TestMainMethods.PNG" width=800>
+<img src="tutorial-assets/file_explorer_example.PNG" width=800/>
 
 
 
