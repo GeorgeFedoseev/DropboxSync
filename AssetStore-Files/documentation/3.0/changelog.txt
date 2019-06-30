@@ -10,7 +10,7 @@ v2.0
 - Move and Delete features
 
 v3.0
-- Completely rewritten
+- Completely rewritten for stability
 - Low-latency lightweight changes tracking
 - Ability to cancel file transfers
 - Transfers pop-up widget
