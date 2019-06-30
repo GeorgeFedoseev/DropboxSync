@@ -221,6 +221,7 @@ namespace DBXSync {
         }        
 
         public void Cancel() {
+            // Debug.Log($"[D][DropboxSync/DownloadFileTransfer] Cancel {this}");
             _internalCancellationTokenSource.Cancel();
         }
 

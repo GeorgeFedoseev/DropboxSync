@@ -60,8 +60,9 @@ namespace DBXSync {
             }                     
         }
 
-        private void _StartSync(SyncSubscription syncSubscription){
+        private void _StartSync(SyncSubscription syncSubscription){            
             var dropboxPath = syncSubscription.dropboxPath;
+            Debug.Log($"_StartSync {dropboxPath}");
 
             Action<EntryChange> changedCallback = async (change) => {
                 // sync

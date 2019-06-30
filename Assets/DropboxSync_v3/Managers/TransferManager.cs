@@ -196,19 +196,25 @@ namespace DBXSync {
                 || _downloadTransferQueue.Any (t => Utils.AreEqualDropboxPaths (t.DropboxPath, dropboxPath));
         }
 
-        public void CancelQueuedOrExecutingDownloadTransfer(string dropboxPath){
+        public async Task CancelQueuedOrExecutingDownloadTransferAsync(string dropboxPath){
             // lock (_transfersLock) {
-                var executing = _currentDownloadTransfers.FirstOrDefault (t => Utils.AreEqualDropboxPaths (t.DropboxPath, dropboxPath));
-                if (executing != null) {
-                    // cancel
-                    executing.Cancel();
-                }
-
                 var queued = _downloadTransferQueue.FirstOrDefault (t => Utils.AreEqualDropboxPaths (t.DropboxPath, dropboxPath));
                 if (queued != null) {
                     // remove from queue
                     _downloadTransferQueue.Remove(queued);
                 }
+
+                var executing = _currentDownloadTransfers.FirstOrDefault (t => Utils.AreEqualDropboxPaths (t.DropboxPath, dropboxPath));
+                if (executing != null) {                   
+
+                    // cancel and await transfer cancellation to finish
+                    executing.Cancel();
+
+                    // Debug.LogWarning($"Awaiting executing.CompletionSource.Task of {dropboxPath}... (IsCanceled: {executing.CompletionSource.Task.IsCanceled})");
+                    try {
+                        await executing.CompletionSource.Task;
+                    }catch(OperationCanceledException){}                    
+                }                
             // }
         }
 
@@ -266,14 +272,15 @@ namespace DBXSync {
                 transfer.CompletionSource.SetResult (metadata);
             } catch (Exception ex) {
 
-                transfer.CompletionSource.SetException (ex);
-
                 // if it's download trasnfer - remove *.download file
                 if(transfer is DownloadFileTransfer){
                     var downloadTrasnfer = transfer as DownloadFileTransfer;
-                    if(downloadTrasnfer.Metadata != null){                            
-                        File.Delete(Utils.GetDownloadTempFilePath(transfer.LocalPath, downloadTrasnfer.Metadata.content_hash));
-                    }                        
+                    if(downloadTrasnfer.Metadata != null){    
+                        var downloadTempPath = Utils.GetDownloadTempFilePath(transfer.LocalPath, downloadTrasnfer.Metadata.content_hash);
+                        if(File.Exists(downloadTempPath)){
+                            File.Delete(downloadTempPath);
+                        }                        
+                    }                    
                 }
 
                 // remove from current
@@ -295,6 +302,8 @@ namespace DBXSync {
                         Debug.Log ($"[DropboxSync/TransferManager] Transfer failed, moving to failed (now {_failedTransfers.Count} failed)");
                     // }
                 }
+
+                transfer.CompletionSource.SetException (ex);
             }
         }
 
