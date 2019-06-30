@@ -201,6 +201,8 @@ public class DropboxSync : MonoBehaviour {
     }
 
     // UPLOADING
+
+    
     // from local file path
 
     /// <summary>
@@ -315,55 +317,100 @@ public class DropboxSync : MonoBehaviour {
     // OPERATIONS
 
     // create folder
-    public async Task<Metadata> CreateFolderAsync(string dropboxPath, bool autorename = false){
+
+    /// <summary>
+    /// Creates folder on Dropbox
+    /// </summary>
+    /// <param name="dropboxFolderPath">Folder to create</param>
+    /// <param name="autorename">Should autorename if conflicting paths?</param>
+    /// <returns>Metadata of created folder</returns>
+    public async Task<Metadata> CreateFolderAsync(string dropboxFolderPath, bool autorename = false){
         return (await new CreateFolderRequest(new CreateFolderRequestParameters {
-            path = dropboxPath,
+            path = dropboxFolderPath,
             autorename = autorename
         }, _config).ExecuteAsync()).metadata;
     }
 
-    public async void CreateFolder(string dropboxPath, Action<Metadata> successCallback,
+    /// <summary>
+    /// Creates folder on Dropbox
+    /// </summary>
+    /// <param name="dropboxFolderPath">Folder to create</param>
+    /// <param name="successCallback">Callback for receiving created folder Metadata</param>
+    /// <param name="errorCallback">Callback for receiving exceptions</param>
+    /// <param name="autorename">Should autorename if conflicting paths?</param>
+    /// <returns></returns>
+    public async void CreateFolder(string dropboxFolderPath, Action<Metadata> successCallback,
                                  Action<Exception> errorCallback, bool autorename = false)
     {
         try {
-            successCallback(await CreateFolderAsync(dropboxPath, autorename));
+            successCallback(await CreateFolderAsync(dropboxFolderPath, autorename));
         }catch(Exception ex){
             errorCallback(ex);
         }
     }
 
+
+
     // move
-    public async Task<Metadata> MoveAsync(string fromDropboxPath, string toDropboxPath,
-                                     bool autorename = false, bool allow_shared_folder = false,
-                                     bool allow_ownership_transfer = false)
+
+
+    /// <summary>
+    /// Move file or folder from one path to another
+    /// </summary>
+    /// <param name="fromDropboxPath">From where to move</param>
+    /// <param name="toDropboxPath">Where to move</param>
+    /// <param name="autorename">Should autorename if conflicting paths?</param>    
+    /// <returns></returns>
+    public async Task<Metadata> MoveAsync(string fromDropboxPath, string toDropboxPath, bool autorename = false)
     {
         return (await new MoveRequest(new MoveRequestParameters {
             from_path = fromDropboxPath,
             to_path = toDropboxPath,
-            autorename = autorename,
-            allow_shared_folder = allow_shared_folder,
-            allow_ownership_transfer = allow_ownership_transfer
+            autorename = autorename            
         }, _config).ExecuteAsync()).metadata;
     }
 
+    /// <summary>
+    /// Move file or folder from one path to another
+    /// </summary>
+    /// <param name="fromDropboxPath">From where to move</param>
+    /// <param name="toDropboxPath">Where to move</param>    
+    /// <param name="successCallback">Callback for receiving moved object Metadata</param>
+    /// <param name="errorCallback">Callback for receiving exceptions</param>
+    /// <param name="autorename">Should autorename if conflicting paths?</param>    
+    /// <returns></returns>
     public async void Move(string fromDropboxPath, string toDropboxPath, 
                             Action<Metadata> successCallback, Action<Exception> errorCallback,
-                            bool autorename = false, bool allow_shared_folder = false,
-                            bool allow_ownership_transfer = false) 
+                            bool autorename = false) 
     {
         try {
-            successCallback(await MoveAsync(fromDropboxPath, toDropboxPath, autorename, allow_shared_folder, allow_ownership_transfer));
+            successCallback(await MoveAsync(fromDropboxPath, toDropboxPath, autorename));
         }catch(Exception ex){
             errorCallback(ex);
         }
         
     }
 
+
     // delete
+
+
+    /// <summary>
+    /// Delete file or folder on Dropbox
+    /// </summary>
+    /// <param name="dropboxPath">Path to delete</param>
+    /// <returns>Deleted object Metadata</returns>
     public async Task<Metadata> DeleteAsync(string dropboxPath) {
         return (await new DeleteRequest(new PathParameters(dropboxPath), _config).ExecuteAsync()).metadata;
     }
 
+    /// <summary>
+    /// Delete file or folder on Dropbox
+    /// </summary>
+    /// <param name="dropboxPath">Path to delete</param>
+    /// <param name="successCallback">Callback for receiving deleted object Metadata</param>
+    /// <param name="errorCallback">Callback for receiving exceptions</param>
+    /// <returns></returns>
     public async void Delete(string dropboxPath, Action<Metadata> successCallback, Action<Exception> errorCallback) {
         try {
             successCallback(await DeleteAsync(dropboxPath));
@@ -372,31 +419,48 @@ public class DropboxSync : MonoBehaviour {
         }
     }
 
+
     // get metadata
-    public async Task<Metadata> GetMetadataAsync(string dropboxPath, bool include_media_info = false,
-                             bool include_deleted = false, bool include_has_explicit_shared_members = false)
+
+
+    /// <summary>
+    /// Get Metadata for file or folder on Dropbox
+    /// </summary>
+    /// <param name="dropboxPath">Path to file or folder</param>    
+    /// <returns>File's or folder's Metadata</returns>
+    public async Task<Metadata> GetMetadataAsync(string dropboxPath)
     {
         return (await new GetMetadataRequest(new GetMetadataRequestParameters {
-            path = dropboxPath,
-            include_media_info = include_media_info,
-            include_deleted = include_deleted,
-            include_has_explicit_shared_members = include_has_explicit_shared_members
+            path = dropboxPath                   
         }, _config).ExecuteAsync()).GetMetadata();
     }
 
+    /// <summary>
+    /// Get Metadata for file or folder on Dropbox
+    /// </summary>
+    /// <param name="dropboxPath">Path to file or folder</param>
+    /// <param name="successCallback">Callback for receiving file's or folder's Metadata</param>
+    /// <param name="errorCallback">Callback for receiving exceptions</param>
+    /// <returns></returns>
     public async void GetMetadata(string dropboxPath,
-                            Action<Metadata> successCallback, Action<Exception> errorCallback,
-                            bool include_media_info = false,
-                            bool include_deleted = false, bool include_has_explicit_shared_members = false)
+                            Action<Metadata> successCallback, Action<Exception> errorCallback)
     {
         try {
-            successCallback(await GetMetadataAsync(dropboxPath, include_media_info, include_deleted, include_has_explicit_shared_members));
+            successCallback(await GetMetadataAsync(dropboxPath));
         }catch(Exception ex){
             errorCallback(ex);
         }
     }
 
-    // check if path exists
+
+    // exists?
+
+
+    /// <summary>
+    /// Checks if file or folder exists on Dropbox
+    /// </summary>
+    /// <param name="dropboxPath">Path to file or folder</param>
+    /// <returns></returns>
     public async Task<bool> PathExistsAsync(string dropboxPath){
         try {
             await GetMetadataAsync(dropboxPath);
@@ -406,6 +470,13 @@ public class DropboxSync : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// Checks if file or folder exists on Dropbox
+    /// </summary>
+    /// <param name="dropboxPath">Path to file or folder</param>
+    /// <param name="successCallback">Callback for receiving boolean result</param>
+    /// <param name="errorCallback">Callback for receiving exceptions</param>
+    /// <returns></returns>
     public async void PathExists(string dropboxPath, Action<bool> successCallback, Action<Exception> errorCallback){
         try {
             successCallback(await PathExistsAsync(dropboxPath));
@@ -414,7 +485,16 @@ public class DropboxSync : MonoBehaviour {
         }
     }
 
+
     // list folder
+
+
+    /// <summary>
+    /// Get contents of the folder on Dropbox
+    /// </summary>
+    /// <param name="dropboxFolderPath">Path to folder on Dropbox</param>
+    /// <param name="recursive">Include all subdirectories recursively?</param>
+    /// <returns>List of file's and folder's Metadata - contents on the folder</returns>
     public async Task<List<Metadata>> ListFolderAsync(string dropboxFolderPath, bool recursive = false){
         dropboxFolderPath = Utils.UnifyDropboxPath(dropboxFolderPath);
         
@@ -445,6 +525,14 @@ public class DropboxSync : MonoBehaviour {
         return result;
     }
 
+    /// <summary>
+    /// Get contents of the folder on Dropbox
+    /// </summary>
+    /// <param name="dropboxFolderPath">Path to folder on Dropbox</param>
+    /// <param name="successCallback">Callback for receiving a List of file's and folder's Metadata - contents on the folder</param>
+    /// <param name="errorCallback">Callback for receiving exceptions</param>
+    /// <param name="recursive">Include all subdirectories recursively?</param>
+    /// <returns></returns>
     public async void ListFolder(string dropboxFolderPath, 
                                     Action<List<Metadata>> successCallback, Action<Exception> errorCallback,
                                     bool recursive = false) 
@@ -457,6 +545,14 @@ public class DropboxSync : MonoBehaviour {
     }
 
 
+    // should update?
+
+
+    /// <summary>
+    /// Checks if Dropbox has different version of the file (always returns true if file is not cached locally)
+    /// </summary>
+    /// <param name="dropboxFilePath">Path to file on Dropbox</param>
+    /// <returns></returns>
     public async Task<bool> ShouldUpdateFromDropboxAsync(string dropboxFilePath){
         var metadata = await GetMetadataAsync(dropboxFilePath);
         if(!metadata.IsFile){
@@ -466,6 +562,13 @@ public class DropboxSync : MonoBehaviour {
         return _cacheManager.ShouldUpdateFileFromDropbox(metadata);
     }
 
+    /// <summary>
+    /// Checks if Dropbox has different version of the file (always returns true if file is not cached locally)
+    /// </summary>
+    /// <param name="dropboxFilePath">Path to file on Dropbox</param>
+    /// <param name="successCallback">Callback for receiving boolean result</param>
+    /// <param name="errorCallback">Callback for receiving exceptions</param>
+    /// <returns></returns>
     public async void ShouldUpdateFileFromDropbox(string dropboxFilePath, Action<bool> successCallback, Action<Exception> errorCallback){
         try {
             successCallback(await ShouldUpdateFromDropboxAsync(dropboxFilePath));
