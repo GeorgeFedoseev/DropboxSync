@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using DBXSync;
 using UnityEngine;
 using UnityEngine.UI;
@@ -99,7 +100,7 @@ public class TransferManagerWidgetScript : MonoBehaviour {
 
         // order by time finished in each group
         // active
-        foreach(var tr in _dropboxSyncInstance.TransferManager.ActiveTransfers){
+        foreach(var tr in _dropboxSyncInstance.TransferManager.ActiveTransfers.OrderByDescending(x => x.StartDateTime)){
             InstantiateRowForTransfer(tr, TransferRowType.Active);
         }
         // queued        
@@ -107,11 +108,11 @@ public class TransferManagerWidgetScript : MonoBehaviour {
             InstantiateRowForTransfer(tr, TransferRowType.Queued);
         }
         // failed
-        foreach(var tr in _dropboxSyncInstance.TransferManager.FailedTransfers){
+        foreach(var tr in _dropboxSyncInstance.TransferManager.FailedTransfers.OrderByDescending(x => x.EndDateTime)){
             InstantiateRowForTransfer(tr, TransferRowType.Failed);
         }
         // completed
-        foreach(var tr in _dropboxSyncInstance.TransferManager.CompletedTransfers){
+        foreach(var tr in _dropboxSyncInstance.TransferManager.CompletedTransfers.OrderByDescending(x => x.EndDateTime)){
             InstantiateRowForTransfer(tr, TransferRowType.Completed);
         }        
 
