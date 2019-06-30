@@ -8,3 +8,5 @@ v2.0
 - Code refactoring
 - Upload feature
 - Move and Delete features
+
+v3.0

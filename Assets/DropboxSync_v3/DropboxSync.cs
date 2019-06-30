@@ -173,7 +173,7 @@ public class DropboxSync : MonoBehaviour {
     /// <param name="progressCallback">Progress callback with download percentage and speed</param>
     /// <param name="cancellationToken">Cancellation token that can be used to cancel download</param>
     /// <returns>Task that produces object of type T</returns>
-    public async Task<T> GetFile<T>(string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken) where T : class{        
+    public async Task<T> GetFileAsync<T>(string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken) where T : class{        
         var bytes = await GetFileAsBytesAsync(dropboxPath, progressCallback, cancellationToken);
         return Utils.ConvertBytesTo<T>(bytes);
     }
@@ -202,7 +202,7 @@ public class DropboxSync : MonoBehaviour {
 
     // UPLOADING
 
-    
+
     // from local file path
 
     /// <summary>
