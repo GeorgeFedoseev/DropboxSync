@@ -18,5 +18,6 @@ namespace DBXSync {
 
         System.Threading.Tasks.Task<Metadata> ExecuteAsync();
         void Cancel();
+        void SetEndDateTime(DateTime dateTime);
     }
 }

@@ -236,5 +236,9 @@ namespace DBXSync {
         public override string ToString() {
             return $"[DownloadFileTransfer] {_dropboxPath}";
         }
+
+        public void SetEndDateTime(DateTime dateTime) {
+            _endDateTime = dateTime;
+        }
     }
 }

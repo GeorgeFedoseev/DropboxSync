@@ -6,6 +6,19 @@ namespace DBXSync {
     
     public static class Extensions {
 
+        public static Action<T> Debounce<T>(this Action<T> func, int milliseconds = 300) {
+            var last = 0;
+            return arg =>
+            {
+                var current = Interlocked.Increment(ref last);
+                Task.Delay(milliseconds).ContinueWith(task =>
+                {
+                    if (current == last) func(arg);
+                    task.Dispose();
+                });
+            };
+        }
+
 
         public static T[] SubArray<T>(this T[] data, int index, int length) {
             T[] result = new T[length];

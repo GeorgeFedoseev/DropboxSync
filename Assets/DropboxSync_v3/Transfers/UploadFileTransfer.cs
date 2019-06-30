@@ -162,5 +162,9 @@ namespace DBXSync {
         public override string ToString() {
             return $"[UploadFileTransfer] {_dropboxTargetPath}";
         }
+
+        public void SetEndDateTime(DateTime dateTime) {
+            _endDateTime = dateTime;
+        }
     }
 }
