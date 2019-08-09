@@ -1,4 +1,10 @@
 using System;
+using System.Collections.Specialized;
+using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace DBXSync {
@@ -6,15 +12,19 @@ namespace DBXSync {
     public class AuthManager : IDisposable {
 
         private string _dropboxAppKey;
+        private string _dropboxAppSecret;
 
-        private Action<string> _onFlowCompletedAction = (_) => {};
+        private Action<OAuth2TokenResponse> _onFlowCompletedAction = (_) => {};
 
-        public AuthManager(string dropboxAppKey, Action<string> onFlowCompleted){
+        private OAuth2CodeDialogScript _currentDialog;
+
+        public AuthManager(string dropboxAppKey, string dropboxAppSecret, Action<OAuth2TokenResponse> onFlowCompleted){
             // verify app key is valid
             if(string.IsNullOrWhiteSpace(dropboxAppKey)){
                 throw new InvalidConfigurationException("Dropbox app key is not set or invalid");
             }
             _dropboxAppKey = dropboxAppKey;
+            _dropboxAppSecret = dropboxAppSecret;
             _onFlowCompletedAction = onFlowCompleted;
         }
 
@@ -24,12 +34,10 @@ namespace DBXSync {
             Application.OpenURL(url);
 
             // TODO: open dialog with code input in Unity
-            OpenCodeDialog((code) => {
-                Debug.Log($"Got code: {code}");
-            });
+            _currentDialog = OpenCodeDialog(OnCodeSubmitted);
         }
 
-        private void OpenCodeDialog(Action<string> onCodeSubmitted){
+        private OAuth2CodeDialogScript OpenCodeDialog(Action<string> onCodeSubmitted){
             // remove existing dialogs if exist
             foreach(var d in Resources.FindObjectsOfTypeAll<OAuth2CodeDialogScript>()){                
                 if(d.gameObject.scene.name != null){ // if object is in scene and not prefab
@@ -42,6 +50,62 @@ namespace DBXSync {
                         .GetComponent<OAuth2CodeDialogScript>();
             dialog.onCodeSubmit = onCodeSubmitted;
             dialog.name = "DropboxSync_OAuth2CodeDialog";
+
+            return dialog;
+        }
+
+
+        private async Task<OAuth2TokenResponse> ExchangeCodeForAccessTokenAsync(string code){
+            var uri = new Uri("https://api.dropbox.com/oauth2/token");
+
+            using(var client = new WebClient()){                               
+                string credentials = Convert.ToBase64String(
+                Encoding.ASCII.GetBytes(_dropboxAppKey + ":" + _dropboxAppSecret));
+                client.Headers[HttpRequestHeader.Authorization] = string.Format(
+                "Basic {0}", credentials);
+
+                NameValueCollection postValues = new NameValueCollection();
+                postValues.Add("code", code);
+                postValues.Add("grant_type", "authorization_code");
+
+                byte[] responseBytes = null;
+                try {
+                    responseBytes = await client.UploadValuesTaskAsync(uri, "POST", postValues);
+                }catch(WebException ex){
+                    try {
+                        using(var sr = new StreamReader(ex.Response.GetResponseStream())){
+                            Debug.LogError($"Failed to get access token: {sr.ReadToEnd()}");
+                        }
+                    }catch{
+                        Debug.LogError($"Failed to get access token: {ex}");
+                    }                   
+                    
+                    return null;
+                }
+                
+                var responseString = Encoding.UTF8.GetString(responseBytes);
+
+                if(string.IsNullOrWhiteSpace(responseString) || responseString == "null"){
+                    Debug.LogError($"Failed to get access token: response is null");
+                    return null;
+                }
+
+                responseString = Utils.FixDropboxJSONString(responseString);
+                return UnityEngine.JsonUtility.FromJson<OAuth2TokenResponse>(responseString);
+            }
+        }
+
+        private async void OnCodeSubmitted(string code){
+            Debug.Log($"Got code: {code}");
+            var tokenResult = await ExchangeCodeForAccessTokenAsync(code);
+            if(tokenResult != null){
+                Debug.Log($"Got access token: {tokenResult.access_token}");
+                _onFlowCompletedAction(tokenResult);
+                _currentDialog.Close();
+                _currentDialog = null;
+            }else{
+                _currentDialog.DisplayError("Wrong code");
+            }
         }
 
 

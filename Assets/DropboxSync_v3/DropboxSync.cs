@@ -28,6 +28,8 @@ public class DropboxSync : MonoBehaviour {
     [SerializeField]
     private string _dropboxAppKey;
     [SerializeField]
+    private string _dropboxAppSecret;
+    [SerializeField]
     private string _dropboxAccessToken;
 
     private DropboxSyncConfiguration _config;
@@ -51,7 +53,7 @@ public class DropboxSync : MonoBehaviour {
 
 
     void Awake(){
-        _authManager = new AuthManager(_dropboxAppKey, OnOAuth2FlowCompleted);
+        _authManager = new AuthManager(_dropboxAppKey, _dropboxAppSecret, OnOAuth2FlowCompleted);
 
         // if access token set in inspector
         if(!string.IsNullOrWhiteSpace(_dropboxAccessToken)){
@@ -92,8 +94,8 @@ public class DropboxSync : MonoBehaviour {
         }
     }
 
-    private void OnOAuth2FlowCompleted(string accessToken){
-        AuthenticateWithAccessToken(accessToken);
+    private void OnOAuth2FlowCompleted(OAuth2TokenResponse tokenResult){
+        AuthenticateWithAccessToken(tokenResult.access_token);
     }
 
     // DOWNLOADING
