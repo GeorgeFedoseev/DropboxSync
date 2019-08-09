@@ -26,6 +26,8 @@ public class DropboxSync : MonoBehaviour {
 
     // inspector
     [SerializeField]
+    private string _dropboxAppKey;
+    [SerializeField]
     private string _dropboxAccessToken;
 
     private DropboxSyncConfiguration _config;
@@ -45,9 +47,12 @@ public class DropboxSync : MonoBehaviour {
     private CacheManager _cacheManager;
     private ChangesManager _changesManager;
     private SyncManager _syncManager;   
+    private AuthManager _authManager;
 
 
     void Awake(){
+        _authManager = new AuthManager(_dropboxAppKey, OnOAuth2FlowCompleted);
+
         // if access token set in inspector
         if(!string.IsNullOrWhiteSpace(_dropboxAccessToken)){
             // set configuration based on inspector values        
@@ -66,9 +71,9 @@ public class DropboxSync : MonoBehaviour {
         _cacheManager = new CacheManager(_transferManger, _config);
         _changesManager = new ChangesManager(_cacheManager, _transferManger, _config);
         _syncManager = new SyncManager(_cacheManager, _changesManager, _config);
-    }
 
-    
+        Debug.Log("DropboxSync Initialized");       
+    }
 
     // AUTHENTICATION
     public void AuthenticateWithAccessToken(string accessToken){
@@ -85,6 +90,10 @@ public class DropboxSync : MonoBehaviour {
         if(!IsAuthenticated){
             throw new DropboxNotAuthenticatedException("No access token to make Dropbox API calls");
         }
+    }
+
+    private void OnOAuth2FlowCompleted(string accessToken){
+        AuthenticateWithAccessToken(accessToken);
     }
 
     // DOWNLOADING
@@ -636,6 +645,10 @@ public class DropboxSync : MonoBehaviour {
 
 
     private void DisposeManagers(){
+        if(_authManager != null){
+            _authManager.Dispose();
+        }
+
         if(_transferManger != null){
             _transferManger.Dispose();
         }
