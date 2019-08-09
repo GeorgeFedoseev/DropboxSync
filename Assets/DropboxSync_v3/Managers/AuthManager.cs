@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace DBXSync {
 
-    public class AuthManager : IDisposable {
+    public class AuthManager {
 
         private string _dropboxAppKey;
         private string _dropboxAppSecret;
@@ -27,6 +27,28 @@ namespace DBXSync {
             _dropboxAppSecret = dropboxAppSecret;
             _onFlowCompletedAction = onFlowCompleted;
         }
+
+
+        // PRESERVING ACCESS TOKEN
+        private void SaveAuthentication(OAuth2TokenResponse tokenResult){
+            PlayerPrefs.SetString("DBXAuth", JsonUtility.ToJson(tokenResult));
+            PlayerPrefs.Save();
+        }
+
+        public OAuth2TokenResponse GetSavedAuthentication(){
+            if(PlayerPrefs.HasKey("DBXAuth")){                
+                return JsonUtility.FromJson<OAuth2TokenResponse>(PlayerPrefs.GetString("DBXAuth"));
+            }
+            return null;
+        }
+
+        public void DropSavedAthentication(){
+            PlayerPrefs.DeleteKey("DBXAuth");
+            PlayerPrefs.Save();
+        }
+
+
+        // OAUTH2 FLOW
 
         public void LaunchOAuth2Flow(){
             // open OAuth2 flow in browser
@@ -95,23 +117,21 @@ namespace DBXSync {
             }
         }
 
-        private async void OnCodeSubmitted(string code){
-            Debug.Log($"Got code: {code}");
+        private async void OnCodeSubmitted(string code){            
             var tokenResult = await ExchangeCodeForAccessTokenAsync(code);
             if(tokenResult != null){
-                Debug.Log($"Got access token: {tokenResult.access_token}");
+                SaveAuthentication(tokenResult);
+                // Debug.Log($"Got access token: {tokenResult.access_token}");
                 _onFlowCompletedAction(tokenResult);
                 _currentDialog.Close();
                 _currentDialog = null;
+                
             }else{
                 _currentDialog.DisplayError("Wrong code");
             }
         }
 
 
-        public void Dispose(){
-
-        }
     }
 
 }

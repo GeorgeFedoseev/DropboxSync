@@ -30,7 +30,7 @@ public class DropboxSync : MonoBehaviour {
     [SerializeField]
     private string _dropboxAppSecret;
     [SerializeField]
-    private string _dropboxAccessToken;
+    private string _developerAccessToken;
 
     private DropboxSyncConfiguration _config;
     public DropboxSyncConfiguration Config {
@@ -55,10 +55,12 @@ public class DropboxSync : MonoBehaviour {
     void Awake(){
         _authManager = new AuthManager(_dropboxAppKey, _dropboxAppSecret, OnOAuth2FlowCompleted);
 
-        // if access token set in inspector
-        if(!string.IsNullOrWhiteSpace(_dropboxAccessToken)){
-            // set configuration based on inspector values        
-            AuthenticateWithAccessToken(_dropboxAccessToken);
+        // if thers debug access token set in inspector - use that
+        if(!string.IsNullOrWhiteSpace(_developerAccessToken)){
+            Debug.LogWarning("[DropboxSync] Using developer access token");
+            AuthenticateWithAccessToken(_developerAccessToken);
+        }else if(_authManager.GetSavedAuthentication() != null){
+            AuthenticateWithAccessToken(_authManager.GetSavedAuthentication().access_token);
         }
         // else: config will be set when app will be authorized        
     }
@@ -74,7 +76,7 @@ public class DropboxSync : MonoBehaviour {
         _changesManager = new ChangesManager(_cacheManager, _transferManger, _config);
         _syncManager = new SyncManager(_cacheManager, _changesManager, _config);
 
-        Debug.Log("DropboxSync Initialized");       
+        Debug.Log("[DropboxSync] Initialized");       
     }
 
     // AUTHENTICATION
@@ -84,6 +86,14 @@ public class DropboxSync : MonoBehaviour {
 
     public void AuthenticateWithOAuth2Flow(){
         _authManager.LaunchOAuth2Flow();
+    }
+
+    public void LogOut(){       
+
+        _authManager.DropSavedAthentication();
+        DisposeManagers();
+        _config = null;
+        Debug.Log("[DropboxSync] Logged out");
     }
 
     public bool IsAuthenticated => _config != null;
@@ -646,10 +656,7 @@ public class DropboxSync : MonoBehaviour {
     }
 
 
-    private void DisposeManagers(){
-        if(_authManager != null){
-            _authManager.Dispose();
-        }
+    private void DisposeManagers(){     
 
         if(_transferManger != null){
             _transferManger.Dispose();
@@ -660,6 +667,10 @@ public class DropboxSync : MonoBehaviour {
         if(_syncManager != null){
             _syncManager.Dispose();
         }
+
+        _transferManger = null;
+        _changesManager = null;
+        _syncManager = null;        
     }
     
 

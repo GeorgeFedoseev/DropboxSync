@@ -19,11 +19,13 @@ namespace DBXSync {
             });
 
             connectButton.onClick.AddListener(() => {
-                onCodeSubmit(codeInput.text);
+                connectButton.interactable = false; // prevent pressing several times
+                onCodeSubmit(codeInput.text);                
             });
         }
         public void DisplayError(string message){
             errorText.text = message;
+            connectButton.interactable = true;
         }
 
         public void Close(){
