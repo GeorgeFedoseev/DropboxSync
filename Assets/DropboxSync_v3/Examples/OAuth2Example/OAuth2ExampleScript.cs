@@ -11,7 +11,7 @@ public class OAuth2ExampleScript : MonoBehaviour {
     void Start()
     {
         connectButton.onClick.AddListener(() => {
-            LaunchOAuth2Flow("bsvn3tdn6jmsvg0");
+            DropboxSync.Main.AuthenticateWithOAuth2Flow();
         });
         
     }
@@ -22,8 +22,5 @@ public class OAuth2ExampleScript : MonoBehaviour {
         
     }
 
-    private void LaunchOAuth2Flow(string client_id){
-        var url = $"https://www.dropbox.com/oauth2/authorize?client_id={client_id}&response_type=code";
-        Application.OpenURL(url);
-    }
+    
 }

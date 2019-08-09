@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace DBXSync {
     public class OAuth2CodeDialogScript : MonoBehaviour {
         
-        public Action<string> onCodeSubmit => (_) => {};
+        public Action<string> onCodeSubmit = (_) => {};
 
         public Button connectButton, cancelButton;
         public InputField codeInput;

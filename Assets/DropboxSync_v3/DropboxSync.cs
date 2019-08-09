@@ -81,7 +81,7 @@ public class DropboxSync : MonoBehaviour {
     }
 
     public void AuthenticateWithOAuth2Flow(){
-        throw new NotImplementedException();
+        _authManager.LaunchOAuth2Flow();
     }
 
     public bool IsAuthenticated => _config != null;
