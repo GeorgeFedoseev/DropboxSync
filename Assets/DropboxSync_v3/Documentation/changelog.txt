@@ -15,3 +15,8 @@ v3.0
 - Ability to cancel file transfers
 - Transfers pop-up widget
 - Async/Await support
+
+
+v3.1
+- added ability to authorize with OAuth flow
+- added OAuth example

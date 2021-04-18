@@ -21,7 +21,8 @@ namespace DBXSync {
         public AuthManager(string dropboxAppKey, string dropboxAppSecret, Action<OAuth2TokenResponse> onFlowCompleted){
             // verify app key is valid
             if(string.IsNullOrWhiteSpace(dropboxAppKey)){
-                throw new InvalidConfigurationException("Dropbox app key is not set or invalid");
+                 Debug.LogWarning("[DropboxSync] Dropbox app key is not set or invalid");
+                // throw new InvalidConfigurationException("Dropbox app key is not set or invalid");
             }
             _dropboxAppKey = dropboxAppKey;
             _dropboxAppSecret = dropboxAppSecret;
