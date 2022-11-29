@@ -64,7 +64,7 @@ namespace DBXSync {
                             if(errorResponse.error.tag == "reset") {
                                 result = new DropboxResetCursorAPIException($"error: {errorResponse.error_summary}; request parameters: {parameters}; endpoint: {endpoint}; full-response: {errorResponseString}",
                                                                      errorResponse.error_summary, errorResponse.error.tag);
-                            } else if (errorResponse.error.tag == "expired_access_token") {
+                            } else if (errorResponse.error.tag == "invalid_access_token" || errorResponse.error.tag == "expired_access_token") {
                                 result = new DropboxAccessTokenExpiredAPIException($"error: {errorResponse.error_summary}; request parameters: {parameters}; endpoint: {endpoint}; full-response: {errorResponseString}",
                                                                      errorResponse.error_summary, errorResponse.error.tag);
                             } else if(errorResponse.error_summary.Contains("not_found")){
