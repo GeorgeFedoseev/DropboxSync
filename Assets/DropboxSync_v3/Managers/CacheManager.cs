@@ -104,7 +104,7 @@ namespace DBXSync {
 			if(File.Exists(localMetadataFilePath)){				
 				var metadataJSONString = File.ReadAllText(localMetadataFilePath);
 				try {
-					return JsonUtility.FromJson<Metadata>(metadataJSONString);
+					return Utils.GetDropboxResponseFromJSON<Metadata>(metadataJSONString);
 				}catch{
 					return null;
 				}		

@@ -38,7 +38,7 @@ namespace DBXSync {
 
         public OAuth2TokenResponse GetSavedAuthentication(){
             if(PlayerPrefs.HasKey("DBXAuth")){                
-                return JsonUtility.FromJson<OAuth2TokenResponse>(PlayerPrefs.GetString("DBXAuth"));
+                return Utils.GetDropboxResponseFromJSON<OAuth2TokenResponse>(PlayerPrefs.GetString("DBXAuth"));
             }
             return null;
         }
@@ -55,7 +55,7 @@ namespace DBXSync {
             // open OAuth2 flow in browser
 
             // TODO: add token_access_type=offline query param (so that code flow returns both short-lived access_token and long-lived refresh_token)
-            var url = $"https://www.dropbox.com/oauth2/authorize?client_id={_dropboxAppKey}&response_type=code";
+            var url = $"https://www.dropbox.com/oauth2/authorize?client_id={_dropboxAppKey}&response_type=code&token_access_type=offline";
             
             Application.OpenURL(url);
 
@@ -116,12 +116,60 @@ namespace DBXSync {
                     return null;
                 }
 
-                responseString = Utils.FixDropboxJSONString(responseString);
-                return UnityEngine.JsonUtility.FromJson<OAuth2TokenResponse>(responseString);
+                return Utils.GetDropboxResponseFromJSON<OAuth2TokenResponse>(responseString);
             }
         }
 
         // TODO: method for exchanging refresh_token for new access_token
+
+        public async Task<string> RefreshAccessToken() {
+            // get refresh token
+            var savedAuth = GetSavedAuthentication();
+            if(string.IsNullOrEmpty(savedAuth.refresh_token)){
+                throw new NoRefreshTokenException("No refresh_token saved to get new access_token");
+            }
+
+            
+            var uri = new Uri("https://api.dropbox.com/oauth2/token");
+
+            using(var client = new WebClient()){                               
+                string credentials = Convert.ToBase64String(
+                Encoding.ASCII.GetBytes(_dropboxAppKey + ":" + _dropboxAppSecret));
+                client.Headers[HttpRequestHeader.Authorization] = string.Format(
+                "Basic {0}", credentials);
+
+                NameValueCollection postValues = new NameValueCollection();
+                postValues.Add("refresh_token", savedAuth.refresh_token);
+                postValues.Add("grant_type", "refresh_token");
+
+                byte[] responseBytes = null;
+                try {
+                    responseBytes = await client.UploadValuesTaskAsync(uri, "POST", postValues);
+                }catch(WebException ex){
+                    try {
+                        using(var sr = new StreamReader(ex.Response.GetResponseStream())){
+                            Debug.LogError($"Failed to get access token: {sr.ReadToEnd()}");
+                        }
+                    }catch{
+                        Debug.LogError($"Failed to get access token: {ex}");
+                    }                   
+                    
+                    return null;
+                }
+                
+                var responseString = Encoding.UTF8.GetString(responseBytes);
+
+                if(string.IsNullOrWhiteSpace(responseString) || responseString == "null"){
+                    Debug.LogError($"Failed to get access token: response is null");
+                    return null;
+                }
+
+                var oauth_resp = Utils.GetDropboxResponseFromJSON<OAuth2TokenResponse>(responseString);
+                SaveAuthentication(oauth_resp);
+
+                return oauth_resp.access_token;
+            }
+        }
 
         private async void OnCodeSubmitted(string code){            
             var tokenResult = await ExchangeCodeForAccessTokenAsync(code);

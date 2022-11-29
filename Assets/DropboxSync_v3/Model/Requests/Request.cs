@@ -29,91 +29,113 @@ namespace DBXSync {
         }      
 
 
-        public async Task<RESP_T> ExecuteAsync(byte[] payload = null, IProgress<int> uploadProgress = null, IProgress<int> downloadProgress = null, CancellationToken? cancellationToken = null, int timeoutMilliseconds = int.MaxValue){
+        private async Task<HttpResponseMessage> HandleAccessTokenExpiration(Func<Task<HttpResponseMessage>> request) {
+            try {
+                return await request();
+            } catch (DropboxAccessTokenExpiredAPIException ex) {
+                DropboxSync.Main.RefreshAccessToken();
+                return await request();
+            }
+        }
 
-            using (var client = new HttpClient()){
-                
-                var requestMessage = new HttpRequestMessage(HttpMethod.Post, _endpoint);
+        private HttpRequestMessage PrepareRequestMessage(byte[] payload = null, IProgress<int> uploadProgress = null, IProgress<int> downloadProgress = null, CancellationToken? cancellationToken = null, int timeoutMilliseconds = int.MaxValue){
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, _endpoint);
 
-                var parametersJSONString = UnityEngine.JsonUtility.ToJson(_parameters);
+            var parametersJSONString = UnityEngine.JsonUtility.ToJson(_parameters);
 
-                // add auth parameters if needed
-                if(_requiresAuthorization) {
-                    requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _config.accessToken);
-                }
+            // add auth parameters if needed
+            if(_requiresAuthorization) {
+                requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _config.accessToken);
+            }
 
-                System.Net.Http.Headers.MediaTypeHeaderValue contentType;
+            System.Net.Http.Headers.MediaTypeHeaderValue contentType;
 
-                if(payload != null){
-                    // add parameters in header
-                    requestMessage.Headers.Add ("Dropbox-API-Arg", parametersJSONString);  
-                    contentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");                 
-                }else{
-                    // add parameters in payload
-                    payload = Encoding.Default.GetBytes(parametersJSONString);
-                    contentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
-                }
+            if(payload != null){
+                // add parameters in header
+                requestMessage.Headers.Add ("Dropbox-API-Arg", parametersJSONString);  
+                contentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");                 
+            }else{
+                // add parameters in payload
+                payload = Encoding.Default.GetBytes(parametersJSONString);
+                contentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+            }
 
-                
-                var streamContent = new ProgressableStreamContent(new MemoryStream(payload), async (sourceStream, uploadStream) => {                    
-                    // write to uploadStream buffered
-                    long totalBytesSent = 0;
-                    using(sourceStream) {
-                        while(true){
-                            // cancel if cancelation token requested
-                            if(cancellationToken.HasValue){
-                                cancellationToken.Value.ThrowIfCancellationRequested();
-                            }
-
-                            var buffer = new Byte[_config.transferBufferSizeBytes];
-                            var length = await sourceStream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
-                            if(length <= 0) break;                                   
-
-                            // check timeouts when writing
-                            var uploadWriteTask = uploadStream.WriteAsync(buffer, 0, length);
-                            if(await Task.WhenAny(uploadWriteTask, Task.Delay(_config.uploadRequestWriteTimeoutMilliseconds)).ConfigureAwait(false) == uploadWriteTask){
-                                // all good                               
-                            }else{
-                                // timed-out
-                                // close streams
-                                sourceStream.Close();
-                                uploadStream.Close();
-                                // throw canceled exception
-                                throw new TimeoutException("Upload write chunk timed-out");
-                            }                            
-
-                            totalBytesSent += length;
-
-                            if(uploadProgress != null){
-                                uploadProgress.Report((int)(totalBytesSent * 100 / payload.Length));
-                            }                            
+            
+            var streamContent = new ProgressableStreamContent(new MemoryStream(payload), async (sourceStream, uploadStream) => {                    
+                // write to uploadStream buffered
+                long totalBytesSent = 0;
+                using(sourceStream) {
+                    while(true){
+                        // cancel if cancelation token requested
+                        if(cancellationToken.HasValue){
+                            cancellationToken.Value.ThrowIfCancellationRequested();
                         }
+
+                        var buffer = new Byte[_config.transferBufferSizeBytes];
+                        var length = await sourceStream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+                        if(length <= 0) break;                                   
+
+                        // check timeouts when writing
+                        var uploadWriteTask = uploadStream.WriteAsync(buffer, 0, length);
+                        if(await Task.WhenAny(uploadWriteTask, Task.Delay(_config.uploadRequestWriteTimeoutMilliseconds)).ConfigureAwait(false) == uploadWriteTask){
+                            // all good                               
+                        }else{
+                            // timed-out
+                            // close streams
+                            sourceStream.Close();
+                            uploadStream.Close();
+                            // throw canceled exception
+                            throw new TimeoutException("Upload write chunk timed-out");
+                        }                            
+
+                        totalBytesSent += length;
 
                         if(uploadProgress != null){
-                            uploadProgress.Report(100);
-                        }
+                            uploadProgress.Report((int)(totalBytesSent * 100 / payload.Length));
+                        }                            
+                    }
 
-                        // Debug.Log($"Total bytes sent: {totalBytesSent}");
-                    }                    
-                });
+                    if(uploadProgress != null){
+                        uploadProgress.Report(100);
+                    }
 
-                streamContent.Headers.ContentType = contentType;                
-                requestMessage.Content = streamContent;
+                    // Debug.Log($"Total bytes sent: {totalBytesSent}");
+                }                    
+            });
 
-                // disable upload buffering
-                // requestMessage.Headers.TransferEncodingChunked = true;
-                streamContent.Headers.ContentLength = payload.Length;                
+            streamContent.Headers.ContentType = contentType;                
+            // disable upload buffering
+            // requestMessage.Headers.TransferEncodingChunked = true;
+            streamContent.Headers.ContentLength = payload.Length; 
+            
+            requestMessage.Content = streamContent;
+
+            return requestMessage;
+        }
+
+
+        public async Task<RESP_T> ExecuteAsync(byte[] payload = null, IProgress<int> uploadProgress = null, IProgress<int> downloadProgress = null, CancellationToken? cancellationToken = null, int timeoutMilliseconds = int.MaxValue){
+            Debug.Log($"Using access_token: {_config.accessToken}");
+
+            using (var client = new HttpClient()){
 
                 // GET RESPONSE HEADERS
-                var getHeadersCTS = cancellationToken.HasValue ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken.Value) : new CancellationTokenSource();                
-                var headersResponse = await client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, getHeadersCTS.Token);        
+                var headersResponse = await HandleAccessTokenExpiration(async () => {
+                    var requestMessage = PrepareRequestMessage(payload, uploadProgress, downloadProgress, cancellationToken, timeoutMilliseconds);
 
-                try {
-                    // throw exception if not success status code
-                    headersResponse.EnsureSuccessStatusCode();       
-                }catch(HttpRequestException ex){
-                    await Utils.RethrowDropboxHttpRequestException(ex, headersResponse, _parameters, _endpoint);                    
-                }                
+                    var getHeadersCTS = cancellationToken.HasValue ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken.Value) : new CancellationTokenSource();                
+                    var response = await client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, getHeadersCTS.Token);        
+
+                    try {
+                        // throw exception if not success status code
+                        response.EnsureSuccessStatusCode();       
+                    }catch(HttpRequestException ex){
+                        await Utils.RethrowDropboxHttpRequestException(ex, response, _parameters, _endpoint);                    
+                    } 
+                    return response;
+                });
+
+                               
 
                 
                 var contentLength = headersResponse.Content.Headers.ContentLength;                
@@ -167,9 +189,7 @@ namespace DBXSync {
 
                     // Debug.Log($"Received request response: {responseString}");
 
-                    responseString = Utils.FixDropboxJSONString(responseString);
-
-                    var response = UnityEngine.JsonUtility.FromJson<RESP_T>(responseString);
+                    var response = Utils.GetDropboxResponseFromJSON<RESP_T>(responseString);
 
                     return response;
                 }

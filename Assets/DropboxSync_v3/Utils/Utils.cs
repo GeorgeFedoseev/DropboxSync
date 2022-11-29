@@ -59,15 +59,18 @@ namespace DBXSync {
 
                 if(!string.IsNullOrWhiteSpace(errorResponseString)){
                     try {
-                        var errorResponse = JsonUtility.FromJson<Response>(errorResponseString);
+                        var errorResponse = GetDropboxResponseFromJSON<Response>(errorResponseString);
                         if(!string.IsNullOrEmpty(errorResponse.error_summary)){
-                            if(errorResponse.error.tag == "reset"){
+                            if(errorResponse.error.tag == "reset") {
                                 result = new DropboxResetCursorAPIException($"error: {errorResponse.error_summary}; request parameters: {parameters}; endpoint: {endpoint}; full-response: {errorResponseString}",
                                                                      errorResponse.error_summary, errorResponse.error.tag);
-                            }else if(errorResponse.error_summary.Contains("not_found")){
+                            } else if (errorResponse.error.tag == "expired_access_token") {
+                                result = new DropboxAccessTokenExpiredAPIException($"error: {errorResponse.error_summary}; request parameters: {parameters}; endpoint: {endpoint}; full-response: {errorResponseString}",
+                                                                     errorResponse.error_summary, errorResponse.error.tag);
+                            } else if(errorResponse.error_summary.Contains("not_found")){
                                 result = new DropboxNotFoundAPIException($"error: {errorResponse.error_summary}; request parameters: {parameters}; endpoint: {endpoint}; full-response: {errorResponseString}",
                                                                      errorResponse.error_summary, errorResponse.error.tag);
-                            }else{
+                            } else {
                                 result = new DropboxAPIException($"error: {errorResponse.error_summary}; request parameters: {parameters}; endpoint: {endpoint}; full-response: {errorResponseString}",
                                                                      errorResponse.error_summary, errorResponse.error.tag);
                             }
@@ -211,6 +214,11 @@ namespace DBXSync {
             jsonStr = jsonStr.Replace("\".tag\"", "\"tag\"");
 
             return jsonStr;
+        }
+
+        public static T GetDropboxResponseFromJSON<T>(string jsonStr) {
+            jsonStr = FixDropboxJSONString(jsonStr);
+            return UnityEngine.JsonUtility.FromJson<T>(jsonStr);
         }
 
         public static void EnsurePathFoldersExist(string path){

@@ -1,4 +1,5 @@
 using System.IO;
+using UnityEngine;
 
 namespace DBXSync {
     
@@ -42,6 +43,7 @@ namespace DBXSync {
             }
 
             this.accessToken = accessToken;
+            Debug.Log($"New access_token set to {this.accessToken}");
         }
 
         public void InvalidateAccessToken(){

@@ -85,6 +85,12 @@ public class DropboxSync : MonoBehaviour {
         InitializeWithAccessToken(tokenResult.access_token);
     }
 
+    public async void RefreshAccessToken() {
+        Debug.Log("Refreshing access_token...");
+        var accessToken = await _authManager.RefreshAccessToken();
+        _config.SetAccessToken(accessToken);
+    }
+
     public void LogOut(){       
         _authManager.DropSavedAthentication();
         DisposeManagers();
@@ -98,6 +104,17 @@ public class DropboxSync : MonoBehaviour {
     private void ThrowIfNotAuthenticated(){
         if(!IsAuthenticated){
             throw new DropboxNotAuthenticatedException("No access token to make Dropbox API calls");
+        }
+    }
+
+    private void HandleAuthErrors(Action wrapped) {
+        ThrowIfNotAuthenticated();
+
+        try {
+            wrapped();
+        } catch (DropboxAccessTokenExpiredAPIException) {
+            // TODO: try get new access token using refresh_token
+            Debug.Log("try get new access token using refresh_token");
         }
     }
 
@@ -115,7 +132,6 @@ public class DropboxSync : MonoBehaviour {
     /// <param name="cancellationToken">Cancellation token that can be used to cancel download</param>
     /// <returns>Task that produces path to downloaded file</returns>
     public async Task<string> GetFileAsLocalCachedPathAsync(string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken = null){
-        ThrowIfNotAuthenticated();
         return await _cacheManager.GetLocalFilePathAsync(dropboxPath, progressCallback, cancellationToken);
     }
 

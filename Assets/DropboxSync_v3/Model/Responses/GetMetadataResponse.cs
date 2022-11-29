@@ -24,7 +24,7 @@ namespace DBXSync {
         public string content_hash;        
 
         public Metadata GetMetadata(){
-            return JsonUtility.FromJson<Metadata>(this.ToString());
+            return Utils.GetDropboxResponseFromJSON<Metadata>(this.ToString());
         }
 
     }

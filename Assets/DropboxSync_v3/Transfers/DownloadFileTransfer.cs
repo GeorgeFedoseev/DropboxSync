@@ -132,7 +132,7 @@ namespace DBXSync {
                                     }
 
                                     var fileMetadataJSONString = headersResponse.Headers.GetValues("Dropbox-API-Result").First();
-                                    latestMetadata = JsonUtility.FromJson<Metadata>(fileMetadataJSONString);
+                                    latestMetadata = Utils.GetDropboxResponseFromJSON<Metadata>(fileMetadataJSONString);
 
                                     fileStream.Seek (chunkIndex * _config.downloadChunkSizeBytes, SeekOrigin.Begin);
 
