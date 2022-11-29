@@ -194,22 +194,18 @@ namespace DBXSync {
             string piece_of_hash = content_hash.Substring(0, 10);
             return $"{targetLocalPath}.{piece_of_hash}{DropboxSyncConfiguration.INTERMEDIATE_DOWNLOAD_FILE_EXTENSION}";
         }
+        public static bool IsAppKeyValid(string appKey) {
+            return appKey != null && appKey.Trim().Length > 0;
+        }
+
+        public static bool IsAppSecretValid(string appSecret) {
+            return appSecret != null && appSecret.Trim().Length > 0;
+        }
 
         public static bool IsAccessTokenValid(string accessToken) {
-            if(accessToken == null) {
-                return false;
-            }
-            
-            if(accessToken.Trim().Length == 0){
-                return false;
-            }
-
-            if(accessToken.Length < 20){
-                return false;
-            }
-
-            return true;
+            return accessToken != null && accessToken.Trim().Length > 0 && accessToken.Length < 20;
         }
+
 
 
         public static string FixDropboxJSONString(string jsonStr) {

@@ -7,11 +7,13 @@ namespace DBXSync {
         public static string INTERMEDIATE_DOWNLOAD_FILE_EXTENSION = ".download";
 
 
+        public string appKey;
+        public string appSecret;
         public string accessToken;
         public string cacheDirecoryPath;
 
         // TRANSFERS
-        public int transferBufferSizeBytes = 16384; // 8KB
+        public int transferBufferSizeBytes = 16384;
         public int maxSimultaneousDownloadFileTransfers = 3;
         public int maxSimultaneousUploadFileTransfers = 3;
         public int chunkTransferMaxFailedAttempts = 3;
@@ -35,14 +37,19 @@ namespace DBXSync {
         
 
         public void FillDefaultsAndValidate(){
+            if(!Utils.IsAppKeyValid(appKey)) {
+                throw new InvalidConfigurationException($"Dropbox appKey is not valid ('{appKey}')");
+            }
+            if(!Utils.IsAppSecretValid(appKey)) {
+                throw new InvalidConfigurationException($"Dropbox appSecret is not valid ('{appSecret}')");
+            }
             if(!Utils.IsAccessTokenValid(accessToken)) {
                 throw new InvalidConfigurationException($"Dropbox accessToken is not valid ('{accessToken}')");
             }
 
             // set default cache dir path if null
             if(cacheDirecoryPath == null) {
-                var accessTokeFirst5Characters = accessToken.Substring(0, 5);
-				cacheDirecoryPath = Path.Combine(UnityEngine.Application.persistentDataPath, accessTokeFirst5Characters);
+				cacheDirecoryPath = Path.Combine(UnityEngine.Application.persistentDataPath, appKey);
             }
 
             if(!Directory.Exists(cacheDirecoryPath)) {
