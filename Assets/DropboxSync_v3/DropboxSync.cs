@@ -25,12 +25,12 @@ public class DropboxSync : MonoBehaviour {
 		}
 
     // inspector
+
+    // TODO: show error if these fields are empty
     [SerializeField]
     private string _dropboxAppKey;
     [SerializeField]
     private string _dropboxAppSecret;
-    [SerializeField]
-    private string _developerAccessToken;
 
     private DropboxSyncConfiguration _config;
     public DropboxSyncConfiguration Config {
@@ -53,22 +53,20 @@ public class DropboxSync : MonoBehaviour {
 
 
     void Awake(){
+        _config = new DropboxSyncConfiguration { appKey = _dropboxAppKey, appSecret = _dropboxAppSecret};
+        _config.FillDefaultsAndValidate();       
+
         _authManager = new AuthManager(_dropboxAppKey, _dropboxAppSecret, OnOAuth2FlowCompleted);
 
-        // if thers debug access token set in inspector - use that
-        if(!string.IsNullOrWhiteSpace(_developerAccessToken)){
-            Debug.LogWarning("[DropboxSync] Using developer access token");
-            AuthenticateWithAccessToken(_developerAccessToken);
-        }else if(_authManager.GetSavedAuthentication() != null){
-            AuthenticateWithAccessToken(_authManager.GetSavedAuthentication().access_token);
+        if(_authManager.GetSavedAuthentication() != null){
+            InitializeWithAccessToken(_authManager.GetSavedAuthentication().access_token);
         }
         // else: config will be set when app will be authorized        
     }
 
     // INIT
     private void InitializeWithAccessToken(string accessToken){
-        _config = new DropboxSyncConfiguration { accessToken = accessToken};
-        _config.FillDefaultsAndValidate();        
+        _config.SetAccessToken(accessToken);
 
         DisposeManagers();
         _transferManger = new TransferManager(_config);
@@ -80,12 +78,12 @@ public class DropboxSync : MonoBehaviour {
     }
 
     // AUTHENTICATION
-    public void AuthenticateWithAccessToken(string accessToken){
-        InitializeWithAccessToken(accessToken);
-    }
-
     public void AuthenticateWithOAuth2Flow(){
         _authManager.LaunchOAuth2Flow();
+    }
+
+    private void OnOAuth2FlowCompleted(OAuth2TokenResponse tokenResult){
+        InitializeWithAccessToken(tokenResult.access_token);
     }
 
     public void LogOut(){       
@@ -96,7 +94,8 @@ public class DropboxSync : MonoBehaviour {
         Debug.Log("[DropboxSync] Logged out");
     }
 
-    public bool IsAuthenticated => _config != null;
+    public bool IsAuthenticated => _config.accessToken != null;
+
 
     private void ThrowIfNotAuthenticated(){
         if(!IsAuthenticated){
@@ -104,9 +103,7 @@ public class DropboxSync : MonoBehaviour {
         }
     }
 
-    private void OnOAuth2FlowCompleted(OAuth2TokenResponse tokenResult){
-        AuthenticateWithAccessToken(tokenResult.access_token);
-    }
+    
 
     // DOWNLOADING
 

@@ -36,6 +36,18 @@ namespace DBXSync {
         public int chunkTransferErrorRetryDelaySeconds = 7; 
         
 
+        public void SetAccessToken(string accessToken) {
+            if(!Utils.IsAccessTokenValid(accessToken)) {
+                throw new InvalidConfigurationException($"Dropbox accessToken is not valid ('{accessToken}')");
+            }
+
+            this.accessToken = accessToken;
+        }
+
+        public void InvalidateAccessToken(){
+            SetAccessToken(null);
+        }
+
         public void FillDefaultsAndValidate(){
             if(!Utils.IsAppKeyValid(appKey)) {
                 throw new InvalidConfigurationException($"Dropbox appKey is not valid ('{appKey}')");
@@ -43,9 +55,7 @@ namespace DBXSync {
             if(!Utils.IsAppSecretValid(appKey)) {
                 throw new InvalidConfigurationException($"Dropbox appSecret is not valid ('{appSecret}')");
             }
-            if(!Utils.IsAccessTokenValid(accessToken)) {
-                throw new InvalidConfigurationException($"Dropbox accessToken is not valid ('{accessToken}')");
-            }
+            
 
             // set default cache dir path if null
             if(cacheDirecoryPath == null) {

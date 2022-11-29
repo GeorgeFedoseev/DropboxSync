@@ -53,7 +53,10 @@ namespace DBXSync {
 
         public void LaunchOAuth2Flow(){
             // open OAuth2 flow in browser
+
+            // TODO: add token_access_type=offline query param (so that code flow returns both short-lived access_token and long-lived refresh_token)
             var url = $"https://www.dropbox.com/oauth2/authorize?client_id={_dropboxAppKey}&response_type=code";
+            
             Application.OpenURL(url);
 
             // TODO: open dialog with code input in Unity
@@ -117,6 +120,8 @@ namespace DBXSync {
                 return UnityEngine.JsonUtility.FromJson<OAuth2TokenResponse>(responseString);
             }
         }
+
+        // TODO: method for exchanging refresh_token for new access_token
 
         private async void OnCodeSubmitted(string code){            
             var tokenResult = await ExchangeCodeForAccessTokenAsync(code);
