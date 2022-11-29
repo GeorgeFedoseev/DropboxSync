@@ -15,8 +15,7 @@ public class DropboxSync : MonoBehaviour {
 			get {
 				if(_instance == null){
 					_instance = FindObjectOfType<DropboxSync>();
-					if(_instance != null){						
-					}else{
+					if(_instance == null){						
 						Debug.LogError("[DropboxSync] DropboxSync script wasn't found on the scene.");						
 					}
 				}
@@ -87,10 +86,9 @@ public class DropboxSync : MonoBehaviour {
     }
 
     public void LogOut(){       
-
         _authManager.DropSavedAthentication();
         DisposeManagers();
-        _config = null;
+        _config.InvalidateAccessToken();
         Debug.Log("[DropboxSync] Logged out");
     }
 

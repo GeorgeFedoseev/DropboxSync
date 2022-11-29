@@ -203,10 +203,8 @@ namespace DBXSync {
         }
 
         public static bool IsAccessTokenValid(string accessToken) {
-            return accessToken != null && accessToken.Trim().Length > 0 && accessToken.Length < 20;
+            return accessToken != null && accessToken.Trim().Length > 0;
         }
-
-
 
         public static string FixDropboxJSONString(string jsonStr) {
             

@@ -45,7 +45,7 @@ namespace DBXSync {
         }
 
         public void InvalidateAccessToken(){
-            SetAccessToken(null);
+            this.accessToken = null;
         }
 
         public void FillDefaultsAndValidate(){
