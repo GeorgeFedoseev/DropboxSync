@@ -107,6 +107,34 @@ namespace DBXSync {
             return result;
         }
 
+
+        public static async Task<T> GetPostResponse<T>(Uri uri, List<KeyValuePair<string, string>> data, 
+            System.Net.Http.Headers.AuthenticationHeaderValue authenticationHeaderValue = null
+        ){
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, uri);
+            requestMessage.Headers.Authorization = authenticationHeaderValue;
+            requestMessage.Content = new FormUrlEncodedContent(data);
+
+            using (var client = new HttpClient()) {
+                var response = await client.SendAsync(requestMessage);
+                try {
+                    // throw exception if not success status code
+                    response.EnsureSuccessStatusCode();       
+                }catch(HttpRequestException ex){
+                    await Utils.RethrowDropboxHttpRequestException(ex, response, new RequestParameters(), uri.ToString());                    
+                } 
+
+                var responseString = await response.Content.ReadAsStringAsync();
+
+                if(string.IsNullOrWhiteSpace(responseString) || responseString == "null"){
+                    Debug.LogError($"Failed to get access token: response is null");
+                    return default(T);
+                }
+
+                return Utils.GetDropboxResponseFromJSON<T>(responseString);
+            }
+        }
+
         // public static void RethrowDropboxRequestWebException(WebException ex, RequestParameters parameters, string endpoint){
         //     throw DecorateDropboxRequestWebException(ex, parameters, endpoint);
         // }
