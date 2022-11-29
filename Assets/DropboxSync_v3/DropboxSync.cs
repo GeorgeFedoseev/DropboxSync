@@ -26,10 +26,16 @@ public class DropboxSync : MonoBehaviour {
     // inspector
 
     // TODO: show error if these fields are empty
+    [Header("Dropbox Authorization")]
     [SerializeField]
-    private string _dropboxAppKey;
+    public string _dropboxAppKey;
     [SerializeField]
-    private string _dropboxAppSecret;
+    public string _dropboxAppSecret;
+
+    [Header("Dropbox Authorization Optional")]
+
+    [SerializeField]
+    public string _dropboxRefreshToken;
 
     private DropboxSyncConfiguration _config;
     public DropboxSyncConfiguration Config {

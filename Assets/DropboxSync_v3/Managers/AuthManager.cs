@@ -85,11 +85,11 @@ namespace DBXSync {
         }
 
 
-        private async Task<OAuth2TokenResponse> ExchangeCodeForAccessTokenAsync(string code){
+        public static async Task<OAuth2TokenResponse> ExchangeCodeForAccessTokenAsync(string code, string appKey, string appSecret){
             return await Utils.GetPostResponse<OAuth2TokenResponse>(new Uri("https://api.dropbox.com/oauth2/token"), new List<KeyValuePair<string, string>>{
                 new KeyValuePair<string, string>("grant_type", "authorization_code"),
                 new KeyValuePair<string, string>("code", code),
-            }, GetAuthenticationHeaderValue());
+            }, GetAuthenticationHeaderValue(appKey, appSecret));
         }
 
 
@@ -120,7 +120,7 @@ namespace DBXSync {
                 var oauth_resp = await Utils.GetPostResponse<OAuth2TokenResponse>(new Uri("https://api.dropbox.com/oauth2/token"), new List<KeyValuePair<string, string>>{
                     new KeyValuePair<string, string>("grant_type", "refresh_token"),
                     new KeyValuePair<string, string>("refresh_token", savedAuth.refresh_token),
-                }, GetAuthenticationHeaderValue());
+                }, GetAuthenticationHeaderValue(_dropboxAppKey, _dropboxAppSecret));
 
                 // modify access_token in original auth data 
                 // (refresh token response does not contain refresh_token, so we keep it from original auth data)
@@ -137,14 +137,14 @@ namespace DBXSync {
             return savedAuth.access_token;
         }
 
-        private System.Net.Http.Headers.AuthenticationHeaderValue GetAuthenticationHeaderValue() {
-            string credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes(_dropboxAppKey + ":" + _dropboxAppSecret));
+        private static System.Net.Http.Headers.AuthenticationHeaderValue GetAuthenticationHeaderValue(string appKey, string appSecret) {
+            string credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes(appKey + ":" + appSecret));
             return new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
         }
 
 
         private async void OnCodeSubmitted(string code){            
-            var tokenResult = await ExchangeCodeForAccessTokenAsync(code);
+            var tokenResult = await ExchangeCodeForAccessTokenAsync(code, _dropboxAppKey, _dropboxAppSecret);
             if(tokenResult != null){
                 SaveAuthentication(tokenResult);
                 // Debug.Log($"Got access token: {tokenResult.access_token}");
