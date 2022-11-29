@@ -75,7 +75,18 @@ namespace DBXSync {
                                                                      errorResponse.error_summary, errorResponse.error.tag);
                             }
                             
-                        }else{
+                        } else if (errorResponseString.Contains("error_description")) {
+                            try {
+                                var error = Utils.GetDropboxResponseFromJSON<ErrorResponse>(errorResponseString);
+                                if (error.error == "invalid_grant") {
+                                    result = new InvalidGrantTokenException($"{error.error_description}; request parameters: {parameters}; endpoint: {endpoint}; full-response: {errorResponseString}");
+                                } else {
+                                    result = new DropboxAPIException($"error: {error.error}, {error.error_description}; request parameters: {parameters}; endpoint: {endpoint}; full-response: {errorResponseString}");
+                                }
+                            } catch {
+                                result = new DropboxAPIException($"error: {errorResponseString}; request parameters: {parameters}; endpoint: {endpoint}", errorResponseString, null);                                            
+                            }
+                        } else {
                             // empty error-summary
                             result = new DropboxAPIException($"error: {errorResponseString}; request parameters: {parameters}; endpoint: {endpoint}", errorResponseString, null);                                            
                         }
