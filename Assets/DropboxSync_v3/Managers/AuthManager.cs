@@ -120,12 +120,28 @@ namespace DBXSync {
             }
         }
 
-        // TODO: method for exchanging refresh_token for new access_token
+        private Task<String> _refreshTokenTask;
 
         public async Task<string> RefreshAccessToken() {
+            if(_refreshTokenTask == null){
+                _refreshTokenTask = _RefreshAccessToken();
+            }else{
+                Debug.LogWarning($"Already refreshing access_token, waiting for finish...");
+            }
+
+            try {
+                return await _refreshTokenTask;
+            } finally {
+                _refreshTokenTask = null;
+            }           
+        }
+
+        private async Task<string> _RefreshAccessToken() {
             // get refresh token
             var savedAuth = GetSavedAuthentication();
-            if(string.IsNullOrEmpty(savedAuth.refresh_token)){
+            if(savedAuth != null && string.IsNullOrEmpty(savedAuth.refresh_token)){
+                // remove saved auth because it doesn't have refresh_token
+                DropSavedAthentication();
                 throw new NoRefreshTokenException("No refresh_token saved to get new access_token");
             }
 
@@ -165,9 +181,13 @@ namespace DBXSync {
                 }
 
                 var oauth_resp = Utils.GetDropboxResponseFromJSON<OAuth2TokenResponse>(responseString);
-                SaveAuthentication(oauth_resp);
 
-                return oauth_resp.access_token;
+                // modify access_token in original auth data 
+                // (refresh token response does not contain refresh_token, so we keep it from original auth data)
+                savedAuth.access_token = oauth_resp.access_token;
+                SaveAuthentication(savedAuth);
+
+                return savedAuth.access_token;
             }
         }
 

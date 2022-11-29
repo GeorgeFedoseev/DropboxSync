@@ -85,7 +85,7 @@ public class DropboxSync : MonoBehaviour {
         InitializeWithAccessToken(tokenResult.access_token);
     }
 
-    public async void RefreshAccessToken() {
+    public async Task RefreshAccessToken() {
         Debug.Log("Refreshing access_token...");
         var accessToken = await _authManager.RefreshAccessToken();
         _config.SetAccessToken(accessToken);

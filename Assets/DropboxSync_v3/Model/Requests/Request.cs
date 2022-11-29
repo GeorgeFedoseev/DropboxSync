@@ -33,7 +33,7 @@ namespace DBXSync {
             try {
                 return await request();
             } catch (DropboxAccessTokenExpiredAPIException ex) {
-                DropboxSync.Main.RefreshAccessToken();
+                await DropboxSync.Main.RefreshAccessToken();
                 return await request();
             }
         }
