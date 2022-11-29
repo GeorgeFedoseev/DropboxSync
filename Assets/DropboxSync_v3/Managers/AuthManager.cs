@@ -36,19 +36,19 @@ namespace DBXSync {
 
         // PRESERVING ACCESS TOKEN
         private void SaveAuthentication(OAuth2TokenResponse tokenResult){
-            PlayerPrefs.SetString("DBXAuth", JsonUtility.ToJson(tokenResult));
+            PlayerPrefs.SetString("DBXAuth_v4", JsonUtility.ToJson(tokenResult));
             PlayerPrefs.Save();
         }
 
         public OAuth2TokenResponse GetSavedAuthentication(){
-            if(PlayerPrefs.HasKey("DBXAuth")){                
-                return Utils.GetDropboxResponseFromJSON<OAuth2TokenResponse>(PlayerPrefs.GetString("DBXAuth"));
+            if(PlayerPrefs.HasKey("DBXAuth_v4")){                
+                return Utils.GetDropboxResponseFromJSON<OAuth2TokenResponse>(PlayerPrefs.GetString("DBXAuth_v4"));
             }
             return null;
         }
 
         public void DropSavedAthentication(){
-            PlayerPrefs.DeleteKey("DBXAuth");
+            PlayerPrefs.DeleteKey("DBXAuth_v4");
             PlayerPrefs.Save();
         }
 
@@ -116,14 +116,23 @@ namespace DBXSync {
                 throw new NoRefreshTokenException("No refresh_token saved to get new access_token");
             }
 
-            var oauth_resp = await Utils.GetPostResponse<OAuth2TokenResponse>(new Uri("https://api.dropbox.com/oauth2/token"), new List<KeyValuePair<string, string>>{
-                new KeyValuePair<string, string>("grant_type", "refresh_token"),
-                new KeyValuePair<string, string>("refresh_token", savedAuth.refresh_token),
-            }, GetAuthenticationHeaderValue());
-            // modify access_token in original auth data 
-            // (refresh token response does not contain refresh_token, so we keep it from original auth data)
-            savedAuth.access_token = oauth_resp.access_token;
-            SaveAuthentication(savedAuth);
+            try {
+                var oauth_resp = await Utils.GetPostResponse<OAuth2TokenResponse>(new Uri("https://api.dropbox.com/oauth2/token"), new List<KeyValuePair<string, string>>{
+                    new KeyValuePair<string, string>("grant_type", "refresh_token"),
+                    new KeyValuePair<string, string>("refresh_token", savedAuth.refresh_token),
+                }, GetAuthenticationHeaderValue());
+
+                // modify access_token in original auth data 
+                // (refresh token response does not contain refresh_token, so we keep it from original auth data)
+                savedAuth.access_token = oauth_resp.access_token;
+                SaveAuthentication(savedAuth);
+            } catch(InvalidGrantTokenException) {
+                DropSavedAthentication();
+                throw;
+            }
+
+
+            
 
             return savedAuth.access_token;
         }
