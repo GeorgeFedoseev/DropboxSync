@@ -916,9 +916,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6e58b23c8a844a6f825316a97d52120, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _dropboxAppKey: ty80zyetwmge7uc
-  _dropboxAppSecret: mf8yftsv3twh4kv
-  _developerAccessToken: 
+  _dropboxAppKey: 
+  _dropboxAppSecret: 
+  _dropboxRefreshToken: 
 --- !u!4 &1507957962
 Transform:
   m_ObjectHideFlags: 0
