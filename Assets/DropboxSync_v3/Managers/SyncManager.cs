@@ -20,13 +20,9 @@ namespace DBXSync {
         private ChangesManager _changesManager;
         private DropboxSyncConfiguration _config;
 
-        // private Thread _backgroundThread;
-        private volatile bool _isDisposed = false;
             
-        // private List<SyncSubscription> _syncStartQueue = new List<SyncSubscription>();
         private Dictionary<string, SyncSubscription> _syncSubscriptions = new Dictionary<string, SyncSubscription>();
 
-        // private object _syncSubscriptionsLock = new object();    
 
         public SyncManager (CacheManager cacheManager, ChangesManager changesManager, DropboxSyncConfiguration config) {
             _cacheManager = cacheManager;
@@ -62,11 +58,9 @@ namespace DBXSync {
 
         private void _StartSync(SyncSubscription syncSubscription){            
             var dropboxPath = syncSubscription.dropboxPath;
-            // Debug.Log($"_StartSync {dropboxPath}");
 
             Action<EntryChange> changedCallback = async (change) => {
                 // sync
-                // Debug.Log(change);
 
                 try {
                     await _cacheManager.SyncChangeAsync(change, new Progress<TransferProgressReport>((progress) => {
@@ -86,7 +80,6 @@ namespace DBXSync {
                     // quiet
                 }catch(Exception ex){
                     // reset syncing
-                    // Debug.LogWarning($"[DropboxSync/SyncManager] Failed to sync change {ex}\n {change}; sync subscription: {syncSubscription.GetHashCode()}");
                     // check if that subscription still going (cause can be already canceled by other transfer errors)
                     
                     bool needsReset = _syncSubscriptions.ContainsKey(dropboxPath) && _syncSubscriptions[dropboxPath] == syncSubscription;
@@ -163,7 +156,6 @@ namespace DBXSync {
 
 
         public void Dispose () {            
-            _isDisposed = true;      
             CancelAllCurrentSyncTransfers();
         }
     }

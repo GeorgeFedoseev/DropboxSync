@@ -77,7 +77,6 @@ namespace DBXSync
             if (GUI.Button(r, cancelButton))
             {
                 inputText = null;   // Cancel - delete inputText
-                Debug.Log("DELETE INPUT TEXT");
                 shouldClose = true;
             }
 

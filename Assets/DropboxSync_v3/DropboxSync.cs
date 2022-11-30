@@ -32,7 +32,7 @@ public class DropboxSync : MonoBehaviour {
     [SerializeField]
     public string _dropboxAppSecret;
 
-    [Header("Dropbox Authorization Optional")]
+    [Header("Dropbox Authorization (Optional)")]
 
     [SerializeField]
     public string _dropboxRefreshToken;

@@ -111,7 +111,7 @@ namespace DBXSync {
                     }catch(DropboxResetCursorAPIException){
                         // if exception is because cursor is not valid anymore do CheckChangesInFoldersAsync() to get new cursor
                         await CheckChangesInFoldersAsync();
-                    }catch(Exception ex){                        
+                    }catch(Exception){                        
                         // Debug.LogError($"Failed to request Dropbox changes: {ex}");
                         await Task.Delay (TimeSpan.FromSeconds(_config.requestErrorRetryDelaySeconds));
                     }                    
@@ -305,7 +305,7 @@ namespace DBXSync {
                     has_more = listFolderContinueResponse.has_more;
                     cursor = listFolderContinueResponse.cursor;
 
-                }catch(DropboxResetCursorAPIException ex){
+                }catch(DropboxResetCursorAPIException){
                     // Debug.LogWarning($"[DropboxSync] Resetting cursor for folder {dropboxFolderPath}");
 
                     // cursor is invalid - need to reset it

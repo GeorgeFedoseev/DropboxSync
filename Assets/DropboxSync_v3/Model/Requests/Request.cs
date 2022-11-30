@@ -32,7 +32,7 @@ namespace DBXSync {
         private async Task<HttpResponseMessage> HandleAccessTokenExpiration(Func<Task<HttpResponseMessage>> request) {
             try {
                 return await request();
-            } catch (DropboxAccessTokenExpiredAPIException ex) {
+            } catch (DropboxAccessTokenExpiredAPIException) {
                 Debug.LogWarning($"[DropboxSync] Access token expired.");
                 await DropboxSync.Main.RefreshAccessToken();
                 return await request();

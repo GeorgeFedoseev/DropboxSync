@@ -21,7 +21,7 @@ namespace DBXSync {
 
             EditorGUILayout.LabelField("Specify refresh token above if you want to use single Dropbox account (provided by you) for all users.", EditorStyles.helpBox);
 
-            if(dropboxSync != null && dropboxSync._dropboxRefreshToken.Trim().Length == 0){
+            if(dropboxSync != null){
             //     if(GUILayout.Button("Clear refresh token")) {
             //         dropboxSync._dropboxRefreshToken = "";
             //     }
