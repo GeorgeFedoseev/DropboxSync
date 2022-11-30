@@ -43,7 +43,6 @@ namespace DBXSync {
             }
 
             this.accessToken = accessToken;
-            Debug.Log($"New access_token set to {this.accessToken}");
         }
 
         public void InvalidateAccessToken(){
@@ -54,7 +53,7 @@ namespace DBXSync {
             if(!Utils.IsAppKeyValid(appKey)) {
                 throw new InvalidConfigurationException($"Dropbox appKey is not valid ('{appKey}')");
             }
-            if(!Utils.IsAppSecretValid(appKey)) {
+            if(!Utils.IsAppSecretValid(appSecret)) {
                 throw new InvalidConfigurationException($"Dropbox appSecret is not valid ('{appSecret}')");
             }
             

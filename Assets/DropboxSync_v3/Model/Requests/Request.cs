@@ -33,6 +33,7 @@ namespace DBXSync {
             try {
                 return await request();
             } catch (DropboxAccessTokenExpiredAPIException ex) {
+                Debug.LogWarning($"[DropboxSync] Access token expired.");
                 await DropboxSync.Main.RefreshAccessToken();
                 return await request();
             }
@@ -115,8 +116,6 @@ namespace DBXSync {
 
 
         public async Task<RESP_T> ExecuteAsync(byte[] payload = null, IProgress<int> uploadProgress = null, IProgress<int> downloadProgress = null, CancellationToken? cancellationToken = null, int timeoutMilliseconds = int.MaxValue){
-            Debug.Log($"Using access_token: {_config.accessToken}");
-
             using (var client = new HttpClient()){
 
                 // GET RESPONSE HEADERS
@@ -134,8 +133,6 @@ namespace DBXSync {
                     } 
                     return response;
                 });
-
-                               
 
                 
                 var contentLength = headersResponse.Content.Headers.ContentLength;                

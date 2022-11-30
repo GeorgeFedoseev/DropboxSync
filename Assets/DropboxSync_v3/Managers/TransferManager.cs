@@ -323,7 +323,7 @@ namespace DBXSync {
 
                 if(ex is OperationCanceledException){
                     // transfer cancelled
-                    Debug.Log ($"[DropboxSync/TransferManager] Transfer was cancelled");                    
+                    Debug.Log ($"[DropboxSync/TransferManager] Transfer was cancelled ({ex})");                    
                 }else{
                     // move to failed
                     // lock (_transfersLock) {

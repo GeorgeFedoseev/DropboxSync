@@ -1126,6 +1126,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _dropboxAppKey: ty80zyetwmge7uc
   _dropboxAppSecret: mf8yftsv3twh4kv
+  _dropboxRefreshToken: S2iNpWh6-t0AAAAAAAAAAZTxpOS5eQRzOMp2rDupIT6NSUPcyw2JzfT6rCo7cORj
 --- !u!4 &996569776
 Transform:
   m_ObjectHideFlags: 0

@@ -95,7 +95,7 @@ namespace DBXSync {
 
         public async Task<string> RefreshAccessToken() {
             if(_refreshTokenTask == null){
-                _refreshTokenTask = _RefreshAccessToken();
+                _refreshTokenTask = _RefreshAccessTokenAsync();
             }else{
                 Debug.LogWarning($"Already refreshing access_token, waiting for finish...");
             }
@@ -107,8 +107,8 @@ namespace DBXSync {
             }           
         }
 
-        private async Task<string> _RefreshAccessToken() {
-            // get refresh token
+        private async Task<string> _RefreshAccessTokenAsync() {
+            // check if have refresh_token
             var savedAuth = GetSavedAuthentication();
             if(savedAuth != null && string.IsNullOrEmpty(savedAuth.refresh_token)){
                 // remove saved auth because it doesn't have refresh_token
@@ -117,24 +117,43 @@ namespace DBXSync {
             }
 
             try {
-                var oauth_resp = await Utils.GetPostResponse<OAuth2TokenResponse>(new Uri("https://api.dropbox.com/oauth2/token"), new List<KeyValuePair<string, string>>{
-                    new KeyValuePair<string, string>("grant_type", "refresh_token"),
-                    new KeyValuePair<string, string>("refresh_token", savedAuth.refresh_token),
-                }, GetAuthenticationHeaderValue(_dropboxAppKey, _dropboxAppSecret));
+                var oauth_resp = await GetAuthWithRefreshTokenAsync(savedAuth.refresh_token);
+                SaveAuthentication(oauth_resp);
+                Debug.Log($"Access token was refreshed to {oauth_resp.access_token}");
+                return oauth_resp.access_token;
+            } catch(InvalidGrantTokenException) {
+                DropSavedAthentication();
+                throw;
+            }
+        }
 
-                // modify access_token in original auth data 
-                // (refresh token response does not contain refresh_token, so we keep it from original auth data)
-                savedAuth.access_token = oauth_resp.access_token;
-                SaveAuthentication(savedAuth);
+        public async Task<OAuth2TokenResponse> GetAuthWithRefreshTokenAsync(string refreshToken) {
+            var resp = await Utils.GetPostResponse<OAuth2TokenResponse>(
+                new Uri("https://api.dropbox.com/oauth2/token"), 
+                new List<KeyValuePair<string, string>>{
+                    new KeyValuePair<string, string>("grant_type", "refresh_token"),
+                    new KeyValuePair<string, string>("refresh_token", refreshToken),
+            }, GetAuthenticationHeaderValue(_dropboxAppKey, _dropboxAppSecret));
+
+            // manually set refresh token, as it's not provided in this response
+            resp.refresh_token = refreshToken;
+
+            return resp;
+
+        }
+
+        public string AuthWithRefreshTokenSync(string refreshToken) {
+            try {
+                var oauth_resp = Task.Run(() => GetAuthWithRefreshTokenAsync(refreshToken)).Result;
+                oauth_resp.refresh_token = refreshToken;
+
+                SaveAuthentication(oauth_resp);
+                return oauth_resp.access_token;
             } catch(InvalidGrantTokenException) {
                 DropSavedAthentication();
                 throw;
             }
 
-
-            
-
-            return savedAuth.access_token;
         }
 
         private static System.Net.Http.Headers.AuthenticationHeaderValue GetAuthenticationHeaderValue(string appKey, string appSecret) {
