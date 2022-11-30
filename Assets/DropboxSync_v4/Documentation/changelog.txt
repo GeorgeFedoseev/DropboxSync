@@ -1,0 +1,22 @@
+DropboxSync
+
+v1.0
+- initial release
+
+v2.0
+- Fixed NullReference exception when running on iOS
+- Code refactoring
+- Upload feature
+- Move and Delete features
+
+v3.0
+- Completely rewritten
+- Low-latency lightweight changes tracking
+- Ability to cancel file transfers
+- Transfers pop-up widget
+- Async/Await support
+
+
+v3.1
+- added ability to authorize with OAuth flow
+- added OAuth example
