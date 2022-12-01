@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/DropboxSync_v4/Examples/UploadFileExample/With Callbacks/UploadFileExample.unity
+    guid: 244d55a3cb3c7484d971e4b2bfdcb277
+  - enabled: 1
     path: Assets/DropboxSync_v4/Examples/UploadTextExample/UploadTextExample.unity
     guid: 145e63d9d4268274f9807b93102ed935
   - enabled: 1
@@ -20,9 +23,6 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/DropboxSync_v4/Examples/KeepSyncedExample/KeepSyncedExample.unity
     guid: 1e9f54ebd67214523af9a4fa3413d989
-  - enabled: 1
-    path: Assets/DropboxSync_v4/Examples/UploadFileExample/With Callbacks/UploadFileExample.unity
-    guid: 244d55a3cb3c7484d971e4b2bfdcb277
   - enabled: 0
     path: 
     guid: 00000000000000000000000000000000
