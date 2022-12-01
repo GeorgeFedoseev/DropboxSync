@@ -78,7 +78,9 @@ namespace DBXSync {
                     for (var i = 0; i < addNum; i++) {
                         var transfer = _downloadTransferQueue.First(); _downloadTransferQueue.RemoveAt(0);
                         // fire and forget
-                        ProcessTransferAsync(transfer);
+                        ProcessTransferAsync(transfer).ContinueWith((t) => {
+                            Debug.LogError(t.Exception);
+                        }, TaskContinuationOptions.OnlyOnFaulted);
                         _currentDownloadTransfers.Add(transfer);
                         addedAnything = true;
                     }
@@ -96,7 +98,9 @@ namespace DBXSync {
                     for (var i = 0; i < addNum; i++) {
                         var transfer = _uploadTransferQueue.First(); _uploadTransferQueue.RemoveAt(0);
                         // fire and forget
-                        ProcessTransferAsync(transfer);
+                        ProcessTransferAsync(transfer).ContinueWith((t) => {
+                            Debug.LogError(t.Exception);
+                        }, TaskContinuationOptions.OnlyOnFaulted);
                         _currentUploadTransfers.Add(transfer);
                         addedAnything = true;
                     }
@@ -279,7 +283,7 @@ namespace DBXSync {
             return null;
         }
 
-        private async void ProcessTransferAsync(IFileTransfer transfer) {
+        private async Task ProcessTransferAsync(IFileTransfer transfer) {
 
             try {
                 var metadata = await transfer.ExecuteAsync();
@@ -353,6 +357,7 @@ namespace DBXSync {
             _isDisposed = true;
             // cancel current tranfers
             // lock (_transfersLock) {
+            Debug.LogWarning($"Disposed, so cancelling transfers...");
             _currentDownloadTransfers.ForEach(x => x.Cancel());
             _currentUploadTransfers.ForEach(x => x.Cancel());
             // }

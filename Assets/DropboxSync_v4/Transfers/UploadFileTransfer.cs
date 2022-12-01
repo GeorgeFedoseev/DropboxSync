@@ -108,6 +108,7 @@ namespace DBXSync {
                         } catch (Exception ex) {
                             // dont retry if cancel request
                             if (ex is OperationCanceledException || ex is TaskCanceledException || ex is AggregateException && ((AggregateException)ex).InnerException is TaskCanceledException) {
+                                Debug.LogError($"[DropboxSync] Upload chunk exception: {ex}");
                                 throw new OperationCanceledException();
                             }
 

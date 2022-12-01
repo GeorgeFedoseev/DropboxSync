@@ -222,7 +222,7 @@ public class DropboxSync : MonoBehaviour {
                         successCallback(t.Result);
                     }
                 }
-            }, TaskContinuationOptions.NotOnCanceled);            
+            }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);            
 
         } catch (Exception ex) {
             errorCallback(ex);
@@ -341,7 +341,7 @@ public class DropboxSync : MonoBehaviour {
             }else{
                 successCallback(t.Result);
             }
-        }, TaskContinuationOptions.NotOnCanceled);
+        }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);
     }
 
     // from bytes
@@ -384,7 +384,7 @@ public class DropboxSync : MonoBehaviour {
             }else{
                 successCallback(t.Result);
             }
-        }, TaskContinuationOptions.NotOnCanceled);
+        }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);
     }
 
     // KEEP SYNCED
@@ -463,7 +463,7 @@ public class DropboxSync : MonoBehaviour {
             }else{
                 successCallback(t.Result);
             }
-        }, TaskContinuationOptions.NotOnCanceled);
+        }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);
     }
 
 
@@ -506,7 +506,7 @@ public class DropboxSync : MonoBehaviour {
             }else{
                 successCallback(t.Result);
             }
-        }, TaskContinuationOptions.NotOnCanceled);
+        }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);
     }
 
 
@@ -538,7 +538,7 @@ public class DropboxSync : MonoBehaviour {
             }else{
                 successCallback(t.Result);
             }
-        }, TaskContinuationOptions.NotOnCanceled);
+        }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);
     }
 
 
@@ -573,7 +573,7 @@ public class DropboxSync : MonoBehaviour {
             }else{
                 successCallback(t.Result);
             }
-        }, TaskContinuationOptions.NotOnCanceled);
+        }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);
     }
 
 
@@ -610,7 +610,7 @@ public class DropboxSync : MonoBehaviour {
             }else{
                 successCallback(t.Result);
             }
-        }, TaskContinuationOptions.NotOnCanceled);
+        }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);
     }
 
 
@@ -672,7 +672,7 @@ public class DropboxSync : MonoBehaviour {
             }else{
                 successCallback(t.Result);
             }
-        }, TaskContinuationOptions.NotOnCanceled);
+        }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);
     }
 
 
@@ -709,7 +709,7 @@ public class DropboxSync : MonoBehaviour {
             }else{
                 successCallback(t.Result);
             }
-        }, TaskContinuationOptions.NotOnCanceled);
+        }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);
     }
 
 

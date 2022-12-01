@@ -27,7 +27,7 @@ namespace DBXSync {
         public int downloadChunkReadTimeoutMilliseconds = 5000;
 
         // uploading
-        public long uploadChunkSizeBytes = 150000000; // 150MB
+        public long uploadChunkSizeBytes = 100000000; // 100MB
         public int uploadRequestWriteTimeoutMilliseconds = 5000;
         public int lightRequestTimeoutMilliseconds = 1000;
 
