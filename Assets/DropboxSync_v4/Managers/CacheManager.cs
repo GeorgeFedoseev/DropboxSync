@@ -33,11 +33,8 @@ namespace DBXSync {
         private async Task MaybeCacheFileAsync(Metadata remoteMetadata, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken) {
             var localFilePath = Utils.DropboxPathToLocalPath(remoteMetadata.path_lower, _config);
 
-            // Debug.LogWarning($"MaybeCacheFileAsync {remoteMetadata.path_display}");
-
             // decide if need to download a new version
             if (File.Exists(localFilePath) && !ShouldUpdateFileFromDropbox(remoteMetadata)) {
-                // Debug.LogWarning($"MaybeCacheFileAsync: don't download {remoteMetadata.path_display}");
                 return;
             }
 
@@ -73,9 +70,7 @@ namespace DBXSync {
                 case EntryChangeType.Created:
                 case EntryChangeType.Modified:
                     // remove from current downloads or queue in TransferManager
-                    // Debug.LogWarning($"Waiting for cancellation of {entryChange.metadata.path_display}...");
                     await _transferManager.CancelQueuedOrExecutingDownloadTransferAsync(entryChange.metadata.path_lower);
-                    // Debug.LogWarning($"Re-download file {entryChange.metadata.path_display}");
                     // then start download again
                     await MaybeCacheFileAsync(entryChange.metadata, progressCallback, cancellationToken);
                     break;

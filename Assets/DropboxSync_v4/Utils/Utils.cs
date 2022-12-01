@@ -127,63 +127,13 @@ namespace DBXSync {
                 var responseString = await response.Content.ReadAsStringAsync();
 
                 if (string.IsNullOrWhiteSpace(responseString) || responseString == "null") {
-                    Debug.LogError($"Failed to get access token: response is null");
+                    Debug.LogError($"[DropboxSync] Failed to get access token: response is null");
                     return default(T);
                 }
 
                 return Utils.GetDropboxResponseFromJSON<T>(responseString);
             }
         }
-
-        // public static void RethrowDropboxRequestWebException(WebException ex, RequestParameters parameters, string endpoint){
-        //     throw DecorateDropboxRequestWebException(ex, parameters, endpoint);
-        // }
-
-        // public static Exception DecorateDropboxRequestWebException(WebException ex, RequestParameters parameters, string endpoint){
-        //     Exception result = ex;    
-
-        //     // Debug.Log($"Decorate exception. Exception message: {ex.Message}");
-        //     if(ex.Message == "The request was canceled." || ex.Message == "Aborted."){
-        //         return new OperationCanceledException("Request was cancelled");
-        //     }
-
-        //     try {
-        //         var errorResponseString = new StreamReader(ex.Response.GetResponseStream()).ReadToEnd();  
-
-        //         if(!string.IsNullOrWhiteSpace(errorResponseString)){
-        //             try {
-        //                 var errorResponse = JsonUtility.FromJson<Response>(errorResponseString);
-        //                 if(!string.IsNullOrEmpty(errorResponse.error_summary)){
-        //                     if(errorResponse.error.tag == "reset"){
-        //                         result = new DropboxResetCursorAPIException($"error: {errorResponse.error_summary}; request parameters: {parameters}; endpoint: {endpoint}; full-response: {errorResponseString}",
-        //                                                              errorResponse.error_summary, errorResponse.error.tag);
-        //                     }else if(errorResponse.error.tag == "not_found"){
-        //                         result = new DropboxNotFoundAPIException($"error: {errorResponse.error_summary}; request parameters: {parameters}; endpoint: {endpoint}; full-response: {errorResponseString}",
-        //                                                              errorResponse.error_summary, errorResponse.error.tag);
-        //                     }else{
-        //                         result = new DropboxAPIException($"error: {errorResponse.error_summary}; request parameters: {parameters}; endpoint: {endpoint}; full-response: {errorResponseString}",
-        //                                                              errorResponse.error_summary, errorResponse.error.tag);
-        //                     }
-
-        //                 }else{
-        //                     // empty error-summary
-        //                     result = new DropboxAPIException($"error: {errorResponseString}; request parameters: {parameters}; endpoint: {endpoint}", errorResponseString, null);                                            
-        //                 }
-        //             }catch {
-        //                 // not json-formatted error
-        //                 result = new DropboxAPIException($"error: {errorResponseString}; request parameters: {parameters}; endpoint: {endpoint}", errorResponseString, null);                                        
-        //             }
-        //         }else{
-        //             // no text in response - throw original
-        //             result = ex;
-        //         }                        
-        //     } catch {
-        //         // failed to get response - throw original
-        //         result = ex;
-        //     }   
-
-        //     return result;
-        // }
 
         public static bool AreEqualDropboxPaths(string dropboxPath1, string dropboxPath2) {
             return UnifyDropboxPath(dropboxPath1) == UnifyDropboxPath(dropboxPath2);

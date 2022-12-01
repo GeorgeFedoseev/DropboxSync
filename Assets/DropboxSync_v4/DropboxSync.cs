@@ -118,12 +118,12 @@ public class DropboxSync : MonoBehaviour {
     }
 
     public async Task RefreshAccessToken() {
-        Debug.Log("Refreshing access_token...");
+        Debug.Log("[DropboxSync] Refreshing access_token...");
         try {
             var accessToken = await _authManager.RefreshAccessToken();
             _config.SetAccessToken(accessToken);
         } catch (Exception ex) {
-            Debug.LogError($"Failed to refresh access_token: {ex}");
+            Debug.LogError($"[DropboxSync] Failed to refresh access_token: {ex}");
             _config.InvalidateAccessToken();
             DisposeManagers();
         }

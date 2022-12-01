@@ -77,7 +77,7 @@ namespace DBXSync {
                         var transfer = _downloadTransferQueue.First(); _downloadTransferQueue.RemoveAt(0);
                         // fire and forget
                         ProcessTransferAsync(transfer).ContinueWith((t) => {
-                            Debug.LogError(t.Exception);
+                            Debug.LogError($"[DropboxSync/TransferManager] Error processing download transfer: {t.Exception}");
                         }, TaskContinuationOptions.OnlyOnFaulted);
                         _currentDownloadTransfers.Add(transfer);
                         addedAnything = true;
@@ -97,7 +97,7 @@ namespace DBXSync {
                         var transfer = _uploadTransferQueue.First(); _uploadTransferQueue.RemoveAt(0);
                         // fire and forget
                         ProcessTransferAsync(transfer).ContinueWith((t) => {
-                            Debug.LogError(t.Exception);
+                            Debug.LogError($"[DropboxSync/TransferManager] Error processing upload transfer: {t.Exception}");
                         }, TaskContinuationOptions.OnlyOnFaulted);
                         _currentUploadTransfers.Add(transfer);
                         addedAnything = true;

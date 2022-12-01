@@ -97,7 +97,7 @@ namespace DBXSync {
             if (_refreshTokenTask == null) {
                 _refreshTokenTask = _RefreshAccessTokenAsync();
             } else {
-                Debug.LogWarning($"Already refreshing access_token, waiting for finish...");
+                Debug.LogWarning($"[DropboxSync] Already refreshing access_token, waiting for finish...");
             }
 
             try {
@@ -119,7 +119,7 @@ namespace DBXSync {
             try {
                 var oauth_resp = await GetAuthWithRefreshTokenAsync(savedAuth.refresh_token);
                 SaveAuthentication(oauth_resp);
-                Debug.Log($"Access token was refreshed to {oauth_resp.access_token}");
+                Debug.Log($"[DropboxSync] Access token was refreshed to {oauth_resp.access_token}");
                 return oauth_resp.access_token;
             } catch (InvalidGrantTokenException) {
                 DropSavedAthentication();
@@ -166,7 +166,6 @@ namespace DBXSync {
             var tokenResult = await ExchangeCodeForAccessTokenAsync(code, _dropboxAppKey, _dropboxAppSecret);
             if (tokenResult != null) {
                 SaveAuthentication(tokenResult);
-                // Debug.Log($"Got access token: {tokenResult.access_token}");
                 _onFlowCompletedAction(tokenResult);
                 _currentDialog.Close();
                 _currentDialog = null;

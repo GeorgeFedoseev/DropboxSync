@@ -58,14 +58,12 @@ namespace DBXSync {
                 // process subscription queue
                 foreach (var sub in _pathSubscriptionQueue.ToList()) {
                     try {
-                        // Debug.LogWarning($"[D][DropboxSync/ChangesManager] Get metadata for path sub {sub.dropboxPath}");
 
                         var metadata = (await new GetMetadataRequest(sub.dropboxPath, _config).ExecuteAsync()).GetMetadata();
 
                         // dequeue if got metadata
                         _pathSubscriptionQueue.Remove(sub);
 
-                        // Debug.LogWarning($"[D][DropboxSync/ChangesManager] Got metadata for path sub {sub.dropboxPath}");
 
                         foreach (var callback in sub.callbacks) {
                             if (metadata.IsFile) {
@@ -90,19 +88,13 @@ namespace DBXSync {
                 // if _lastCursor != null start longpoll request on this cursor
                 if (_lastCursor != null) {
                     try {
-                        // Debug.LogWarning("Do longpoll request...");
                         var longpollResponse = await new ListFolderLongpollRequest(new ListFolderLongpollRequestParameters {
                             cursor = _lastCursor
                         }, _config).ExecuteAsync();
 
-                        // Debug.LogWarning($"Longpoll response: {longpollResponse}");
 
                         if (longpollResponse.changes) {
                             await CheckChangesInFoldersAsync();
-                        }
-
-                        if (longpollResponse.backoff > 0) {
-                            // Debug.LogWarning($"longpollResponse.backoff = {longpollResponse.backoff}");
                         }
 
                         // wait before making next longpoll
@@ -112,7 +104,6 @@ namespace DBXSync {
                         // if exception is because cursor is not valid anymore do CheckChangesInFoldersAsync() to get new cursor
                         await CheckChangesInFoldersAsync();
                     } catch (Exception) {
-                        // Debug.LogError($"Failed to request Dropbox changes: {ex}");
                         await Task.Delay(TimeSpan.FromSeconds(_config.requestErrorRetryDelaySeconds));
                     }
                 } else if (_folderSubscriptions.Count > 0) {
@@ -130,7 +121,6 @@ namespace DBXSync {
 
         // CHANGES NOTIFICATIONS
         public void SubscribeToChanges(string dropboxPath, Action<EntryChange> callback) {
-            // Debug.Log($"[DropboxSync/ChangesManager] SubscribeToChanges {dropboxPath}");
 
             dropboxPath = Utils.UnifyDropboxPath(dropboxPath);
             if (_folderSubscriptions.ContainsKey(dropboxPath)) {
@@ -173,14 +163,11 @@ namespace DBXSync {
         private void SubscribeToFileChanges(string dropboxFilePath, Action<EntryChange> callback) {
             dropboxFilePath = Utils.UnifyDropboxPath(dropboxFilePath);
 
-            // Debug.Log($"SubscribeToFileChages {dropboxFilePath}");            
-
             if (!_fileSubscriptions.ContainsKey(dropboxFilePath)) {
                 // get folder path from file path
                 var dropboxFolderPath = Path.GetDirectoryName(dropboxFilePath);
 
                 Action<EntryChange> folderChangeCallback = (change) => {
-                    //  Debug.LogWarning($"SubscribeToFileChages {dropboxFilePath} folder change {change}");  
                     if (Utils.AreEqualDropboxPaths(change.metadata.path_lower, dropboxFilePath)) {
                         _fileSubscriptions[dropboxFilePath].fileChangeCallbacks.ForEach(c => c(change));
                     }
@@ -219,8 +206,6 @@ namespace DBXSync {
         private async void SubscribeToFolderChanges(string dropboxFolderPath, Action<EntryChange> callback) {
             dropboxFolderPath = Utils.UnifyDropboxPath(dropboxFolderPath);
 
-            // Debug.LogWarning($"[D][DropboxSync/ChangesManager] SubscribeToFolderChanges {dropboxFolderPath}");
-
             // add folder to dictionary
             if (!_folderSubscriptions.ContainsKey(dropboxFolderPath)) {
                 _folderSubscriptions[dropboxFolderPath] = new List<Action<EntryChange>>();
@@ -257,7 +242,6 @@ namespace DBXSync {
 
         // called from longpoll thread when changes = true
         private async Task CheckChangesInFoldersAsync() {
-            // Debug.LogWarning("[D][DropboxSync/ChangesManager] CheckChangesInFoldersAsync");
             var folders = _folderSubscriptions.Select(x => x.Key);
             foreach (var folder in folders.ToList()) {
                 await CheckChangesInFolderAsync(folder);
@@ -266,7 +250,6 @@ namespace DBXSync {
 
         // called from longpoll when changes = true or after adding new folder subscription 
         private async Task CheckChangesInFolderAsync(string dropboxFolderPath) {
-            // Debug.LogWarning($"[D][DropboxSync/ChangesManager] CheckChangesInFolderAsync {dropboxFolderPath}");
             string cursor = null;
             bool has_more = true;
 
@@ -306,7 +289,6 @@ namespace DBXSync {
                     cursor = listFolderContinueResponse.cursor;
 
                 } catch (DropboxResetCursorAPIException) {
-                    // Debug.LogWarning($"[DropboxSync] Resetting cursor for folder {dropboxFolderPath}");
 
                     // cursor is invalid - need to reset it
                     ResetCursorForFolderAsync(dropboxFolderPath);
@@ -321,7 +303,6 @@ namespace DBXSync {
             // update _lastCursor for next longpoll
             _lastCursor = cursor;
 
-            // Debug.LogWarning($"CheckChangesInFolderAsync {dropboxFolderPath}. Done.");
         }
 
         private void ResetCursorForFolderAsync(string dropboxFolderPath) {
@@ -334,8 +315,6 @@ namespace DBXSync {
             dropboxFolderPath = Utils.UnifyDropboxPath(dropboxFolderPath);
             // detect changes based on local metadata
             // call FileChange events for subscriptions if detected changes
-
-            //            Debug.Log($"Process remote metadata: {remoteMetadata}");
 
             if (_folderSubscriptions.ContainsKey(dropboxFolderPath)) {
                 if (remoteMetadata.EntryType == DropboxEntryType.File) {

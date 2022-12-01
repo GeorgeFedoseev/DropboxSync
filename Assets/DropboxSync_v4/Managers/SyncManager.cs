@@ -64,7 +64,7 @@ namespace DBXSync {
 
                 try {
                     await _cacheManager.SyncChangeAsync(change, new Progress<TransferProgressReport>((progress) => {
-                        //Debug.Log($"Syncing {dropboxPath} {progress.progress}% {progress.bytesPerSecondFormatted}");
+                        //Debug.Log($"[DropboxSync] Syncing {dropboxPath} {progress.progress}% {progress.bytesPerSecondFormatted}");
                     }), _syncSubscriptions[dropboxPath].syncCancellationTokenSource.Token);
 
                     // report to all callbacks that synced
@@ -102,8 +102,6 @@ namespace DBXSync {
         public void StopKeepingInSync(string dropboxPath) {
             dropboxPath = Utils.UnifyDropboxPath(dropboxPath);
 
-            // Debug.LogWarning($"StopKeepingInSync {dropboxPath}");
-
             if (_syncSubscriptions.ContainsKey(dropboxPath)) {
 
                 var sub = _syncSubscriptions[dropboxPath];
@@ -117,7 +115,6 @@ namespace DBXSync {
         }
 
         public void UnsubscribeFromKeepSyncCallback(string dropboxPath, Action<EntryChange> callback) {
-            // Debug.LogWarning($"UnsubscribeFromKeepSyncCallback {dropboxPath}");
             dropboxPath = Utils.UnifyDropboxPath(dropboxPath);
 
             if (_syncSubscriptions.ContainsKey(dropboxPath)) {

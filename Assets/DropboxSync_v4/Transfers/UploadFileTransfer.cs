@@ -68,11 +68,8 @@ namespace DBXSync {
             long fileSize = new FileInfo(_localPath).Length;
 
             // send start request
-            // Debug.LogWarning($"Sending start upload request..."); 
             var startUploadResponse = await new UploadStartRequest(new UploadStartRequestParameters(), _config).ExecuteAsync(new byte[0]);
             string sessionId = startUploadResponse.session_id;
-
-            // Debug.LogWarning($"Starting upload with session id {sessionId}");     
 
             long chunksUploaded = 0;
             long totalChunks = 1 + fileSize / _config.uploadChunkSizeBytes;
@@ -95,7 +92,6 @@ namespace DBXSync {
                     while (true) {
                         try {
                             await uploadAppendRequest.ExecuteAsync(chunkDataBuffer.SubArray(0, chunkDataLength), uploadProgress: new Progress<int>((chunkUploadProgress) => {
-                                // Debug.Log($"Chunk {chunksUploaded} upload progress: {progress}");
                                 long currentlyUploadedBytes = totalBytesUploaded + chunkDataLength / 100 * chunkUploadProgress;
                                 speedTracker.SetBytesCompleted(currentlyUploadedBytes);
                                 if (fileSize > 0) {
@@ -130,7 +126,6 @@ namespace DBXSync {
                 }
             }
 
-            // Debug.LogWarning($"Committing upload...");
             // send finish request            
             var metadata = await new UploadFinishRequest(new UploadFinishRequestParameters(sessionId, totalBytesUploaded, _dropboxTargetPath), _config).ExecuteAsync(new byte[0]);
 
@@ -141,8 +136,6 @@ namespace DBXSync {
             await Task.Delay(1);
 
             _endDateTime = DateTime.Now;
-
-            // Debug.LogWarning($"Upload done.");
 
             return metadata;
         }

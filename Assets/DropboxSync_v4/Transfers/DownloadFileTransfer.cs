@@ -102,8 +102,6 @@ namespace DBXSync {
                         var requestParameters = new PathParameters { path = $"rev:{_metadata.rev}" };
                         var parametersJSONString = requestParameters.ToString();
 
-                        // Debug.Log($"{_dropboxPath}: Downloading chunk {chunkIndex}...");
-
                         // retry loop
                         int failedAttempts = 0;
                         while (true) {
@@ -175,8 +173,6 @@ namespace DBXSync {
                                 break;
 
                             } catch (Exception ex) {
-                                // Debug.Log($"Chunk download exception: {ex}");
-
                                 // dont retry if cancel request
                                 if (ex is OperationCanceledException || ex is TaskCanceledException || ex is AggregateException && ((AggregateException)ex).InnerException is TaskCanceledException) {
                                     throw new OperationCanceledException();
@@ -220,7 +216,6 @@ namespace DBXSync {
         }
 
         public void Cancel() {
-            // Debug.Log($"[D][DropboxSync/DownloadFileTransfer] Cancel {this}");
             _internalCancellationTokenSource.Cancel();
         }
 

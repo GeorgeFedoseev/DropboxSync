@@ -111,8 +111,6 @@ namespace DBXSync {
                         return default(RESP_T);
                     }
 
-                    // Debug.Log($"Received request response: {responseString}");
-
                     var response = Utils.GetDropboxResponseFromJSON<RESP_T>(responseString);
 
                     return response;
@@ -181,14 +179,10 @@ namespace DBXSync {
                     if (uploadProgress != null) {
                         uploadProgress.Report(100);
                     }
-
-                    // Debug.Log($"Total bytes sent: {totalBytesSent}");
                 }
             });
 
             streamContent.Headers.ContentType = contentType;
-            // disable upload buffering
-            // requestMessage.Headers.TransferEncodingChunked = true;
             streamContent.Headers.ContentLength = payload.Length;
 
             requestMessage.Content = streamContent;
