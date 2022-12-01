@@ -20,43 +20,43 @@ namespace DBXSync {
         private ChangesManager _changesManager;
         private DropboxSyncConfiguration _config;
 
-            
+
         private Dictionary<string, SyncSubscription> _syncSubscriptions = new Dictionary<string, SyncSubscription>();
 
 
-        public SyncManager (CacheManager cacheManager, ChangesManager changesManager, DropboxSyncConfiguration config) {
+        public SyncManager(CacheManager cacheManager, ChangesManager changesManager, DropboxSyncConfiguration config) {
             _cacheManager = cacheManager;
             _changesManager = changesManager;
             _config = config;
         }
-        
+
 
         // SYNCRONIZATION
 
-        public bool IsKeepingInSync(string dropboxPath){
+        public bool IsKeepingInSync(string dropboxPath) {
             dropboxPath = Utils.UnifyDropboxPath(dropboxPath);
 
             return _syncSubscriptions.ContainsKey(dropboxPath);
         }
 
-        public void KeepSynced(string dropboxPath, Action<EntryChange> callback){
+        public void KeepSynced(string dropboxPath, Action<EntryChange> callback) {
             dropboxPath = Utils.UnifyDropboxPath(dropboxPath);
 
             // if already syncing - add callback to subscription
-            if(IsKeepingInSync(dropboxPath)){                
+            if (IsKeepingInSync(dropboxPath)) {
                 // add callback
-                if(!_syncSubscriptions[dropboxPath].syncedCallbacks.Contains(callback)){
+                if (!_syncSubscriptions[dropboxPath].syncedCallbacks.Contains(callback)) {
                     _syncSubscriptions[dropboxPath].syncedCallbacks.Add(callback);
-                }  
+                }
             } else {
                 var syncSubscription = new SyncSubscription();
                 syncSubscription.dropboxPath = dropboxPath;
                 syncSubscription.syncedCallbacks.Add(callback);
                 _StartSync(syncSubscription);
-            }                     
+            }
         }
 
-        private void _StartSync(SyncSubscription syncSubscription){            
+        private void _StartSync(SyncSubscription syncSubscription) {
             var dropboxPath = syncSubscription.dropboxPath;
 
             Action<EntryChange> changedCallback = async (change) => {
@@ -68,64 +68,64 @@ namespace DBXSync {
                     }), _syncSubscriptions[dropboxPath].syncCancellationTokenSource.Token);
 
                     // report to all callbacks that synced
-                    if(_syncSubscriptions.ContainsKey(dropboxPath) && _syncSubscriptions[dropboxPath] == syncSubscription){
-                        foreach(var callback in _syncSubscriptions[dropboxPath].syncedCallbacks){
+                    if (_syncSubscriptions.ContainsKey(dropboxPath) && _syncSubscriptions[dropboxPath] == syncSubscription) {
+                        foreach (var callback in _syncSubscriptions[dropboxPath].syncedCallbacks) {
                             callback(change);
                         }
                     }
 
-                }catch(DropboxNotFoundAPIException){
+                } catch (DropboxNotFoundAPIException) {
                     Debug.LogWarning($"[DropboxSync/SyncManager] Didn't find file {change.metadata.path_display} during sync. Probably it was deleted on Dropbox during sync operation.");
-                }catch(OperationCanceledException){
+                } catch (OperationCanceledException) {
                     // quiet
-                }catch(Exception ex){
+                } catch (Exception ex) {
                     // reset syncing
                     // check if that subscription still going (cause can be already canceled by other transfer errors)
-                    
+
                     bool needsReset = _syncSubscriptions.ContainsKey(dropboxPath) && _syncSubscriptions[dropboxPath] == syncSubscription;
-                    
-                    if(needsReset){
+
+                    if (needsReset) {
                         Debug.LogWarning($"[DropboxSync/SyncManager] Resetting syncing of {dropboxPath} due to {ex}");
                         // reset syncing
                         ResetSyncing(dropboxPath);
-                    }                        
+                    }
                 }
-            };                
-            
-            
+            };
+
+
             _changesManager.SubscribeToChanges(dropboxPath, changedCallback);
 
-            syncSubscription.changedCallback = changedCallback;                
+            syncSubscription.changedCallback = changedCallback;
             _syncSubscriptions[dropboxPath] = syncSubscription;
         }
 
-        public void StopKeepingInSync(string dropboxPath){
+        public void StopKeepingInSync(string dropboxPath) {
             dropboxPath = Utils.UnifyDropboxPath(dropboxPath);
 
             // Debug.LogWarning($"StopKeepingInSync {dropboxPath}");
 
-            if(_syncSubscriptions.ContainsKey(dropboxPath)){
-            
+            if (_syncSubscriptions.ContainsKey(dropboxPath)) {
+
                 var sub = _syncSubscriptions[dropboxPath];
                 // cancel current file transfers
                 sub.syncCancellationTokenSource.Cancel();
                 // unsubscribe from changes notifications
                 _changesManager.UnsubscribeFromChanges(dropboxPath, sub.changedCallback);
-            
+
                 _syncSubscriptions.Remove(dropboxPath);
             }
         }
 
-        public void UnsubscribeFromKeepSyncCallback(string dropboxPath, Action<EntryChange> callback){
+        public void UnsubscribeFromKeepSyncCallback(string dropboxPath, Action<EntryChange> callback) {
             // Debug.LogWarning($"UnsubscribeFromKeepSyncCallback {dropboxPath}");
             dropboxPath = Utils.UnifyDropboxPath(dropboxPath);
 
-            if(_syncSubscriptions.ContainsKey(dropboxPath)){
+            if (_syncSubscriptions.ContainsKey(dropboxPath)) {
                 var sub = _syncSubscriptions[dropboxPath];
-                if(sub.syncedCallbacks.Contains(callback)){
+                if (sub.syncedCallbacks.Contains(callback)) {
                     sub.syncedCallbacks.Remove(callback);
                     // check if anyone is listening
-                    if(sub.syncedCallbacks.Count == 0){
+                    if (sub.syncedCallbacks.Count == 0) {
                         // stop keeping in sync cause no one interested
                         StopKeepingInSync(dropboxPath);
                     }
@@ -133,29 +133,29 @@ namespace DBXSync {
             }
         }
 
-        private void ResetSyncing(string dropboxPath){
-            if(_syncSubscriptions.ContainsKey(dropboxPath)){
-                
+        private void ResetSyncing(string dropboxPath) {
+            if (_syncSubscriptions.ContainsKey(dropboxPath)) {
+
                 var oldSub = _syncSubscriptions[dropboxPath];
 
-                StopKeepingInSync(dropboxPath);                
+                StopKeepingInSync(dropboxPath);
 
                 // start again and add all previous callbacks
-                foreach(var callback in oldSub.syncedCallbacks){
+                foreach (var callback in oldSub.syncedCallbacks) {
                     KeepSynced(dropboxPath, callback);
                 }
             }
         }
 
-        private void CancelAllCurrentSyncTransfers(){
-            foreach(var kv in _syncSubscriptions){
+        private void CancelAllCurrentSyncTransfers() {
+            foreach (var kv in _syncSubscriptions) {
                 var sub = kv.Value;
                 sub.syncCancellationTokenSource.Cancel();
             }
         }
 
 
-        public void Dispose () {            
+        public void Dispose() {
             CancelAllCurrentSyncTransfers();
         }
     }

@@ -9,8 +9,7 @@ public class OAuth2ExampleScript : MonoBehaviour {
     public Text authenticatedText;
 
     // Start is called before the first frame update
-    void Start()
-    {
+    void Start() {
         connectButton.onClick.AddListener(() => {
             DropboxSync.Main.AuthenticateWithOAuth2Flow();
         });
@@ -18,7 +17,7 @@ public class OAuth2ExampleScript : MonoBehaviour {
         disconnectButton.onClick.AddListener(() => {
             DropboxSync.Main.LogOut();
         });
-        
+
     }
 
     // Update is called once per frame
@@ -28,5 +27,5 @@ public class OAuth2ExampleScript : MonoBehaviour {
         disconnectButton.gameObject.SetActive(DropboxSync.Main.IsAuthenticated);
     }
 
-    
+
 }

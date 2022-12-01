@@ -1,6 +1,6 @@
 namespace DBXSync {
-    public class InvalidGrantTokenException : System.Exception {        
+    public class InvalidGrantTokenException : System.Exception {
 
-        public InvalidGrantTokenException(string message) : base(message) {}
+        public InvalidGrantTokenException(string message) : base(message) { }
     }
 }

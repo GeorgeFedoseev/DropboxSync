@@ -11,17 +11,17 @@ using System.IO;
 public class DropboxSync : MonoBehaviour {
 
     private static DropboxSync _instance;
-		public static DropboxSync Main {
-			get {
-				if(_instance == null){
-					_instance = FindObjectOfType<DropboxSync>();
-					if(_instance == null){						
-						Debug.LogError("[DropboxSync] DropboxSync script wasn't found on the scene.");						
-					}
-				}
-				return _instance;				
-			}
-		}
+    public static DropboxSync Main {
+        get {
+            if (_instance == null) {
+                _instance = FindObjectOfType<DropboxSync>();
+                if (_instance == null) {
+                    Debug.LogError("[DropboxSync] DropboxSync script wasn't found on the scene.");
+                }
+            }
+            return _instance;
+        }
+    }
 
     // inspector
 
@@ -53,26 +53,26 @@ public class DropboxSync : MonoBehaviour {
 
     private CacheManager _cacheManager;
     private ChangesManager _changesManager;
-    private SyncManager _syncManager;   
+    private SyncManager _syncManager;
     private AuthManager _authManager;
 
 
-    void Awake(){
+    void Awake() {
         ValidateParameters();
 
-        _config = new DropboxSyncConfiguration { appKey = _dropboxAppKey, appSecret = _dropboxAppSecret};
-        _config.FillDefaultsAndValidate();       
+        _config = new DropboxSyncConfiguration { appKey = _dropboxAppKey, appSecret = _dropboxAppSecret };
+        _config.FillDefaultsAndValidate();
 
         _authManager = new AuthManager(_dropboxAppKey, _dropboxAppSecret, OnOAuth2FlowCompleted);
 
         var savedAuth = _authManager.GetSavedAuthentication();
 
-        if(savedAuth != null){
+        if (savedAuth != null) {
             // if have access_token saved, use that
             InitializeWithAccessToken(savedAuth.access_token);
         } else {
             // if have refresh_token specified in parameters, try to get access_token
-            if(!string.IsNullOrEmpty(_dropboxRefreshToken)) {
+            if (!string.IsNullOrEmpty(_dropboxRefreshToken)) {
                 // var access_token = _authManager.AuthUsingRefreshTokenAsync(_dropboxRefreshToken).Result;
                 // InitializeWithAccessToken(access_token);
             }
@@ -82,21 +82,21 @@ public class DropboxSync : MonoBehaviour {
 
     // INIT
 
-    private void ValidateParameters(){
-        if(string.IsNullOrEmpty(_dropboxAppKey)) {
+    private void ValidateParameters() {
+        if (string.IsNullOrEmpty(_dropboxAppKey)) {
             Debug.LogError("[DropboxSync] Please specify a valid Dropbox App Key (from Dropbox app console).");
         }
 
-        if(string.IsNullOrEmpty(_dropboxAppSecret)) {
+        if (string.IsNullOrEmpty(_dropboxAppSecret)) {
             Debug.LogError("[DropboxSync] Please specify a valid Dropbox App Secret (from Dropbox app console).");
         }
     }
 
 
 
-    
 
-    private void InitializeWithAccessToken(string accessToken){
+
+    private void InitializeWithAccessToken(string accessToken) {
         _config.SetAccessToken(accessToken);
 
         DisposeManagers();
@@ -105,15 +105,15 @@ public class DropboxSync : MonoBehaviour {
         _changesManager = new ChangesManager(_cacheManager, _transferManger, _config);
         _syncManager = new SyncManager(_cacheManager, _changesManager, _config);
 
-        Debug.Log("[DropboxSync] Initialized");       
+        Debug.Log("[DropboxSync] Initialized");
     }
 
     // AUTHENTICATION
-    public void AuthenticateWithOAuth2Flow(){
+    public void AuthenticateWithOAuth2Flow() {
         _authManager.LaunchOAuth2Flow();
     }
 
-    private void OnOAuth2FlowCompleted(OAuth2TokenResponse tokenResult){
+    private void OnOAuth2FlowCompleted(OAuth2TokenResponse tokenResult) {
         InitializeWithAccessToken(tokenResult.access_token);
     }
 
@@ -129,7 +129,7 @@ public class DropboxSync : MonoBehaviour {
         }
     }
 
-    public void LogOut(){       
+    public void LogOut() {
         _authManager.DropSavedAthentication();
         DisposeManagers();
         _config.InvalidateAccessToken();
@@ -139,20 +139,20 @@ public class DropboxSync : MonoBehaviour {
     public bool IsAuthenticated => _config != null && _config.accessToken != null;
 
 
-    private void ThrowIfNotAuthenticated(){
+    private void ThrowIfNotAuthenticated() {
         // TODO: if not authenticated and have refreshToken param - authenticate
 
-        if(!IsAuthenticated){
-            if(!string.IsNullOrEmpty(_dropboxRefreshToken) && _authManager != null) {
+        if (!IsAuthenticated) {
+            if (!string.IsNullOrEmpty(_dropboxRefreshToken) && _authManager != null) {
                 var access_token = _authManager.AuthWithRefreshTokenSync(_dropboxRefreshToken);
                 InitializeWithAccessToken(access_token);
-            }else{
+            } else {
                 throw new DropboxNotAuthenticatedException("Tried to call Dropbox API without authentication. Please authenticate using OAuth2 flow UI or specify refresh token parameter in DropboxSync component.");
             }
         }
     }
 
-    
+
 
     // DOWNLOADING
 
@@ -165,7 +165,7 @@ public class DropboxSync : MonoBehaviour {
     /// <param name="progressCallback">Progress callback with download percentage and speed</param>
     /// <param name="cancellationToken">Cancellation token that can be used to cancel download</param>
     /// <returns>Task that produces path to downloaded file</returns>
-    public async Task<string> GetFileAsLocalCachedPathAsync(string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken = null){
+    public async Task<string> GetFileAsLocalCachedPathAsync(string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken = null) {
         return await _cacheManager.GetLocalFilePathAsync(dropboxPath, progressCallback, cancellationToken);
     }
 
@@ -184,11 +184,10 @@ public class DropboxSync : MonoBehaviour {
     public async void GetFileAsLocalCachedPath(string dropboxPath, Progress<TransferProgressReport> progressCallback,
                                                  Action<string> successCallback, Action<Exception> errorCallback,
                                                  bool useCachedFirst = false, bool useCachedIfOffline = true, bool receiveUpdates = false,
-                                                 CancellationToken? cancellationToken = null)
-    {
+                                                 CancellationToken? cancellationToken = null) {
         ThrowIfNotAuthenticated();
         try {
-            if(receiveUpdates){                
+            if (receiveUpdates) {
                 Action<EntryChange> syncedChangecallback = async (change) => {
                     // serve updated version
                     var updatedResultPath = await GetFileAsLocalCachedPathAsync(dropboxPath, progressCallback, cancellationToken);
@@ -198,29 +197,29 @@ public class DropboxSync : MonoBehaviour {
                 KeepSynced(dropboxPath, syncedChangecallback);
 
                 // unsubscribe from receiving updates when cancellation requested
-                if(cancellationToken.HasValue){                    
-                    cancellationToken.Value.Register(() => {                        
+                if (cancellationToken.HasValue) {
+                    cancellationToken.Value.Register(() => {
                         UnsubscribeFromKeepSyncCallback(dropboxPath, syncedChangecallback);
                     });
                 }
             }
-            
+
             Metadata lastServedMetadata = null;
             var serveCachedFirst = useCachedFirst || (Application.internetReachability == NetworkReachability.NotReachable && useCachedIfOffline);
-            if(serveCachedFirst && _cacheManager.HaveFileLocally(dropboxPath)){
+            if (serveCachedFirst && _cacheManager.HaveFileLocally(dropboxPath)) {
                 lastServedMetadata = _cacheManager.GetLocalMetadataForDropboxPath(dropboxPath);
                 successCallback(Utils.DropboxPathToLocalPath(dropboxPath, _config));
             }
-            
+
             var resultPath = await GetFileAsLocalCachedPathAsync(dropboxPath, progressCallback, cancellationToken);
             var latestMetadata = _cacheManager.GetLocalMetadataForDropboxPath(dropboxPath);
             bool shouldServe = lastServedMetadata == null || lastServedMetadata.content_hash != latestMetadata.content_hash;
             // don't serve same version again
-            if(shouldServe){
+            if (shouldServe) {
                 successCallback(resultPath);
-            }           
-            
-        }catch(Exception ex){
+            }
+
+        } catch (Exception ex) {
             errorCallback(ex);
         }
     }
@@ -234,7 +233,7 @@ public class DropboxSync : MonoBehaviour {
     /// <param name="progressCallback">Progress callback with download percentage and speed</param>
     /// <param name="cancellationToken">Cancellation token that can be used to cancel download</param>
     /// <returns>Task that produces byte array</returns>
-    public async Task<byte[]> GetFileAsBytesAsync(string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken){
+    public async Task<byte[]> GetFileAsBytesAsync(string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken) {
         ThrowIfNotAuthenticated();
         var cachedFilePath = await GetFileAsLocalCachedPathAsync(dropboxPath, progressCallback, cancellationToken);
         return File.ReadAllBytes(cachedFilePath);
@@ -255,8 +254,7 @@ public class DropboxSync : MonoBehaviour {
     public void GetFileAsBytes(string dropboxPath, Progress<TransferProgressReport> progressCallback,
                                         Action<byte[]> successCallback, Action<Exception> errorCallback,
                                         bool useCachedFirst = false, bool useCachedIfOffline = true, bool receiveUpdates = false,
-                                        CancellationToken? cancellationToken = null)
-    {
+                                        CancellationToken? cancellationToken = null) {
         ThrowIfNotAuthenticated();
         GetFileAsLocalCachedPath(dropboxPath, progressCallback, (localPath) => {
             successCallback(File.ReadAllBytes(localPath));
@@ -272,7 +270,7 @@ public class DropboxSync : MonoBehaviour {
     /// <param name="progressCallback">Progress callback with download percentage and speed</param>
     /// <param name="cancellationToken">Cancellation token that can be used to cancel download</param>
     /// <returns>Task that produces object of type T</returns>
-    public async Task<T> GetFileAsync<T>(string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken) where T : class{        
+    public async Task<T> GetFileAsync<T>(string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken) where T : class {
         ThrowIfNotAuthenticated();
         var bytes = await GetFileAsBytesAsync(dropboxPath, progressCallback, cancellationToken);
         return Utils.ConvertBytesTo<T>(bytes);
@@ -293,8 +291,7 @@ public class DropboxSync : MonoBehaviour {
     public void GetFile<T>(string dropboxPath, Progress<TransferProgressReport> progressCallback,
                                         Action<T> successCallback, Action<Exception> errorCallback,
                                         bool useCachedFirst = false, bool useCachedIfOffline = true, bool receiveUpdates = false,
-                                        CancellationToken? cancellationToken = null) where T : class
-    {
+                                        CancellationToken? cancellationToken = null) where T : class {
         ThrowIfNotAuthenticated();
         GetFileAsBytes(dropboxPath, progressCallback, (bytes) => {
             successCallback(Utils.ConvertBytesTo<T>(bytes));
@@ -316,7 +313,7 @@ public class DropboxSync : MonoBehaviour {
     /// <returns>Task that produces Metadata object for the uploaded file</returns>
     public async Task<Metadata> UploadFileAsync(string localFilePath, string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken) {
         ThrowIfNotAuthenticated();
-        return await DropboxSync.Main.TransferManager.UploadFileAsync(localFilePath, dropboxPath, progressCallback, cancellationToken);        
+        return await DropboxSync.Main.TransferManager.UploadFileAsync(localFilePath, dropboxPath, progressCallback, cancellationToken);
     }
 
     /// <summary>
@@ -330,12 +327,11 @@ public class DropboxSync : MonoBehaviour {
     /// <param name="cancellationToken">Cancellation token that can be used to cancel the upload</param>
     /// <returns></returns>
     public async void UploadFile(string localFilePath, string dropboxPath, Progress<TransferProgressReport> progressCallback,
-                                    Action<Metadata> successCallback, Action<Exception> errorCallback, CancellationToken? cancellationToken) 
-    {
+                                    Action<Metadata> successCallback, Action<Exception> errorCallback, CancellationToken? cancellationToken) {
         ThrowIfNotAuthenticated();
         try {
             successCallback(await UploadFileAsync(localFilePath, dropboxPath, progressCallback, cancellationToken));
-        }catch(Exception ex){
+        } catch (Exception ex) {
             errorCallback(ex);
         }
     }
@@ -353,14 +349,14 @@ public class DropboxSync : MonoBehaviour {
     public async Task<Metadata> UploadFileAsync(byte[] bytes, string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken) {
         ThrowIfNotAuthenticated();
         // write bytes to temp location
-        var tempPath = Path.Combine(Application.temporaryCachePath,  Path.GetRandomFileName());
+        var tempPath = Path.Combine(Application.temporaryCachePath, Path.GetRandomFileName());
         File.WriteAllBytes(tempPath, bytes);
-        var metadata = await DropboxSync.Main.TransferManager.UploadFileAsync(tempPath, dropboxPath, progressCallback, cancellationToken);        
+        var metadata = await DropboxSync.Main.TransferManager.UploadFileAsync(tempPath, dropboxPath, progressCallback, cancellationToken);
         // remove temp file
         File.Delete(tempPath);
         return metadata;
     }
-    
+
     /// <summary>
     /// Uploads byte array to Dropbox
     /// </summary>
@@ -372,12 +368,11 @@ public class DropboxSync : MonoBehaviour {
     /// <param name="cancellationToken">Cancellation token that can be used to cancel the upload</param>
     /// <returns></returns>
     public async void UploadFile(byte[] bytes, string dropboxPath, Progress<TransferProgressReport> progressCallback,
-                                    Action<Metadata> successCallback, Action<Exception> errorCallback, CancellationToken? cancellationToken) 
-    {
+                                    Action<Metadata> successCallback, Action<Exception> errorCallback, CancellationToken? cancellationToken) {
         ThrowIfNotAuthenticated();
         try {
             successCallback(await UploadFileAsync(bytes, dropboxPath, progressCallback, cancellationToken));
-        }catch(Exception ex){
+        } catch (Exception ex) {
             errorCallback(ex);
         }
     }
@@ -389,7 +384,7 @@ public class DropboxSync : MonoBehaviour {
     /// </summary>
     /// <param name="dropboxPath">File or folder path on Dropbox</param>
     /// <param name="syncedCallback">Callback that is triggered after change is synced from Dropbox</param>
-    public void KeepSynced(string dropboxPath, Action<EntryChange> syncedCallback){
+    public void KeepSynced(string dropboxPath, Action<EntryChange> syncedCallback) {
         ThrowIfNotAuthenticated();
         _syncManager.KeepSynced(dropboxPath, syncedCallback);
     }
@@ -399,7 +394,7 @@ public class DropboxSync : MonoBehaviour {
     /// </summary>
     /// <param name="dropboxPath">File or folder path on Dropbox</param>
     /// <param name="syncedCallback">Callback that you wish to unsubscribe</param>
-    public void UnsubscribeFromKeepSyncCallback(string dropboxPath, Action<EntryChange> syncedCallback){
+    public void UnsubscribeFromKeepSyncCallback(string dropboxPath, Action<EntryChange> syncedCallback) {
         ThrowIfNotAuthenticated();
         _syncManager.UnsubscribeFromKeepSyncCallback(dropboxPath, syncedCallback);
     }
@@ -408,7 +403,7 @@ public class DropboxSync : MonoBehaviour {
     /// Stop keeping in sync Dropbox file or folder
     /// </summary>
     /// <param name="dropboxPath">File or folder path on Dropbox</param>
-    public void StopKeepingInSync(string dropboxPath){
+    public void StopKeepingInSync(string dropboxPath) {
         ThrowIfNotAuthenticated();
         _syncManager.StopKeepingInSync(dropboxPath);
     }
@@ -418,7 +413,7 @@ public class DropboxSync : MonoBehaviour {
     /// </summary>
     /// <param name="dropboxPath">File or folder path on Dropbox</param>
     /// <returns></returns>
-    public bool IsKeepingInSync(string dropboxPath){
+    public bool IsKeepingInSync(string dropboxPath) {
         ThrowIfNotAuthenticated();
         return _syncManager != null && _syncManager.IsKeepingInSync(dropboxPath);
     }
@@ -433,7 +428,7 @@ public class DropboxSync : MonoBehaviour {
     /// <param name="dropboxFolderPath">Folder to create</param>
     /// <param name="autorename">Should autorename if conflicting paths?</param>
     /// <returns>Metadata of created folder</returns>
-    public async Task<Metadata> CreateFolderAsync(string dropboxFolderPath, bool autorename = false){
+    public async Task<Metadata> CreateFolderAsync(string dropboxFolderPath, bool autorename = false) {
         ThrowIfNotAuthenticated();
         return (await new CreateFolderRequest(new CreateFolderRequestParameters {
             path = dropboxFolderPath,
@@ -450,12 +445,11 @@ public class DropboxSync : MonoBehaviour {
     /// <param name="autorename">Should autorename if conflicting paths?</param>
     /// <returns></returns>
     public async void CreateFolder(string dropboxFolderPath, Action<Metadata> successCallback,
-                                 Action<Exception> errorCallback, bool autorename = false)
-    {
+                                 Action<Exception> errorCallback, bool autorename = false) {
         ThrowIfNotAuthenticated();
         try {
             successCallback(await CreateFolderAsync(dropboxFolderPath, autorename));
-        }catch(Exception ex){
+        } catch (Exception ex) {
             errorCallback(ex);
         }
     }
@@ -472,13 +466,12 @@ public class DropboxSync : MonoBehaviour {
     /// <param name="toDropboxPath">Where to move</param>
     /// <param name="autorename">Should autorename if conflicting paths?</param>    
     /// <returns></returns>
-    public async Task<Metadata> MoveAsync(string fromDropboxPath, string toDropboxPath, bool autorename = false)
-    {
+    public async Task<Metadata> MoveAsync(string fromDropboxPath, string toDropboxPath, bool autorename = false) {
         ThrowIfNotAuthenticated();
         return (await new MoveRequest(new MoveRequestParameters {
             from_path = fromDropboxPath,
             to_path = toDropboxPath,
-            autorename = autorename            
+            autorename = autorename
         }, _config).ExecuteAsync()).metadata;
     }
 
@@ -491,17 +484,16 @@ public class DropboxSync : MonoBehaviour {
     /// <param name="errorCallback">Callback for receiving exceptions</param>
     /// <param name="autorename">Should autorename if conflicting paths?</param>    
     /// <returns></returns>
-    public async void Move(string fromDropboxPath, string toDropboxPath, 
+    public async void Move(string fromDropboxPath, string toDropboxPath,
                             Action<Metadata> successCallback, Action<Exception> errorCallback,
-                            bool autorename = false) 
-    {
+                            bool autorename = false) {
         ThrowIfNotAuthenticated();
         try {
             successCallback(await MoveAsync(fromDropboxPath, toDropboxPath, autorename));
-        }catch(Exception ex){
+        } catch (Exception ex) {
             errorCallback(ex);
         }
-        
+
     }
 
 
@@ -529,7 +521,7 @@ public class DropboxSync : MonoBehaviour {
         ThrowIfNotAuthenticated();
         try {
             successCallback(await DeleteAsync(dropboxPath));
-        }catch(Exception ex){
+        } catch (Exception ex) {
             errorCallback(ex);
         }
     }
@@ -543,11 +535,10 @@ public class DropboxSync : MonoBehaviour {
     /// </summary>
     /// <param name="dropboxPath">Path to file or folder</param>    
     /// <returns>File's or folder's Metadata</returns>
-    public async Task<Metadata> GetMetadataAsync(string dropboxPath)
-    {
+    public async Task<Metadata> GetMetadataAsync(string dropboxPath) {
         ThrowIfNotAuthenticated();
         return (await new GetMetadataRequest(new GetMetadataRequestParameters {
-            path = dropboxPath                   
+            path = dropboxPath
         }, _config).ExecuteAsync()).GetMetadata();
     }
 
@@ -559,12 +550,11 @@ public class DropboxSync : MonoBehaviour {
     /// <param name="errorCallback">Callback for receiving exceptions</param>
     /// <returns></returns>
     public async void GetMetadata(string dropboxPath,
-                            Action<Metadata> successCallback, Action<Exception> errorCallback)
-    {
+                            Action<Metadata> successCallback, Action<Exception> errorCallback) {
         ThrowIfNotAuthenticated();
         try {
             successCallback(await GetMetadataAsync(dropboxPath));
-        }catch(Exception ex){
+        } catch (Exception ex) {
             errorCallback(ex);
         }
     }
@@ -578,12 +568,12 @@ public class DropboxSync : MonoBehaviour {
     /// </summary>
     /// <param name="dropboxPath">Path to file or folder</param>
     /// <returns></returns>
-    public async Task<bool> PathExistsAsync(string dropboxPath){
+    public async Task<bool> PathExistsAsync(string dropboxPath) {
         ThrowIfNotAuthenticated();
         try {
             await GetMetadataAsync(dropboxPath);
             return true;
-        }catch(DropboxNotFoundAPIException){
+        } catch (DropboxNotFoundAPIException) {
             return false;
         }
     }
@@ -595,11 +585,11 @@ public class DropboxSync : MonoBehaviour {
     /// <param name="successCallback">Callback for receiving boolean result</param>
     /// <param name="errorCallback">Callback for receiving exceptions</param>
     /// <returns></returns>
-    public async void PathExists(string dropboxPath, Action<bool> successCallback, Action<Exception> errorCallback){
+    public async void PathExists(string dropboxPath, Action<bool> successCallback, Action<Exception> errorCallback) {
         ThrowIfNotAuthenticated();
         try {
             successCallback(await PathExistsAsync(dropboxPath));
-        }catch(Exception ex){
+        } catch (Exception ex) {
             errorCallback(ex);
         }
     }
@@ -614,13 +604,13 @@ public class DropboxSync : MonoBehaviour {
     /// <param name="dropboxFolderPath">Path to folder on Dropbox</param>
     /// <param name="recursive">Include all subdirectories recursively?</param>
     /// <returns>List of file's and folder's Metadata - contents on the folder</returns>
-    public async Task<List<Metadata>> ListFolderAsync(string dropboxFolderPath, bool recursive = false){
+    public async Task<List<Metadata>> ListFolderAsync(string dropboxFolderPath, bool recursive = false) {
         ThrowIfNotAuthenticated();
         dropboxFolderPath = Utils.UnifyDropboxPath(dropboxFolderPath);
-        
+
         var result = new List<Metadata>();
-        
-        var listFolderResponse = await new ListFolderRequest(new ListFolderRequestParameters{
+
+        var listFolderResponse = await new ListFolderRequest(new ListFolderRequestParameters {
             path = dropboxFolderPath,
             recursive = recursive
         }, _config).ExecuteAsync();
@@ -630,7 +620,7 @@ public class DropboxSync : MonoBehaviour {
         bool has_more = listFolderResponse.has_more;
         string cursor = listFolderResponse.cursor;
 
-        while(has_more){
+        while (has_more) {
             // list_folder/continue
             var continueResponse = await new ListFolderContinueRequest(new CursorRequestParameters {
                 cursor = cursor
@@ -639,7 +629,7 @@ public class DropboxSync : MonoBehaviour {
             result.AddRange(continueResponse.entries);
 
             has_more = continueResponse.has_more;
-            cursor = continueResponse.cursor;            
+            cursor = continueResponse.cursor;
         }
 
         return result;
@@ -653,14 +643,13 @@ public class DropboxSync : MonoBehaviour {
     /// <param name="errorCallback">Callback for receiving exceptions</param>
     /// <param name="recursive">Include all subdirectories recursively?</param>
     /// <returns></returns>
-    public async void ListFolder(string dropboxFolderPath, 
+    public async void ListFolder(string dropboxFolderPath,
                                     Action<List<Metadata>> successCallback, Action<Exception> errorCallback,
-                                    bool recursive = false) 
-    {
+                                    bool recursive = false) {
         ThrowIfNotAuthenticated();
         try {
             successCallback(await ListFolderAsync(dropboxFolderPath, recursive));
-        }catch(Exception ex){
+        } catch (Exception ex) {
             errorCallback(ex);
         }
     }
@@ -674,10 +663,10 @@ public class DropboxSync : MonoBehaviour {
     /// </summary>
     /// <param name="dropboxFilePath">Path to file on Dropbox</param>
     /// <returns></returns>
-    public async Task<bool> ShouldUpdateFromDropboxAsync(string dropboxFilePath){
+    public async Task<bool> ShouldUpdateFromDropboxAsync(string dropboxFilePath) {
         ThrowIfNotAuthenticated();
         var metadata = await GetMetadataAsync(dropboxFilePath);
-        if(!metadata.IsFile){
+        if (!metadata.IsFile) {
             throw new ArgumentException("Please specify Dropbox file path, not folder.");
         }
 
@@ -691,37 +680,37 @@ public class DropboxSync : MonoBehaviour {
     /// <param name="successCallback">Callback for receiving boolean result</param>
     /// <param name="errorCallback">Callback for receiving exceptions</param>
     /// <returns></returns>
-    public async void ShouldUpdateFileFromDropbox(string dropboxFilePath, Action<bool> successCallback, Action<Exception> errorCallback){
+    public async void ShouldUpdateFileFromDropbox(string dropboxFilePath, Action<bool> successCallback, Action<Exception> errorCallback) {
         ThrowIfNotAuthenticated();
         try {
             successCallback(await ShouldUpdateFromDropboxAsync(dropboxFilePath));
-        }catch(Exception ex){
+        } catch (Exception ex) {
             errorCallback(ex);
         }
     }
 
 
-    private void DisposeManagers(){     
+    private void DisposeManagers() {
 
-        if(_transferManger != null){
+        if (_transferManger != null) {
             _transferManger.Dispose();
         }
-        if(_changesManager != null){
+        if (_changesManager != null) {
             _changesManager.Dispose();
         }
-        if(_syncManager != null){
+        if (_syncManager != null) {
             _syncManager.Dispose();
         }
 
         _transferManger = null;
         _changesManager = null;
-        _syncManager = null;        
+        _syncManager = null;
     }
-    
+
 
     // EVENTS
 
-    void OnApplicationQuit(){
+    void OnApplicationQuit() {
         // print("[DropboxSync] Cleanup");        
         DisposeManagers();
     }

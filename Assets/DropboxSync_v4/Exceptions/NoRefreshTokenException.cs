@@ -1,6 +1,6 @@
 namespace DBXSync {
-    public class NoRefreshTokenException : System.Exception {        
+    public class NoRefreshTokenException : System.Exception {
 
-        public NoRefreshTokenException(string message) : base(message) {}
+        public NoRefreshTokenException(string message) : base(message) { }
     }
 }

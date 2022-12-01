@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace DBXSync {
 
-    public class TransferSpeedTracker {        
+    public class TransferSpeedTracker {
 
         private readonly int _sampleSize;
         private readonly TimeSpan _valueDelay;
@@ -26,7 +26,7 @@ namespace DBXSync {
             _previousProgressBytes = 0;
         }
 
-        public void SetBytesCompleted(long bytesReceived) {            
+        public void SetBytesCompleted(long bytesReceived) {
 
             long diff = bytesReceived - _previousProgressBytes;
             if (diff <= 0)
@@ -39,8 +39,8 @@ namespace DBXSync {
                 _changes.Dequeue();
         }
 
-        public static string FormatBytesPerSecond(double bytesPerSecond){
-            var prefix = new[] { "", "K", "M", "G"};
+        public static string FormatBytesPerSecond(double bytesPerSecond) {
+            var prefix = new[] { "", "K", "M", "G" };
 
             int index = 0;
             while (bytesPerSecond > 1024 && index < prefix.Length - 1) {
@@ -48,7 +48,7 @@ namespace DBXSync {
                 index++;
             }
 
-            int intLen = ((int) bytesPerSecond).ToString().Length;
+            int intLen = ((int)bytesPerSecond).ToString().Length;
             int decimals = 3 - intLen;
             if (decimals < 0)
                 decimals = 0;
@@ -57,7 +57,7 @@ namespace DBXSync {
 
             return String.Format(format, bytesPerSecond, prefix[index]);
         }
-        
+
 
         public string GetSpeedString() {
             double speed = GetBytesPerSecond();
@@ -65,8 +65,7 @@ namespace DBXSync {
         }
 
         public double GetBytesPerSecond() {
-            if (DateTime.Now >= _lastUpdateCalculated + _valueDelay)
-            {
+            if (DateTime.Now >= _lastUpdateCalculated + _valueDelay) {
                 _lastUpdateCalculated = DateTime.Now;
                 _cachedSpeed = _GetRate();
             }

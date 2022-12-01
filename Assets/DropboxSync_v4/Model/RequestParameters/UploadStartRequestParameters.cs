@@ -1,6 +1,6 @@
 namespace DBXSync {
 
-	[System.Serializable]
+    [System.Serializable]
     public class UploadStartRequestParameters : RequestParameters {
         public bool close = false;
     }

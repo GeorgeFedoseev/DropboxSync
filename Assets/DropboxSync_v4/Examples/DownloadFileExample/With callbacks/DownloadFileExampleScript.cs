@@ -7,8 +7,7 @@ using DBXSync;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class DownloadFileExampleScript : MonoBehaviour
-{
+public class DownloadFileExampleScript : MonoBehaviour {
 
     public InputField inputField;
     public Button downloadButton, cancelButton;
@@ -18,36 +17,36 @@ public class DownloadFileExampleScript : MonoBehaviour
 
     // Start is called before the first frame update
     void Start() {
-        downloadButton.onClick.AddListener(DownloadFile);	
+        downloadButton.onClick.AddListener(DownloadFile);
 
-		cancelButton.onClick.AddListener(() => {
-			_cancellationTokenSource.Cancel();
-		});
+        cancelButton.onClick.AddListener(() => {
+            _cancellationTokenSource.Cancel();
+        });
     }
 
-    private void DownloadFile(){
+    private void DownloadFile() {
         _cancellationTokenSource = new CancellationTokenSource();
 
-        DropboxSync.Main.GetFileAsLocalCachedPath(inputField.text, 
-                                new Progress<TransferProgressReport>((report) => {                        
+        DropboxSync.Main.GetFileAsLocalCachedPath(inputField.text,
+                                new Progress<TransferProgressReport>((report) => {
                                     statusText.text = $"Downloading: {report.progress}% {report.bytesPerSecondFormatted}";
                                 }),
                                 (localPath) => {
                                     // success
                                     print($"Completed");
-			                        statusText.text = $"<color=green>Local path: {localPath}</color>";
+                                    statusText.text = $"<color=green>Local path: {localPath}</color>";
                                 },
                                 (ex) => {
                                     // exception
-                                    if(ex is OperationCanceledException){
+                                    if (ex is OperationCanceledException) {
                                         Debug.Log("Download cancelled");
                                         statusText.text = $"<color=orange>Download canceled.</color>";
-                                    }else{
+                                    } else {
                                         Debug.LogException(ex);
                                         statusText.text = $"<color=red>Download failed.</color>";
                                     }
                                 },
                                 cancellationToken: _cancellationTokenSource.Token);
-        
+
     }
 }

@@ -16,67 +16,67 @@ using System.Threading;
 
 public class AsyncUploadFileExampleScript : MonoBehaviour {
 
-	public InputField localFileInput;
-	public Button uploadButton;
-	public Button cancelButton;
-	public Text statusText;
+    public InputField localFileInput;
+    public Button uploadButton;
+    public Button cancelButton;
+    public Text statusText;
 
-	private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
-	private string _uploadDropboxPath;
+    private string _uploadDropboxPath;
 
-	void Start(){
-		localFileInput.onValueChanged.AddListener((val) => {
-			ValidateLocalFilePath();
-		});
+    void Start() {
+        localFileInput.onValueChanged.AddListener((val) => {
+            ValidateLocalFilePath();
+        });
 
-		ValidateLocalFilePath();
+        ValidateLocalFilePath();
 
-		uploadButton.onClick.AddListener(UploadFile);	
+        uploadButton.onClick.AddListener(UploadFile);
 
-		cancelButton.onClick.AddListener(() => {
-			_cancellationTokenSource.Cancel();
-		});
-	}	
+        cancelButton.onClick.AddListener(() => {
+            _cancellationTokenSource.Cancel();
+        });
+    }
 
-	void ValidateLocalFilePath(){
-		if(File.Exists(localFileInput.text)){
-			_uploadDropboxPath = Path.Combine("/DropboxSyncExampleFolder/", Path.GetFileName(localFileInput.text));
-			statusText.text = $"Ready to upload to {_uploadDropboxPath}";
-			uploadButton.interactable = true;
-		}else{
-			statusText.text = "<color=red>Specified file does not exist.</color>";
-			uploadButton.interactable = false;
-		}
-	}
+    void ValidateLocalFilePath() {
+        if (File.Exists(localFileInput.text)) {
+            _uploadDropboxPath = Path.Combine("/DropboxSyncExampleFolder/", Path.GetFileName(localFileInput.text));
+            statusText.text = $"Ready to upload to {_uploadDropboxPath}";
+            uploadButton.interactable = true;
+        } else {
+            statusText.text = "<color=red>Specified file does not exist.</color>";
+            uploadButton.interactable = false;
+        }
+    }
 
-	async void UploadFile(){
-		_cancellationTokenSource  = new CancellationTokenSource();
+    async void UploadFile() {
+        _cancellationTokenSource = new CancellationTokenSource();
 
-		uploadButton.interactable = false;
-		var localFilePath = localFileInput.text;
-				
-		
-		try {
-			var metadata = await DropboxSync.Main.UploadFileAsync(localFilePath, _uploadDropboxPath, new Progress<TransferProgressReport>((report) => {
-				if(Application.isPlaying){					
-					statusText.text = $"Uploading file {report.progress}% {report.bytesPerSecondFormatted}";
-				}				
-			}), _cancellationTokenSource.Token);
+        uploadButton.interactable = false;
+        var localFilePath = localFileInput.text;
 
-			print($"Upload completed:\n{metadata}");
-			statusText.text = $"<color=green>Uploaded. {metadata.id}</color>";
-		}catch(Exception ex){
-			if(ex is OperationCanceledException){
-				Debug.Log("Upload cancelled");
-				statusText.text = $"<color=orange>Upload canceled.</color>";
-			}else{
-				Debug.LogException(ex);
-				statusText.text = $"<color=red>Upload failed.</color>";
-			}
-		}
 
-		uploadButton.interactable = true;		
-	}
+        try {
+            var metadata = await DropboxSync.Main.UploadFileAsync(localFilePath, _uploadDropboxPath, new Progress<TransferProgressReport>((report) => {
+                if (Application.isPlaying) {
+                    statusText.text = $"Uploading file {report.progress}% {report.bytesPerSecondFormatted}";
+                }
+            }), _cancellationTokenSource.Token);
+
+            print($"Upload completed:\n{metadata}");
+            statusText.text = $"<color=green>Uploaded. {metadata.id}</color>";
+        } catch (Exception ex) {
+            if (ex is OperationCanceledException) {
+                Debug.Log("Upload cancelled");
+                statusText.text = $"<color=orange>Upload canceled.</color>";
+            } else {
+                Debug.LogException(ex);
+                statusText.text = $"<color=red>Upload failed.</color>";
+            }
+        }
+
+        uploadButton.interactable = true;
+    }
 
 }

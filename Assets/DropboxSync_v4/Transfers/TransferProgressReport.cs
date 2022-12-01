@@ -5,7 +5,7 @@ namespace DBXSync {
         public double bytesPerSecondSpeed;
         public string bytesPerSecondFormatted;
 
-        public TransferProgressReport(int progress, double bytesPerSecond){
+        public TransferProgressReport(int progress, double bytesPerSecond) {
             this.progress = progress;
             this.bytesPerSecondSpeed = bytesPerSecond;
             this.bytesPerSecondFormatted = TransferSpeedTracker.FormatBytesPerSecond(bytesPerSecond);

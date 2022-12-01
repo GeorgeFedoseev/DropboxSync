@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace DBXSync {
     public class TransferRowScript : MonoBehaviour {
-        
+
         [SerializeField]
         private Text nameText, pathText, statusText;
 
@@ -15,11 +15,11 @@ namespace DBXSync {
 
         [SerializeField]
         private Button actionButton;
-        
+
 
         private IFileTransfer _transfer;
 
-        public void InitWith(IFileTransfer transfer, TransferManagerWidgetScript.TransferRowType rowType){
+        public void InitWith(IFileTransfer transfer, TransferManagerWidgetScript.TransferRowType rowType) {
             _transfer = transfer;
 
             nameText.text = Path.GetFileName(transfer.DropboxPath);
@@ -27,41 +27,41 @@ namespace DBXSync {
 
             progressBar.fillAmount = 0;
 
-            switch(rowType){
+            switch (rowType) {
                 case TransferManagerWidgetScript.TransferRowType.Active:
                     statusText.text = $"{(_transfer is DownloadFileTransfer ? "Downloading" : "Uploading")}";
-                    transfer.ProgressCallback.ProgressChanged += OnProgress;                    
+                    transfer.ProgressCallback.ProgressChanged += OnProgress;
                     actionButton.GetComponentInChildren<Text>().text = "Cancel";
                     actionButton.onClick.AddListener(_transfer.Cancel);
-                break;
+                    break;
                 case TransferManagerWidgetScript.TransferRowType.Queued:
-                    statusText.text = "Queued";                    
+                    statusText.text = "Queued";
                     actionButton.GetComponentInChildren<Text>().text = "Cancel";
                     actionButton.onClick.AddListener(_transfer.Cancel);
-                break;
+                    break;
                 case TransferManagerWidgetScript.TransferRowType.Failed:
                     statusText.text = "Failed";
-                    progressBar.color = Color.red;                    
+                    progressBar.color = Color.red;
                     actionButton.gameObject.SetActive(false);
-                break;
+                    break;
                 case TransferManagerWidgetScript.TransferRowType.Completed:
-                    statusText.text = "Completed";                    
+                    statusText.text = "Completed";
                     actionButton.gameObject.SetActive(false);
-                break;
+                    break;
             }
         }
 
-        void OnProgress(object sender, TransferProgressReport report){
+        void OnProgress(object sender, TransferProgressReport report) {
             statusText.text = $"{(_transfer is DownloadFileTransfer ? "Downloading" : "Uploading")} {report.progress}% {report.bytesPerSecondFormatted}";
-            progressBar.fillAmount = (float) report.progress / 100;
+            progressBar.fillAmount = (float)report.progress / 100;
         }
 
-        void OnDestroy(){
-            if(_transfer != null){
+        void OnDestroy() {
+            if (_transfer != null) {
                 _transfer.ProgressCallback.ProgressChanged -= OnProgress;
-            }            
+            }
         }
-        
+
     }
 }
 

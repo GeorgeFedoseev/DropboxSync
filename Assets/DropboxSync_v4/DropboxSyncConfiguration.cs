@@ -2,7 +2,7 @@ using System.IO;
 using UnityEngine;
 
 namespace DBXSync {
-    
+
     public class DropboxSyncConfiguration {
         public static string METADATA_EXTENSION = ".dbxsync";
         public static string INTERMEDIATE_DOWNLOAD_FILE_EXTENSION = ".download";
@@ -24,7 +24,7 @@ namespace DBXSync {
 
         // downloading
         public long downloadChunkSizeBytes = 100000000; // 100MB
-        public int downloadChunkReadTimeoutMilliseconds = 5000;        
+        public int downloadChunkReadTimeoutMilliseconds = 5000;
 
         // uploading
         public long uploadChunkSizeBytes = 150000000; // 150MB
@@ -33,38 +33,38 @@ namespace DBXSync {
 
         // DELAYS
         public int pathSubscriptionFailedDelaySeconds = 5;
-        public int requestErrorRetryDelaySeconds = 3; 
-        public int chunkTransferErrorRetryDelaySeconds = 7; 
-        
+        public int requestErrorRetryDelaySeconds = 3;
+        public int chunkTransferErrorRetryDelaySeconds = 7;
+
 
         public void SetAccessToken(string accessToken) {
-            if(!Utils.IsAccessTokenValid(accessToken)) {
+            if (!Utils.IsAccessTokenValid(accessToken)) {
                 throw new InvalidConfigurationException($"Dropbox accessToken is not valid ('{accessToken}')");
             }
 
             this.accessToken = accessToken;
         }
 
-        public void InvalidateAccessToken(){
+        public void InvalidateAccessToken() {
             this.accessToken = null;
         }
 
-        public void FillDefaultsAndValidate(){
-            if(!Utils.IsAppKeyValid(appKey)) {
+        public void FillDefaultsAndValidate() {
+            if (!Utils.IsAppKeyValid(appKey)) {
                 throw new InvalidConfigurationException($"Dropbox appKey is not valid ('{appKey}')");
             }
-            if(!Utils.IsAppSecretValid(appSecret)) {
+            if (!Utils.IsAppSecretValid(appSecret)) {
                 throw new InvalidConfigurationException($"Dropbox appSecret is not valid ('{appSecret}')");
             }
-            
+
 
             // set default cache dir path if null
-            if(cacheDirecoryPath == null) {
-				cacheDirecoryPath = Path.Combine(UnityEngine.Application.persistentDataPath, appKey);
+            if (cacheDirecoryPath == null) {
+                cacheDirecoryPath = Path.Combine(UnityEngine.Application.persistentDataPath, appKey);
             }
 
-            if(!Directory.Exists(cacheDirecoryPath)) {
-                Utils.EnsurePathFoldersExist(cacheDirecoryPath);                
+            if (!Directory.Exists(cacheDirecoryPath)) {
+                Utils.EnsurePathFoldersExist(cacheDirecoryPath);
             }
         }
     }

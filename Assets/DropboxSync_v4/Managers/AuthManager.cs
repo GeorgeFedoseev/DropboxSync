@@ -15,17 +15,17 @@ namespace DBXSync {
         private string _dropboxAppKey;
         private string _dropboxAppSecret;
 
-        private Action<OAuth2TokenResponse> _onFlowCompletedAction = (_) => {};
+        private Action<OAuth2TokenResponse> _onFlowCompletedAction = (_) => { };
 
         private OAuth2CodeDialogScript _currentDialog;
 
         private Task<String> _refreshTokenTask;
 
 
-        public AuthManager(string dropboxAppKey, string dropboxAppSecret, Action<OAuth2TokenResponse> onFlowCompleted){
+        public AuthManager(string dropboxAppKey, string dropboxAppSecret, Action<OAuth2TokenResponse> onFlowCompleted) {
             // verify app key is valid
-            if(string.IsNullOrWhiteSpace(dropboxAppKey)){
-                 Debug.LogWarning("[DropboxSync] Dropbox app key is not set or invalid");
+            if (string.IsNullOrWhiteSpace(dropboxAppKey)) {
+                Debug.LogWarning("[DropboxSync] Dropbox app key is not set or invalid");
                 // throw new InvalidConfigurationException("Dropbox app key is not set or invalid");
             }
             _dropboxAppKey = dropboxAppKey;
@@ -35,19 +35,19 @@ namespace DBXSync {
 
 
         // PRESERVING ACCESS TOKEN
-        private void SaveAuthentication(OAuth2TokenResponse tokenResult){
+        private void SaveAuthentication(OAuth2TokenResponse tokenResult) {
             PlayerPrefs.SetString("DBXAuth_v4", JsonUtility.ToJson(tokenResult));
             PlayerPrefs.Save();
         }
 
-        public OAuth2TokenResponse GetSavedAuthentication(){
-            if(PlayerPrefs.HasKey("DBXAuth_v4")){                
+        public OAuth2TokenResponse GetSavedAuthentication() {
+            if (PlayerPrefs.HasKey("DBXAuth_v4")) {
                 return Utils.GetDropboxResponseFromJSON<OAuth2TokenResponse>(PlayerPrefs.GetString("DBXAuth_v4"));
             }
             return null;
         }
 
-        public void DropSavedAthentication(){
+        public void DropSavedAthentication() {
             PlayerPrefs.DeleteKey("DBXAuth_v4");
             PlayerPrefs.Save();
         }
@@ -55,22 +55,22 @@ namespace DBXSync {
 
         // OAUTH2 FLOW
 
-        public void LaunchOAuth2Flow(){
+        public void LaunchOAuth2Flow() {
             // open OAuth2 flow in browser
 
             // TODO: add token_access_type=offline query param (so that code flow returns both short-lived access_token and long-lived refresh_token)
             var url = $"https://www.dropbox.com/oauth2/authorize?client_id={_dropboxAppKey}&response_type=code&token_access_type=offline";
-            
+
             Application.OpenURL(url);
 
             // TODO: open dialog with code input in Unity
             _currentDialog = OpenCodeDialog(OnCodeSubmitted);
         }
 
-        private OAuth2CodeDialogScript OpenCodeDialog(Action<string> onCodeSubmitted){
+        private OAuth2CodeDialogScript OpenCodeDialog(Action<string> onCodeSubmitted) {
             // remove existing dialogs if exist
-            foreach(var d in Resources.FindObjectsOfTypeAll<OAuth2CodeDialogScript>()){                
-                if(d.gameObject.scene.name != null){ // if object is in scene and not prefab
+            foreach (var d in Resources.FindObjectsOfTypeAll<OAuth2CodeDialogScript>()) {
+                if (d.gameObject.scene.name != null) { // if object is in scene and not prefab
                     GameObject.Destroy(d.gameObject);
                 }
             }
@@ -85,7 +85,7 @@ namespace DBXSync {
         }
 
 
-        public static async Task<OAuth2TokenResponse> ExchangeCodeForAccessTokenAsync(string code, string appKey, string appSecret){
+        public static async Task<OAuth2TokenResponse> ExchangeCodeForAccessTokenAsync(string code, string appKey, string appSecret) {
             return await Utils.GetPostResponse<OAuth2TokenResponse>(new Uri("https://api.dropbox.com/oauth2/token"), new List<KeyValuePair<string, string>>{
                 new KeyValuePair<string, string>("grant_type", "authorization_code"),
                 new KeyValuePair<string, string>("code", code),
@@ -94,9 +94,9 @@ namespace DBXSync {
 
 
         public async Task<string> RefreshAccessToken() {
-            if(_refreshTokenTask == null){
+            if (_refreshTokenTask == null) {
                 _refreshTokenTask = _RefreshAccessTokenAsync();
-            }else{
+            } else {
                 Debug.LogWarning($"Already refreshing access_token, waiting for finish...");
             }
 
@@ -104,13 +104,13 @@ namespace DBXSync {
                 return await _refreshTokenTask;
             } finally {
                 _refreshTokenTask = null;
-            }           
+            }
         }
 
         private async Task<string> _RefreshAccessTokenAsync() {
             // check if have refresh_token
             var savedAuth = GetSavedAuthentication();
-            if(savedAuth != null && string.IsNullOrEmpty(savedAuth.refresh_token)){
+            if (savedAuth != null && string.IsNullOrEmpty(savedAuth.refresh_token)) {
                 // remove saved auth because it doesn't have refresh_token
                 DropSavedAthentication();
                 throw new NoRefreshTokenException("No refresh_token saved to get new access_token");
@@ -121,7 +121,7 @@ namespace DBXSync {
                 SaveAuthentication(oauth_resp);
                 Debug.Log($"Access token was refreshed to {oauth_resp.access_token}");
                 return oauth_resp.access_token;
-            } catch(InvalidGrantTokenException) {
+            } catch (InvalidGrantTokenException) {
                 DropSavedAthentication();
                 throw;
             }
@@ -129,7 +129,7 @@ namespace DBXSync {
 
         public async Task<OAuth2TokenResponse> GetAuthWithRefreshTokenAsync(string refreshToken) {
             var resp = await Utils.GetPostResponse<OAuth2TokenResponse>(
-                new Uri("https://api.dropbox.com/oauth2/token"), 
+                new Uri("https://api.dropbox.com/oauth2/token"),
                 new List<KeyValuePair<string, string>>{
                     new KeyValuePair<string, string>("grant_type", "refresh_token"),
                     new KeyValuePair<string, string>("refresh_token", refreshToken),
@@ -149,7 +149,7 @@ namespace DBXSync {
 
                 SaveAuthentication(oauth_resp);
                 return oauth_resp.access_token;
-            } catch(InvalidGrantTokenException) {
+            } catch (InvalidGrantTokenException) {
                 DropSavedAthentication();
                 throw;
             }
@@ -162,16 +162,16 @@ namespace DBXSync {
         }
 
 
-        private async void OnCodeSubmitted(string code){            
+        private async void OnCodeSubmitted(string code) {
             var tokenResult = await ExchangeCodeForAccessTokenAsync(code, _dropboxAppKey, _dropboxAppSecret);
-            if(tokenResult != null){
+            if (tokenResult != null) {
                 SaveAuthentication(tokenResult);
                 // Debug.Log($"Got access token: {tokenResult.access_token}");
                 _onFlowCompletedAction(tokenResult);
                 _currentDialog.Close();
                 _currentDialog = null;
-                
-            }else{
+
+            } else {
                 _currentDialog.DisplayError("Wrong code");
             }
         }

@@ -6,7 +6,7 @@ using DBXSync;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class TransferManagerWidgetScript : MonoBehaviour {  
+public class TransferManagerWidgetScript : MonoBehaviour {
 
     public enum TransferRowType {
         Queued,
@@ -41,13 +41,13 @@ public class TransferManagerWidgetScript : MonoBehaviour {
 
     // Start is called before the first frame update
     void Start() {
-        if(_dropboxSyncInstance == null){
+        if (_dropboxSyncInstance == null) {
             _dropboxSyncInstance = DropboxSync.Main;
         }
 
-        if(_dropboxSyncInstance != null && _dropboxSyncInstance.TransferManager != null){
+        if (_dropboxSyncInstance != null && _dropboxSyncInstance.TransferManager != null) {
             // subscribe to transfer list updates
-            _dropboxSyncInstance.TransferManager.OnTransfersListChanged += OnTransfersListChanged;            
+            _dropboxSyncInstance.TransferManager.OnTransfersListChanged += OnTransfersListChanged;
         }
 
         _maximizeButton.onClick.AddListener(Maximize);
@@ -59,83 +59,83 @@ public class TransferManagerWidgetScript : MonoBehaviour {
     // Update is called once per frame
     void Update() {
 
-        if(_dropboxSyncInstance != null && _dropboxSyncInstance.TransferManager != null){
+        if (_dropboxSyncInstance != null && _dropboxSyncInstance.TransferManager != null) {
 
-        if(_popUpWindow.activeInHierarchy){
-            
+            if (_popUpWindow.activeInHierarchy) {
+
                 _statusText.text = $"Downloads: {_dropboxSyncInstance.TransferManager.CurrentDownloadTransferNumber} ({_dropboxSyncInstance.TransferManager.CurrentQueuedDownloadTransfersNumber} queued) {_dropboxSyncInstance.TransferManager.CurrentTotalDownloadSpeedFormatted}"
                                     + $"\nUploads: {_dropboxSyncInstance.TransferManager.CurrentUploadTransferNumber} ({_dropboxSyncInstance.TransferManager.CurrentQueuedUploadTransfersNumber} queued) {_dropboxSyncInstance.TransferManager.CurrentTotalUploadSpeedFormatted}"
                                     + $"\nCompleted: {_dropboxSyncInstance.TransferManager.CompletedTransferNumber}"
                                     + $"\nFailed: {_dropboxSyncInstance.TransferManager.FailedTransfersNumber}"
                                     ;
-                
 
-                if(reloadTransferListAfter > 0 && Time.time >= reloadTransferListAfter){
+
+                if (reloadTransferListAfter > 0 && Time.time >= reloadTransferListAfter) {
                     ReloadTransfersList();
                     reloadTransferListAfter = 0;
                 }
-            }else{
+            } else {
                 // mini status
                 var totalDownloads = _dropboxSyncInstance.TransferManager.CurrentDownloadTransferNumber + _dropboxSyncInstance.TransferManager.CurrentQueuedDownloadTransfersNumber;
                 var totalUploads = _dropboxSyncInstance.TransferManager.CurrentUploadTransferNumber + _dropboxSyncInstance.TransferManager.CurrentQueuedUploadTransfersNumber;
-                
+
                 _maximizeButtonMiniStatusText.text = $"{(totalDownloads > 0 ? $"{totalDownloads} ↓" : "")} {(totalUploads > 0 ? $"{totalUploads} ↑" : "")}";
             }
-        }       
+        }
     }
 
     // METHODS
-    private void Maximize(){
+    private void Maximize() {
         _popUpWindow.SetActive(true);
         ReloadTransfersList();
     }
 
-    private void Minimize(){
+    private void Minimize() {
         _popUpWindow.SetActive(false);
     }
 
-    
-    void ReloadTransfersList(){
+
+    void ReloadTransfersList() {
         ClearContainer(_transfersContainer);
 
         // order by time finished in each group
         // active
-        foreach(var tr in _dropboxSyncInstance.TransferManager.ActiveTransfers.OrderByDescending(x => x.StartDateTime)){
+        foreach (var tr in _dropboxSyncInstance.TransferManager.ActiveTransfers.OrderByDescending(x => x.StartDateTime)) {
             InstantiateRowForTransfer(tr, TransferRowType.Active);
         }
         // queued        
-        foreach(var tr in _dropboxSyncInstance.TransferManager.QueuedTransfers){
+        foreach (var tr in _dropboxSyncInstance.TransferManager.QueuedTransfers) {
             InstantiateRowForTransfer(tr, TransferRowType.Queued);
         }
         // failed
-        foreach(var tr in _dropboxSyncInstance.TransferManager.FailedTransfers.OrderByDescending(x => x.EndDateTime)){
+        foreach (var tr in _dropboxSyncInstance.TransferManager.FailedTransfers.OrderByDescending(x => x.EndDateTime)) {
             InstantiateRowForTransfer(tr, TransferRowType.Failed);
         }
         // completed
-        foreach(var tr in _dropboxSyncInstance.TransferManager.CompletedTransfers.OrderByDescending(x => x.EndDateTime)){
+        foreach (var tr in _dropboxSyncInstance.TransferManager.CompletedTransfers.OrderByDescending(x => x.EndDateTime)) {
             InstantiateRowForTransfer(tr, TransferRowType.Completed);
-        }        
+        }
 
     }
 
-    private void InstantiateRowForTransfer(IFileTransfer transfer, TransferManagerWidgetScript.TransferRowType rowType){
+    private void InstantiateRowForTransfer(IFileTransfer transfer, TransferManagerWidgetScript.TransferRowType rowType) {
         var row = InstantiateIntoContainer<TransferRowScript>(transfer is DownloadFileTransfer ? _downloadRowPrefab : _uploadRowPrefab, _transfersContainer);
-        row.InitWith(transfer, rowType);        
+        row.InitWith(transfer, rowType);
     }
 
-    public static void ClearContainer (Transform container) {
+    public static void ClearContainer(Transform container) {
         foreach (Transform t in container) {
             if (Application.isPlaying) {
-                GameObject.Destroy (t.gameObject);
+                GameObject.Destroy(t.gameObject);
             } else {
-                GameObject.DestroyImmediate (t.gameObject);
+                GameObject.DestroyImmediate(t.gameObject);
             }
         }
     }
 
-    public static T InstantiateIntoContainer<T> (UnityEngine.Object prefab, Transform container) where T : MonoBehaviour {
-        var a = (GameObject.Instantiate (prefab) as GameObject).GetComponent<T> ();
-        a.transform.SetParent (container);
+    public static T InstantiateIntoContainer<T>(UnityEngine.Object prefab, Transform container) where T : MonoBehaviour {
+        var a = (GameObject.Instantiate(prefab) as GameObject).GetComponent<T>();
+        a.transform.SetParent(container);
         a.transform.localScale = Vector3.one;
         a.transform.localPosition = Vector3.zero;
 
@@ -144,7 +144,7 @@ public class TransferManagerWidgetScript : MonoBehaviour {
 
     // EVENTS   
 
-    void OnTransfersListChanged(){
+    void OnTransfersListChanged() {
         // debounce
         reloadTransferListAfter = Time.time + 0.2f;
     }
