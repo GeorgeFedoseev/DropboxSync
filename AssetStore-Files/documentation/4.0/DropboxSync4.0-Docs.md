@@ -5,7 +5,7 @@
 
 ![Logo](http://georgefedoseev.com/dropbox-sync/assets/DropboxSync_Large.png?nocache=1)
 
-### Contents
+<!-- ### Contents
 * Downloading
   * [GetFileAsLocalCachedPath()](#GetFileAsLocalCachedPath())
   * [GetFileAsBytes()](#GetFileAsBytes())
@@ -27,12 +27,12 @@
   * [Delete()](#Delete())
   * [PathExists()](#PathExists())
   * [GetMetadata()](#GetMetadata())
-  * [ShouldUpdateFileFromDropbox()](#ShouldUpdateFileFromDropbox())
+  * [ShouldUpdateFileFromDropbox()](#ShouldUpdateFileFromDropbox()) -->
 
 
 
 
-# `Downloading`
+# Downloading
 ## GetFileAsLocalCachedPath()
 
 ```csharp
@@ -161,7 +161,7 @@ DropboxSync.Main.GetFile<Texture2D>(EXAMPLE_IMAGE_PATH,
 
 
 
-#`Uploading`
+# Uploading
 
 ## UploadFile(string localFilePath)
 
@@ -251,7 +251,7 @@ Uploads byte array to Dropbox
 
 
 
-# `Keeping in Sync`
+# Keeping in Sync
 
 <span style="background:yellow;">**NOTE:** Synchronization is only one way: Dropbox to Local cache</span>
 
@@ -335,7 +335,7 @@ Checks if currently keeping Dropbox file of folder in sync
 
 
 
-# `Operations`
+# Operations
 
 
 

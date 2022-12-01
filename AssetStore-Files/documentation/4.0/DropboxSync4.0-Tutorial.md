@@ -13,7 +13,7 @@
 # DropboxSync v4.0 Tutorial
 
 ![Logo](http://georgefedoseev.com/dropbox-sync/assets/DropboxSync_Large.png?nocache=1)
-
+<!-- 
 ### Contents
 
 * [Setting up Dropbox App Folder](#Setting up Dropbox App Folder)
@@ -21,7 +21,7 @@
 * [Running Example scenes](#Running Example scenes)
   * [DownloadFileExample](#DownloadFileExample)
   * [FileExplorerExample](#FileExplorerExample)
-* [Setting up Custom Scene](#Setting up Custom Scene)
+* [Setting up Custom Scene](#Setting up Custom Scene) -->
 
 
 
