@@ -25,3 +25,6 @@ v4.1
 - better OAuth2 support
 - ability to refresh access_token using saved refresh_token
 - fixes related to large files upload
+
+v4.2
+- sharing links support (thanks to 	Massimiliano Soresini <max.soresini@gmail.com>)
