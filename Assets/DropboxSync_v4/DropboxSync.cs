@@ -548,9 +548,11 @@ public class DropboxSync : MonoBehaviour {
     /// <param name="dropboxPath">Path to share</param>
     /// <param name="audience">Who will have access to the shared path</param>
     /// <param name="access">Type of access</param>
+    /// <param name="allow_download">Allow or not download capabilities for shared links</param>
     /// <returns>Shared link metadata</returns>
 
-    public async Task<SharedLinkMetadata> CreateSharedLinkWithSettingsAsync(string dropboxPath,
+    public async Task<SharedLinkMetadata> CreateSharedLinkWithSettingsAsync(
+        string dropboxPath,
         string audience = LinkAudienceParam.PUBLIC,
         string access = RequestedLinkAccessLevelParam.VIEWER,
         bool allow_download = true
@@ -565,7 +567,13 @@ public class DropboxSync : MonoBehaviour {
         }, _config).ExecuteAsync()).GetMetadata();
     }
 
-    public void CreateSharedLinkWithSettings(string DropboxFilePath, Action<SharedLinkMetadata> successCallback, Action<Exception> errorCallback) {
+    public void CreateSharedLinkWithSettings(
+        string DropboxFilePath, 
+        Action<SharedLinkMetadata> successCallback, Action<Exception> errorCallback,
+        string audience = LinkAudienceParam.PUBLIC,
+        string access = RequestedLinkAccessLevelParam.VIEWER,
+        bool allow_download = true
+    ) {
         CreateSharedLinkWithSettingsAsync(DropboxFilePath).ContinueWith((t) => {
             if (t.Exception != null) {
                 errorCallback(t.Exception);
