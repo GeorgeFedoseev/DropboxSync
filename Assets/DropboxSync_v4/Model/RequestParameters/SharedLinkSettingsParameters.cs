@@ -15,18 +15,10 @@ namespace DBXSync {
 
     }
 
-    public struct RequestedVisibilityParam {
-        public const string PUBLIC = "public";
-        public const string TEAM_ONLY = "team_only";
-        public const string PASSWORD = "password";
-
-    }
-
     [System.Serializable]
     public class SharedLinkSettingsParameters : RequestParameters {
         public string audience = LinkAudienceParam.PUBLIC;
         public string access = RequestedLinkAccessLevelParam.VIEWER;
-        public string requested_visibility = RequestedVisibilityParam.PUBLIC;
         public bool allow_download = true;
     }
 }

@@ -545,27 +545,34 @@ public class DropboxSync : MonoBehaviour {
     /// <summary>
     /// Create share link
     /// </summary>
-    /// <param name="dropboxPath">Path to delete</param>
-    /// <returns>Share link metadata</returns>
+    /// <param name="dropboxPath">Path to share</param>
+    /// <param name="audience">Who will have access to the shared path</param>
+    /// <param name="access">Type of access</param>
+    /// <returns>Shared link metadata</returns>
 
-    public async Task<SharedLinkMetadata> CreateSharedLinkWithSettingsAsync(string DropboxFilePath) {
+    public async Task<SharedLinkMetadata> CreateSharedLinkWithSettingsAsync(string dropboxPath,
+        string audience = LinkAudienceParam.PUBLIC,
+        string access = RequestedLinkAccessLevelParam.VIEWER,
+        bool allow_download = true
+    ) {
         return (await new CreateSharedLinkRequest(new SharedLinkRequestParameters {
-            path = DropboxFilePath,
+            path = dropboxPath,
             settings = new SharedLinkSettingsParameters {
-                audience = "public",
-                access = "viewer",
-                requested_visibility = "public",
-                allow_download = true
+                audience = audience,
+                access = access,
+                allow_download = allow_download
             }
         }, _config).ExecuteAsync()).GetMetadata();
     }
 
-    public async void CreateSharedLinkWithSettings(string DropboxFilePath, Action<SharedLinkMetadata> successCallback, Action<Exception> errorCallback) {
-        try {
-            successCallback(await CreateSharedLinkWithSettingsAsync(DropboxFilePath));
-        } catch (Exception ex) {
-            errorCallback(ex);
-        }
+    public void CreateSharedLinkWithSettings(string DropboxFilePath, Action<SharedLinkMetadata> successCallback, Action<Exception> errorCallback) {
+        CreateSharedLinkWithSettingsAsync(DropboxFilePath).ContinueWith((t) => {
+            if (t.Exception != null) {
+                errorCallback(t.Exception);
+            } else {
+                successCallback(t.Result);
+            }
+        }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);
     }
 
 
