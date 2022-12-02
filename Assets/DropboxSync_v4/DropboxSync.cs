@@ -212,9 +212,9 @@ public class DropboxSync : MonoBehaviour {
             }
 
             GetFileAsLocalCachedPathAsync(dropboxPath, progressCallback, cancellationToken).ContinueWith((t) => {
-                if(t.Exception != null) {
+                if (t.Exception != null) {
                     errorCallback(t.Exception);
-                }else{
+                } else {
                     var latestMetadata = _cacheManager.GetLocalMetadataForDropboxPath(dropboxPath);
                     bool shouldServe = lastServedMetadata == null || lastServedMetadata.content_hash != latestMetadata.content_hash;
                     // don't serve same version again
@@ -222,7 +222,7 @@ public class DropboxSync : MonoBehaviour {
                         successCallback(t.Result);
                     }
                 }
-            }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);            
+            }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);
 
         } catch (Exception ex) {
             errorCallback(ex);
@@ -336,9 +336,9 @@ public class DropboxSync : MonoBehaviour {
         ThrowIfNotAuthenticated();
 
         UploadFileAsync(localFilePath, dropboxPath, progressCallback, cancellationToken).ContinueWith((t) => {
-            if(t.Exception != null) {
+            if (t.Exception != null) {
                 errorCallback(t.Exception);
-            }else{
+            } else {
                 successCallback(t.Result);
             }
         }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);
@@ -379,9 +379,9 @@ public class DropboxSync : MonoBehaviour {
                                     Action<Metadata> successCallback, Action<Exception> errorCallback, CancellationToken? cancellationToken) {
         ThrowIfNotAuthenticated();
         UploadFileAsync(bytes, dropboxPath, progressCallback, cancellationToken).ContinueWith((t) => {
-            if(t.Exception != null) {
+            if (t.Exception != null) {
                 errorCallback(t.Exception);
-            }else{
+            } else {
                 successCallback(t.Result);
             }
         }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);
@@ -458,9 +458,9 @@ public class DropboxSync : MonoBehaviour {
                                  Action<Exception> errorCallback, bool autorename = false) {
         ThrowIfNotAuthenticated();
         CreateFolderAsync(dropboxFolderPath, autorename).ContinueWith((t) => {
-            if(t.Exception != null){
-                errorCallback(t.Exception);                
-            }else{
+            if (t.Exception != null) {
+                errorCallback(t.Exception);
+            } else {
                 successCallback(t.Result);
             }
         }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);
@@ -501,9 +501,9 @@ public class DropboxSync : MonoBehaviour {
                             bool autorename = false) {
         ThrowIfNotAuthenticated();
         MoveAsync(fromDropboxPath, toDropboxPath, autorename).ContinueWith((t) => {
-            if(t.Exception != null){
-                errorCallback(t.Exception);                
-            }else{
+            if (t.Exception != null) {
+                errorCallback(t.Exception);
+            } else {
                 successCallback(t.Result);
             }
         }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);
@@ -533,12 +533,39 @@ public class DropboxSync : MonoBehaviour {
     public void Delete(string dropboxPath, Action<Metadata> successCallback, Action<Exception> errorCallback) {
         ThrowIfNotAuthenticated();
         DeleteAsync(dropboxPath).ContinueWith((t) => {
-            if(t.Exception != null){
-                errorCallback(t.Exception);                
-            }else{
+            if (t.Exception != null) {
+                errorCallback(t.Exception);
+            } else {
                 successCallback(t.Result);
             }
         }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);
+    }
+
+
+    /// <summary>
+    /// Create share link
+    /// </summary>
+    /// <param name="dropboxPath">Path to delete</param>
+    /// <returns>Share link metadata</returns>
+
+    public async Task<SharedLinkMetadata> CreateSharedLinkWithSettingsAsync(string DropboxFilePath) {
+        return (await new CreateSharedLinkRequest(new SharedLinkRequestParameters {
+            path = DropboxFilePath,
+            settings = new SharedLinkSettingsParameters {
+                audience = "public",
+                access = "viewer",
+                requested_visibility = "public",
+                allow_download = true
+            }
+        }, _config).ExecuteAsync()).GetMetadata();
+    }
+
+    public async void CreateSharedLinkWithSettings(string DropboxFilePath, Action<SharedLinkMetadata> successCallback, Action<Exception> errorCallback) {
+        try {
+            successCallback(await CreateSharedLinkWithSettingsAsync(DropboxFilePath));
+        } catch (Exception ex) {
+            errorCallback(ex);
+        }
     }
 
 
@@ -568,9 +595,9 @@ public class DropboxSync : MonoBehaviour {
                             Action<Metadata> successCallback, Action<Exception> errorCallback) {
         ThrowIfNotAuthenticated();
         GetMetadataAsync(dropboxPath).ContinueWith((t) => {
-            if(t.Exception != null){
-                errorCallback(t.Exception);                
-            }else{
+            if (t.Exception != null) {
+                errorCallback(t.Exception);
+            } else {
                 successCallback(t.Result);
             }
         }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);
@@ -605,9 +632,9 @@ public class DropboxSync : MonoBehaviour {
     public void PathExists(string dropboxPath, Action<bool> successCallback, Action<Exception> errorCallback) {
         ThrowIfNotAuthenticated();
         PathExistsAsync(dropboxPath).ContinueWith((t) => {
-            if(t.Exception != null){
-                errorCallback(t.Exception);                
-            }else{
+            if (t.Exception != null) {
+                errorCallback(t.Exception);
+            } else {
                 successCallback(t.Result);
             }
         }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);
@@ -667,9 +694,9 @@ public class DropboxSync : MonoBehaviour {
                                     bool recursive = false) {
         ThrowIfNotAuthenticated();
         ListFolderAsync(dropboxFolderPath, recursive).ContinueWith((t) => {
-            if(t.Exception != null){
-                errorCallback(t.Exception);                
-            }else{
+            if (t.Exception != null) {
+                errorCallback(t.Exception);
+            } else {
                 successCallback(t.Result);
             }
         }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);
@@ -704,9 +731,9 @@ public class DropboxSync : MonoBehaviour {
     public void ShouldUpdateFileFromDropbox(string dropboxFilePath, Action<bool> successCallback, Action<Exception> errorCallback) {
         ThrowIfNotAuthenticated();
         ShouldUpdateFromDropboxAsync(dropboxFilePath).ContinueWith((t) => {
-            if(t.Exception != null){
-                errorCallback(t.Exception);                
-            }else{
+            if (t.Exception != null) {
+                errorCallback(t.Exception);
+            } else {
                 successCallback(t.Result);
             }
         }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled);
