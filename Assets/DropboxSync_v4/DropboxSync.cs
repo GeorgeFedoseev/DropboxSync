@@ -67,17 +67,21 @@ public class DropboxSync : MonoBehaviour {
 
         var savedAuth = _authManager.GetSavedAuthentication();
 
+        // check if specified refresh token
+        if (!string.IsNullOrEmpty(_dropboxRefreshToken)) {
+            if(savedAuth != null && _dropboxRefreshToken != savedAuth.refresh_token) {
+                // specified refresh token has more priority, so drop saved in PlayerPrefs tokens
+                Debug.LogWarning($"[DropboxSync] Dropping saved credentials due to specified refresh token doesn't match one in saved creadentials.");
+                _authManager.DropSavedAthentication();
+                savedAuth = null;
+            }
+        }
+
         if (savedAuth != null) {
+            Debug.Log("[DropboxSync] Found cached access_token");
             // if have access_token saved, use that
             InitializeWithAccessToken(savedAuth.access_token);
-        } else {
-            // if have refresh_token specified in parameters, try to get access_token
-            if (!string.IsNullOrEmpty(_dropboxRefreshToken)) {
-                // var access_token = _authManager.AuthUsingRefreshTokenAsync(_dropboxRefreshToken).Result;
-                // InitializeWithAccessToken(access_token);
-            }
-            // else will need app user to auth to their dropbox account through UI
-        }
+        } // else will use specified refresh token (if given) or user should authenticate using OAuth2 flow in UI
     }
 
     // INIT
@@ -114,6 +118,7 @@ public class DropboxSync : MonoBehaviour {
     }
 
     private void OnOAuth2FlowCompleted(OAuth2TokenResponse tokenResult) {
+        Debug.Log("[DropboxSync] Authorized using OAuth2 Flow");
         InitializeWithAccessToken(tokenResult.access_token);
     }
 
@@ -145,6 +150,7 @@ public class DropboxSync : MonoBehaviour {
         if (!IsAuthenticated) {
             if (!string.IsNullOrEmpty(_dropboxRefreshToken) && _authManager != null) {
                 var access_token = _authManager.AuthWithRefreshTokenSync(_dropboxRefreshToken);
+                Debug.Log("[DropboxSync] Authorized using predefined refresh token");
                 InitializeWithAccessToken(access_token);
             } else {
                 throw new DropboxNotAuthenticatedException("Tried to call Dropbox API without authentication. Please authenticate using OAuth2 flow UI or specify refresh token parameter in DropboxSync component.");
