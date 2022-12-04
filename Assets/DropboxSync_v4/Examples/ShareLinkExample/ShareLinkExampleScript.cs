@@ -30,6 +30,7 @@ public class ShareLinkExampleScript : MonoBehaviour {
             }, (ex) => {
                 statusText.text = $"<color=red>Failed to create share link {ex}</color>";
                 sharedLinkField.text = "";
+                Debug.LogError($"Failed to create share link: {ex}");
             }, audience: LinkAudienceParam.PUBLIC, access: RequestedLinkAccessLevelParam.EDITOR, allow_download: false
         );
     }
