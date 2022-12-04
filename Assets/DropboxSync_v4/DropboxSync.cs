@@ -563,6 +563,7 @@ public class DropboxSync : MonoBehaviour {
         string access = RequestedLinkAccessLevelParam.VIEWER,
         bool allow_download = true
     ) {
+        ThrowIfNotAuthenticated();
         return (await new CreateSharedLinkRequest(new SharedLinkRequestParameters {
             path = dropboxPath,
             settings = new SharedLinkSettingsParameters {
@@ -580,6 +581,7 @@ public class DropboxSync : MonoBehaviour {
         string access = RequestedLinkAccessLevelParam.VIEWER,
         bool allow_download = true
     ) {
+        ThrowIfNotAuthenticated();
         CreateSharedLinkWithSettingsAsync(DropboxFilePath).ContinueWith((t) => {
             if (t.Exception != null) {
                 errorCallback(t.Exception);
