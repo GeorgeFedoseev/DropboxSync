@@ -56,18 +56,21 @@ public class UploadTextExampleScript : MonoBehaviour {
 
         Debug.Log("Upload text " + textToUploadInput.text);
 
-        DropboxSync.Main.UploadFile(Encoding.UTF8.GetBytes(textToUploadInput.text), TEXT_FILE_UPLOAD_PATH,
-                                    new Progress<TransferProgressReport>((progress) => { }),
-        (metadata) => {
-            Debug.Log("Upload completed");
-            textToUploadInput.text = "";
-            textToUploadInput.interactable = true;
-            uploadTextButton.interactable = true;
-        }, (ex) => {
-            Debug.LogError("Error uploading text file: " + ex.Message);
-            textToUploadInput.interactable = true;
-            uploadTextButton.interactable = true;
-        }, _cancellationTokenSource.Token);
+        DropboxSync.Main.UploadFile(
+            Encoding.UTF8.GetBytes(textToUploadInput.text),
+            TEXT_FILE_UPLOAD_PATH,
+            new Progress<TransferProgressReport>((progress) => { }),
+            (metadata) => {
+                Debug.Log("Upload completed");
+                textToUploadInput.text = "";
+                textToUploadInput.interactable = true;
+                uploadTextButton.interactable = true;
+            }, (ex) => {
+                Debug.LogError($"Error uploading text file: {ex}");
+                textToUploadInput.interactable = true;
+                uploadTextButton.interactable = true;
+            }, _cancellationTokenSource.Token
+        );
     }
 
     void UpdateDownloadedText(string desc) {
