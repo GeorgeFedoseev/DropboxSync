@@ -28,3 +28,7 @@ v4.1
 
 v4.2
 - sharing links support (thanks to 	Massimiliano Soresini <max.soresini@gmail.com>)
+
+v4.2.1
+- fix access token caching bug
+- fix authorization for sharing links
