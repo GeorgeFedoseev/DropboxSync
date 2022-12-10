@@ -41,7 +41,7 @@ After creation you will be redirected to `https://www.dropbox.com/developers/app
 <img src="tutorial-assets/3.png" width=700/>
 
 #### Step 4
-Paste app key and app secret into **DropboxSync Script** inspector field in **DownloadFileExample**  scene in Unity (you will find the scene in /DropboxSync_v3/Examples/).  
+Paste app key and app secret into **DropboxSync Script** inspector field in **DownloadFileExample**  scene in Unity (you will find the scene in /DropboxSync_v4/Examples/).  
 
 <img src="tutorial-assets/4.png?" width=500/>
 <img src="tutorial-assets/5.png?" width=400/>

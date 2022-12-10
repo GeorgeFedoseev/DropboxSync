@@ -33,7 +33,7 @@ After creation you will be redirected to `https://www.dropbox.com/developers/app
 <img src="tutorial-assets/3.png" width=700/>
 
 #### Step 4
-Copy generated access token and paste into **DropboxSync Script** inspector field in **DownloadFileExample**  scene in Unity (you will find the scene in /DropboxSync_v3/Examples/).  
+Copy generated access token and paste into **DropboxSync Script** inspector field in **DownloadFileExample**  scene in Unity (you will find the scene in /DropboxSync_v4/Examples/).  
 <img src="tutorial-assets/4.png?=1=2" width=800/>
 
 
