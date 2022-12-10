@@ -145,9 +145,9 @@ public class DropboxSync : MonoBehaviour {
 
 
     private void ThrowIfNotAuthenticated() {
-        // TODO: if not authenticated and have refreshToken param - authenticate
 
         if (!IsAuthenticated) {
+            // if not authenticated and have refreshToken param - authenticate
             if (!string.IsNullOrEmpty(_dropboxRefreshToken) && _authManager != null) {
                 var access_token = _authManager.AuthWithRefreshTokenSync(_dropboxRefreshToken);
                 Debug.Log("[DropboxSync] Authorized using predefined refresh token");
