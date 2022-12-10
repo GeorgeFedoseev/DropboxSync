@@ -172,6 +172,7 @@ public class DropboxSync : MonoBehaviour {
     /// <param name="cancellationToken">Cancellation token that can be used to cancel download</param>
     /// <returns>Task that produces path to downloaded file</returns>
     public async Task<string> GetFileAsLocalCachedPathAsync(string dropboxPath, Progress<TransferProgressReport> progressCallback, CancellationToken? cancellationToken = null) {
+        ThrowIfNotAuthenticated();
         return await _cacheManager.GetLocalFilePathAsync(dropboxPath, progressCallback, cancellationToken);
     }
 
