@@ -1,0 +1,669 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>DropboxSync v4 Tutorial</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 3px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	text-indent: -1.7em;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-block;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1.25em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(55, 53, 47, 1);
+}
+.highlight-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.highlight-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.highlight-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.highlight-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.highlight-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.highlight-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.highlight-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.highlight-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.highlight-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.highlight-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.highlight-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.highlight-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.highlight-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.highlight-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.highlight-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.block-color-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.block-color-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.block-color-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.block-color-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.block-color-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.block-color-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.block-color-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.block-color-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.block-color-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.block-color-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.block-color-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.block-color-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.select-value-color-pink { background-color: rgba(245, 224, 233, 1); }
+.select-value-color-purple { background-color: rgba(232, 222, 238, 1); }
+.select-value-color-green { background-color: rgba(219, 237, 219, 1); }
+.select-value-color-gray { background-color: rgba(227, 226, 224, 1); }
+.select-value-color-opaquegray { background-color: rgba(255, 255, 255, 0.0375); }
+.select-value-color-orange { background-color: rgba(250, 222, 201, 1); }
+.select-value-color-brown { background-color: rgba(238, 224, 218, 1); }
+.select-value-color-red { background-color: rgba(255, 226, 221, 1); }
+.select-value-color-yellow { background-color: rgba(253, 236, 200, 1); }
+.select-value-color-blue { background-color: rgba(211, 229, 239, 1); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="fc88c3ee-fa06-497e-8bd5-0546e291488d" class="page sans"><header><h1 class="page-title"><strong><strong>DropboxSync v4 Tutorial</strong></strong></h1></header><div class="page-body"><p id="5dde0303-14a7-4919-8b9e-6a2721192651" class=""><a href="https://www.notion.so/documentation.html">Go to Documentation</a></p><figure id="a5ac108a-ca55-46ce-bdf2-f729a7c05851" class="image"><a href="DropboxSync%20v4%20Tutorial%20fc88c3eefa06497e8bd50546e291488d/DropboxSync_Large.png"><img style="width:516px" src="DropboxSync%20v4%20Tutorial%20fc88c3eefa06497e8bd50546e291488d/DropboxSync_Large.png"/></a></figure><nav id="b9b0dded-531c-449f-951a-dbf6c8629579" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#90afb707-51eb-4cdf-a00e-4d2887d33d16">Getting Started</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#a98f6bc0-730a-4901-9bb9-357d769ec558">Step 1: Create Dropbox App</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#de2de8d2-8739-4024-afec-5b414924648c">Step 2: Get App Key and App Secret</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#75b3794a-f334-4867-b983-c3af4d1a9b3e">Step 3: Configure Permissions</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#3c506905-310f-442a-9094-7d66a43a2740">Step 4: Get Refresh Token (Optional)</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#76147bca-d455-464d-98ac-efabbc056ee7">Copying Example content for Example scenes</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#ee99dd21-d2c8-4187-9d3d-9caa191a95e1">Running Example scenes</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#8916bbd2-9f6f-4329-84ee-a9d71ee27cc8">DownloadFileExample</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#d0a60a7d-a362-4c44-adc2-e9c74d4ee360">FileExplorerExample</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#baf6476f-81b9-402c-a7b9-cb754ec01145">Setting up Custom Scene</a></div></nav><h2 id="90afb707-51eb-4cdf-a00e-4d2887d33d16" class="">Getting Started</h2><h3 id="a98f6bc0-730a-4901-9bb9-357d769ec558" class="">Step 1: Create Dropbox App</h3><p id="ca761766-0bb4-4f7e-99bb-5d68f3e2a525" class="">Navigate to <a href="https://www.dropbox.com/developers/apps/">Dropbox App creating page</a> and click <strong>Create app </strong>button.</p><figure id="91aac904-b4a7-4fb1-812b-a9b160e6c30e" class="image"><a href="http://georgefedoseev.com/dropbox-sync/tutorial-assets/1.png?"><img src="http://georgefedoseev.com/dropbox-sync/tutorial-assets/1.png?"/></a></figure><p id="ba7d16cb-b23b-4a28-89e2-3e059382aa66" class="">Create new app folder:</p><figure id="c6a53520-0f8d-4a46-bcc0-ab2b85959a03" class="image"><a href="http://georgefedoseev.com/dropbox-sync/tutorial-assets/2.png"><img src="http://georgefedoseev.com/dropbox-sync/tutorial-assets/2.png"/></a></figure><h3 id="de2de8d2-8739-4024-afec-5b414924648c" class="">Step 2: Get App Key and App Secret</h3><p id="a86583b8-83c9-4020-b24a-2dd171c088ab" class="">After creation you will be redirected to your app’s configuration page. Here you need to copy <strong>App key </strong>and <strong>App secret </strong>for your app that will be used by DropboxSync component parameters.</p><figure id="5710d466-b6b0-49ce-afc1-74141643e1b2" class="image"><a href="DropboxSync%20v4%20Tutorial%20fc88c3eefa06497e8bd50546e291488d/3.png"><img style="width:1354px" src="DropboxSync%20v4%20Tutorial%20fc88c3eefa06497e8bd50546e291488d/3.png"/></a></figure><p id="03acf53b-aeb7-4415-98e5-63187fcb9740" class="">Paste app key and app secret into <strong>DropboxSync Script</strong> inspector field in <strong>DownloadFileExample</strong> scene in Unity (you will find the scene in /DropboxSync_v4/Examples/).</p><figure id="e2f846e7-b5be-45ec-b1ba-a0c7b0b92e56" class="image"><a href="DropboxSync%20v4%20Tutorial%20fc88c3eefa06497e8bd50546e291488d/4.png"><img style="width:625px" src="DropboxSync%20v4%20Tutorial%20fc88c3eefa06497e8bd50546e291488d/4.png"/></a></figure><figure id="1d295f3a-f282-4901-9d6b-e162cf26e173" class="image"><a href="DropboxSync%20v4%20Tutorial%20fc88c3eefa06497e8bd50546e291488d/5.png"><img style="width:411px" src="DropboxSync%20v4%20Tutorial%20fc88c3eefa06497e8bd50546e291488d/5.png"/></a></figure><h3 id="75b3794a-f334-4867-b983-c3af4d1a9b3e" class="">Step 3: Configure Permissions</h3><p id="878f2e89-4dde-4e71-80d4-15e3eb85203f" class="">Navigate to <strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong>Permissions</strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong> tab and check all the permissions your app should have. </p><figure id="296f8cd3-1a74-4c92-8d20-0990d3e647df" class="image"><a href="DropboxSync%20v4%20Tutorial%20fc88c3eefa06497e8bd50546e291488d/Untitled.png"><img style="width:784px" src="DropboxSync%20v4%20Tutorial%20fc88c3eefa06497e8bd50546e291488d/Untitled.png"/></a></figure><p id="22af3a15-ad30-4557-8692-e555730af517" class=""><mark class="highlight-yellow_background"><strong>NOTE</strong></mark><mark class="highlight-yellow_background">: After changing permissions access and refresh tokens need to be regenerated for changes to apply. Old tokens will use old permissions.</mark></p><h3 id="3c506905-310f-442a-9094-7d66a43a2740" class="">Step 4: Get Refresh Token (Optional)</h3><p id="61468f9b-2f0b-492e-a8a7-435ee4aaf5ad" class="">If you want to use your own Dropbox account for all users of your app (in contrast with letting users to log in to their own), you should provide a refresh token in DropboxSync parameters.</p><p id="5b237d9a-d4ac-4ed3-9240-3b04deda568e" class="">To get the refresh token click <strong>Get Refresh Token </strong>button and follow steps in the web browser. Copy authorization <strong>code </strong>from final web OAuth2 flow step into respective DropboxSync component input and click <strong>Submit</strong>. After that <strong>Dropbox Refresh Token </strong>field should be filled.</p><figure id="99d36eee-ff31-4584-8400-2bdea7b7d4c6" class="image"><a href="DropboxSync%20v4%20Tutorial%20fc88c3eefa06497e8bd50546e291488d/6.png"><img style="width:692px" src="DropboxSync%20v4%20Tutorial%20fc88c3eefa06497e8bd50546e291488d/6.png"/></a></figure><figure id="c9ca5d44-30db-4504-b67f-44619b18ee24" class="image"><a href="DropboxSync%20v4%20Tutorial%20fc88c3eefa06497e8bd50546e291488d/7.png"><img style="width:399px" src="DropboxSync%20v4%20Tutorial%20fc88c3eefa06497e8bd50546e291488d/7.png"/></a><figcaption>Copy generated authorization code into DropboxSync inspector UI to generate refresh token. Click <strong>Submit</strong>. </figcaption></figure><figure id="57056664-9be0-4810-8ed5-828e33a3b499" class="image"><a href="DropboxSync%20v4%20Tutorial%20fc88c3eefa06497e8bd50546e291488d/8.png"><img style="width:399px" src="DropboxSync%20v4%20Tutorial%20fc88c3eefa06497e8bd50546e291488d/8.png"/></a></figure><p id="8909962b-b779-4d8c-b593-e600dacea5a9" class="">Now you have example scene connected to your app folder. To run example scenes you need to copy example content to your created app folder.</p><h2 id="76147bca-d455-464d-98ac-efabbc056ee7" class="">Copying Example content for Example scenes</h2><p id="3ee044b2-64c5-491b-9462-859812c07c6b" class="">Save <a href="https://www.dropbox.com/sh/u9yubr1rcydaf9s/AAD5Sf2MTKVTMjZCX8A2t3oOa">this folder</a> to your Dropbox account <strong>and then move it to created app folder</strong> that you copied accessToken for on previous steps.</p><h2 id="ee99dd21-d2c8-4187-9d3d-9caa191a95e1" class="">Running Example scenes</h2><p id="048498bf-1dbb-4dfc-9137-5c68bd86ceda" class=""><mark class="highlight-yellow_background"><strong>NOTE:</strong></mark><mark class="highlight-yellow_background"> for each scene you&#x27;ll need to insert appKey, appSecret and optionally refresh token.</mark></p><h3 id="8916bbd2-9f6f-4329-84ee-a9d71ee27cc8" class="">DownloadFileExample</h3><p id="ab4b167d-c4a8-4898-b08e-71ab7ea171d7" class="">Now when you run <strong>DownloadFileExample </strong>scene you should see something like this:</p><figure id="2cedffd2-05c8-48d9-a5eb-b63a98802d4a" class="image"><a href="DropboxSync%20v4%20Tutorial%20fc88c3eefa06497e8bd50546e291488d/download_example.png"><img style="width:1498px" src="DropboxSync%20v4%20Tutorial%20fc88c3eefa06497e8bd50546e291488d/download_example.png"/></a></figure><p id="3120ad2d-a5f3-4e74-9518-2e1c02d32dc1" class=""><em>(to open </em><em><strong>Transfers pop-up</strong></em><em> click on the button on the top right)</em></p><h3 id="d0a60a7d-a362-4c44-adc2-e9c74d4ee360" class="">FileExplorerExample</h3><p id="c4364cb8-087f-406e-8a73-a4490a058017" class="">To run other example scene (<strong>FileExplorerExample</strong>) copy appKey, appSecret and refresh token to DropboxSync inspector field same way and click play. You should see something like this:</p><figure id="65c1d86a-2b35-435b-99d2-aea9582d055d" class="image"><a href="DropboxSync%20v4%20Tutorial%20fc88c3eefa06497e8bd50546e291488d/file_explorer_example.png"><img style="width:1499px" src="DropboxSync%20v4%20Tutorial%20fc88c3eefa06497e8bd50546e291488d/file_explorer_example.png"/></a></figure><h3 id="baf6476f-81b9-402c-a7b9-cb754ec01145" class="">Setting up Custom Scene</h3><p id="089af9c0-541c-4a44-bad4-2b406f81700c" class="">To use DropboxSync asset in your own scenes create GameObject and attach DropboxSync script to it. Then use asset from your scripts through <code>DropboxSync.Main</code> instance.</p></div></article></body></html>

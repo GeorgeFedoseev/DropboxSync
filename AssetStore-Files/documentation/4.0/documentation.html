@@ -1,0 +1,749 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>DropboxSync v4 Documentation</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 3px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	text-indent: -1.7em;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-block;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1.25em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(55, 53, 47, 1);
+}
+.highlight-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.highlight-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.highlight-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.highlight-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.highlight-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.highlight-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.highlight-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.highlight-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.highlight-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.highlight-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.highlight-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.highlight-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.highlight-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.highlight-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.highlight-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.block-color-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.block-color-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.block-color-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.block-color-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.block-color-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.block-color-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.block-color-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.block-color-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.block-color-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.block-color-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.block-color-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.block-color-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.select-value-color-pink { background-color: rgba(245, 224, 233, 1); }
+.select-value-color-purple { background-color: rgba(232, 222, 238, 1); }
+.select-value-color-green { background-color: rgba(219, 237, 219, 1); }
+.select-value-color-gray { background-color: rgba(227, 226, 224, 1); }
+.select-value-color-opaquegray { background-color: rgba(255, 255, 255, 0.0375); }
+.select-value-color-orange { background-color: rgba(250, 222, 201, 1); }
+.select-value-color-brown { background-color: rgba(238, 224, 218, 1); }
+.select-value-color-red { background-color: rgba(255, 226, 221, 1); }
+.select-value-color-yellow { background-color: rgba(253, 236, 200, 1); }
+.select-value-color-blue { background-color: rgba(211, 229, 239, 1); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="077ec1e7-6cbd-4473-9c76-0b41776e728e" class="page sans"><header><h1 class="page-title">DropboxSync v4 Documentation</h1></header><div class="page-body"><p id="f403710f-ad70-4fd6-9828-2e112de9e780" class=""><a href="https://www.notion.so/tutorial.html">Go to Tutorial</a></p><figure id="d4cd75e2-8941-42c0-8b08-10f433f0dbb0" class="image"><a href="DropboxSync%20v4%20Documentation%20077ec1e76cbd44739c760b41776e728e/DropboxSync_Large.png"><img style="width:516px" src="DropboxSync%20v4%20Documentation%20077ec1e76cbd44739c760b41776e728e/DropboxSync_Large.png"/></a></figure><nav id="20f53801-0553-45ca-8fd3-ec2476e7876e" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#0932a358-2db4-4312-9a59-6bbe611b0af8">Downloading</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#0d477212-da53-41df-8e60-530aba7b00b6">GetFileAsLocalCachedPath()</a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#4767c7df-e3c3-4822-95a9-6ce8d9bde7e8">Example usage</a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#b947536a-2af9-4c0b-858d-93636b72b4da">Example usage (async)</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#4533a9cb-3678-42f1-8cad-cb831fa7ef00">GetFileAsBytes()</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#0aaf7ec0-dcd3-43a5-8375-103497a19ef7">GetFile&lt;T&gt;()</a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#aeb344c4-2801-421b-b5b2-f95ff2fbc3f7">Example usage</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2294e149-aa42-443b-a43d-6a8b3296f846">Uploading</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#85f65fce-da47-4451-afa0-189b0a3ca142">UploadFile(string localFilePath)</a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#8e824507-92eb-42f5-89d0-4bb8e5a44134">Example usage</a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#1b9f81b1-0ad6-4e26-9a6a-4c69602b514f">Example usage (async)</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#fc28c09a-eea9-4efd-843d-b1b594c68c80">UploadFile(byte[] bytes)</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#4ba8f202-2c0e-47a5-8406-52319946c966">Keeping in Sync</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#57f04975-62b8-46df-ac08-516da5a3f9e4">KeepSynced()</a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#8196720d-98c3-40eb-8692-e30b5a7807c0">Example usage</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#0aa6d29d-2858-46d2-bbf8-ae5018a50110">UnsubscribeFromKeepSyncCallback()</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#dc57cc7d-d857-4ec7-8cec-6c85e399ba10">StopKeepingInSync()</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#56138f6e-1390-4137-92f1-cf6c4d35999e">IsKeepingInSync()</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#a851a4ac-3395-4db3-adb6-3a5e10ed5c52">Operations</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#86293c1e-1e9e-4e94-8a10-e2034e061c9b">CreateFolder()</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#a56a5acf-a5b4-46ca-bb23-261f6d496def">ListFolder()</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#f1ac4fe0-b4bc-4382-9375-ab6afd4a6a4d">Move()</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#ae481fd0-cf61-458c-b6ec-5750ce720d93">Delete()</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#d6b9125c-b1aa-43fc-bf50-e5847dc22913">PathExists()</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d15c2e4-82d4-4f56-890a-c425a98fdb50">GetMetadata()</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#3401f55a-d83a-4017-bfeb-4290ef51acc1">ShouldUpdateFileFromDropbox()</a></div></nav><h1 id="0932a358-2db4-4312-9a59-6bbe611b0af8" class="">Downloading</h1><h2 id="0d477212-da53-41df-8e60-530aba7b00b6" class="">GetFileAsLocalCachedPath()</h2><pre id="96022984-e753-42c0-96a3-0e324eb1233a" class="code code-wrap"><code>public async void GetFileAsLocalCachedPath(string dropboxPath, Progress&lt;TransferProgressReport&gt; progressCallback, Action&lt;string&gt; successCallback, Action&lt;Exception&gt; errorCallback, bool useCachedFirst = false, bool useCachedIfOffline = true, bool receiveUpdates = false, CancellationToken? cancellationToken = null)</code></pre><p id="11922837-1d27-4550-884f-4bb98485c6e9" class="">Asynchronously retrieves file from Dropbox and returns path to local filesystem cached copy.</p><table id="56aa11a5-f3eb-4e20-a1b1-8c4b26079074" class="simple-table"><tbody><tr id="3e055a6e-25d9-499c-9f38-2d1a722ee91b"><td id="ZwYm" class=""><strong>Parameter</strong></td><td id="}?sC" class=""><strong>Description</strong></td></tr><tr id="352ce69b-d825-4229-ba4a-6c58c5cae3c8"><td id="ZwYm" class="">dropboxPath</td><td id="}?sC" class="">Path to file on Dropbox</td></tr><tr id="4371573a-ef03-40fb-962d-3574cb72a6d4"><td id="ZwYm" class="">progressCallback</td><td id="}?sC" class="">Progress callback with download percentage and speed</td></tr><tr id="c95398b5-7706-45ec-bb4e-724e92627857"><td id="ZwYm" class="">successCallback</td><td id="}?sC" class="">Callback for receiving downloaded file path</td></tr><tr id="fa368967-4227-460d-b0e8-92dd30a1c792"><td id="ZwYm" class="">errorCallback</td><td id="}?sC" class="">Callback that is triggered if any exception happened</td></tr><tr id="988c81b2-5fe8-4230-a5d2-6e1d3690c0c2"><td id="ZwYm" class="">useCachedFirst</td><td id="}?sC" class="">Serve cached version (if it exists) before event checking Dropbox for newer version?</td></tr><tr id="33dbb606-ce12-4a00-b95e-46a5536518d3"><td id="ZwYm" class="">useCachedIfOffline</td><td id="}?sC" class="">Use cached version if no Internet connection?</td></tr><tr id="cebd6bda-11f8-4708-b480-c6155ea07f75"><td id="ZwYm" class="">receiveUpdates</td><td id="}?sC" class="">If <code>true</code>, then when there are remote updates on Dropbox, callback function <code>successCallback</code> will be triggered again with updated version of the file.</td></tr><tr id="646b0e96-7275-443a-ac8e-989f55c3cf03"><td id="ZwYm" class="">cancellationToken</td><td id="}?sC" class="">Cancellation token that can be used to cancel download</td></tr></tbody></table><h3 id="4767c7df-e3c3-4822-95a9-6ce8d9bde7e8" class="">Example usage</h3><pre id="982b01d0-9900-4c84-befd-3cd050b609ec" class="code code-wrap"><code>_cancellationTokenSource = new CancellationTokenSource();
+
+DropboxSync.Main.GetFileAsLocalCachedPath(inputField.text, 
+  new Progress&lt;TransferProgressReport&gt;((report) =&gt; {                        
+      statusText.text = $&quot;Downloading: {report.progress}% {report.bytesPerSecondFormatted}&quot;;
+  }),
+  (localPath) =&gt; {
+      // success
+      print($&quot;Completed&quot;);
+      statusText.text = $&quot;&lt;color=green&gt;Local path: {localPath}&lt;/color&gt;&quot;;
+  }, (ex) =&gt; {
+      // exception
+      if(ex is OperationCanceledException){
+          Debug.Log(&quot;Download cancelled&quot;);
+          statusText.text = $&quot;&lt;color=orange&gt;Download canceled.&lt;/color&gt;&quot;;
+      }else{
+          Debug.LogException(ex);
+          statusText.text = $&quot;&lt;color=red&gt;Download failed.&lt;/color&gt;&quot;;
+      }
+  },
+  cancellationToken: _cancellationTokenSource.Token);</code></pre><h3 id="b947536a-2af9-4c0b-858d-93636b72b4da" class="">Example usage (async)</h3><pre id="622be489-7f22-4c1d-b506-8c3997533012" class="code code-wrap"><code>_cancellationTokenSource = new CancellationTokenSource();
+
+try {
+  var localPath = await DropboxSync.Main.GetFileAsLocalCachedPathAsync(inputField.text, 
+  new Progress&lt;TransferProgressReport&gt;((report) =&gt; {                        
+      print($&quot;Downloading: {report.progress}% {report.bytesPerSecondFormatted}&quot;);
+  }), _cancellationTokenSource.Token);
+
+  print($&quot;Completed&quot;);
+}catch(Exception ex){
+  if(ex is OperationCanceledException){
+    print(&quot;Download cancelled&quot;);
+  }else{
+    Debug.LogException(ex);
+  }
+}</code></pre><h2 id="4533a9cb-3678-42f1-8cad-cb831fa7ef00" class="">GetFileAsBytes()</h2><pre id="3be6d6b1-2b95-4f4c-b6fd-ac66c0f9aff2" class="code code-wrap"><code>public void GetFileAsBytes(string dropboxPath, Progress&lt;TransferProgressReport&gt; progressCallback, Action&lt;byte[]&gt; successCallback, Action&lt;Exception&gt; errorCallback, bool useCachedFirst = false, bool useCachedIfOffline = true, bool receiveUpdates = false, CancellationToken? cancellationToken = null)</code></pre><p id="c38f177f-7a76-4e2e-964b-eefa637c1633" class="">Asynchronously retrieves file from Dropbox and returns it as byte array</p><table id="a77ba826-7741-4ec4-b0cb-28566bc97841" class="simple-table"><tbody><tr id="c5ebea21-d07e-4f1e-9ec8-d698292b3ed8"><td id="AePn" class=""><strong>Parameter</strong></td><td id="t:In" class=""><strong>Description</strong></td></tr><tr id="f7af9fae-af82-4a8f-893f-b3e6e6514d81"><td id="AePn" class="">dropboxPath</td><td id="t:In" class="">Path to file on Dropbox</td></tr><tr id="77893444-3394-4c02-a53c-0b859d214394"><td id="AePn" class="">progressCallback</td><td id="t:In" class="">Progress callback with download percentage and speed</td></tr><tr id="77fadbce-ff8a-43c8-8c4c-de365c28dc6c"><td id="AePn" class="">successCallback</td><td id="t:In" class="">Callback for receiving downloaded file bytes</td></tr><tr id="7b400cdd-0c7a-4742-a9bb-922105ac1f54"><td id="AePn" class="">errorCallback</td><td id="t:In" class="">Callback that is triggered if any exception happened</td></tr><tr id="b91ae4a0-ed61-4863-8bde-9c3760c34f56"><td id="AePn" class="">useCachedFirst</td><td id="t:In" class="">Serve cached version (if it exists) before event checking Dropbox for newer version?</td></tr><tr id="f99ef71e-ec2a-4a2d-93e5-56bb911769f5"><td id="AePn" class="">useCachedIfOffline</td><td id="t:In" class="">Use cached version if no Internet connection?</td></tr><tr id="b6e7e872-6dfb-4b6b-83b5-1a4046fdf2c2"><td id="AePn" class="">receiveUpdates</td><td id="t:In" class="">If <code>true</code>, then when there are remote updates on Dropbox, callback function <code>successCallback</code> will be triggered again with updated version of the file.</td></tr><tr id="b37455d9-e662-4f44-a3a3-8504de35cbbd"><td id="AePn" class="">cancellationToken</td><td id="t:In" class="">Cancellation token that can be used to cancel download</td></tr></tbody></table><h2 id="0aaf7ec0-dcd3-43a5-8375-103497a19ef7" class="">GetFile&lt;T&gt;()</h2><pre id="10be41d0-c4a6-4e1b-b9dc-8d9a1e49ac66" class="code code-wrap"><code>public void GetFile&lt;T&gt;(string dropboxPath, Progress&lt;TransferProgressReport&gt; progressCallback, Action&lt;T&gt; successCallback, Action&lt;Exception&gt; errorCallback, bool useCachedFirst = false, bool useCachedIfOffline = true, bool receiveUpdates = false, CancellationToken? cancellationToken = null)</code></pre><p id="ad6129cc-2727-478d-9760-8fa1ee5b0fdd" class="">Retrieves file from Dropbox and returns it as T (T can be string, Texture2D or any type that can be deserialized from text using JsonUtility)</p><table id="cddb22ce-79a5-4393-9e0d-44a85df2ac2b" class="simple-table"><tbody><tr id="7820bbc1-c5f7-447a-979f-4e12779fb30d"><td id="}:eQ" class=""><strong>Parameter</strong></td><td id="NkwX" class=""><strong>Description</strong></td></tr><tr id="ef51affa-7e48-419a-be37-7f7e1e31f09f"><td id="}:eQ" class="">dropboxPath</td><td id="NkwX" class="">Path to file on Dropbox</td></tr><tr id="3b2f5fe4-d923-4991-b8e3-0f342f8984cb"><td id="}:eQ" class="">progressCallback</td><td id="NkwX" class="">Progress callback with download percentage and speed</td></tr><tr id="eaea70c3-0b3d-4106-a708-3e48c86aff20"><td id="}:eQ" class="">successCallback</td><td id="NkwX" class="">Callback for receiving downloaded object T (T can be string, Texture2D or any type that can be deserialized from text using JsonUtility)</td></tr><tr id="42e9a6ef-9b6c-4827-8840-efc22cccc1fa"><td id="}:eQ" class="">errorCallback</td><td id="NkwX" class="">Callback that is triggered if any exception happened</td></tr><tr id="1e8768ff-2269-454d-8548-4d06f2ac00dc"><td id="}:eQ" class="">useCachedFirst</td><td id="NkwX" class="">Serve cached version (if it exists) before event checking Dropbox for newer version?</td></tr><tr id="757f8a47-a1b5-4d1e-ae22-f481d86a8a7a"><td id="}:eQ" class="">useCachedIfOffline</td><td id="NkwX" class="">Use cached version if no Internet connection?</td></tr><tr id="df1c2425-c7ea-4124-a556-bf0b4ab8458a"><td id="}:eQ" class="">receiveUpdates</td><td id="NkwX" class="">If <code>true</code>, then when there are remote updates on Dropbox, callback function <code>successCallback</code> will be triggered again with updated version of the file.</td></tr><tr id="853cc3ef-9906-4267-b9d0-f7fd5df0d4fa"><td id="}:eQ" class="">cancellationToken</td><td id="NkwX" class="">Cancellation token that can be used to cancel download</td></tr></tbody></table><h3 id="aeb344c4-2801-421b-b5b2-f95ff2fbc3f7" class="">Example usage</h3><pre id="cae0bdda-a1a9-493d-805e-401bc84c09f4" class="code code-wrap"><code>DropboxSync.Main.GetFile&lt;Texture2D&gt;(EXAMPLE_IMAGE_PATH, 
+  new Progress&lt;TransferProgressReport&gt;((progress) =&gt; {}), 
+  (texture) =&gt; {      
+    UpdatePicture(texture);     
+  }, (ex) =&gt; {
+    Debug.LogError($&quot;Error getting picture from Dropbox: {ex}&quot;);
+  }, receiveUpdates: true, useCachedFirst:true);</code></pre><h1 id="2294e149-aa42-443b-a43d-6a8b3296f846" class="">Uploading</h1><h2 id="85f65fce-da47-4451-afa0-189b0a3ca142" class="">UploadFile(string localFilePath)</h2><pre id="78b3182e-91ac-4e7a-9147-b1526f000247" class="code code-wrap"><code>public async void UploadFile(string localFilePath, string dropboxPath, Progress&lt;TransferProgressReport&gt; progressCallback, Action&lt;Metadata&gt; successCallback, Action&lt;Exception&gt; errorCallback, CancellationToken? cancellationToken)</code></pre><p id="ef50b4d8-2c35-4683-b153-c5f1dede1bb7" class="">Uploads file from specified filepath in local filesystem to Dropbox</p><table id="c34ca4c3-6669-4708-89a5-fda026ab2bd8" class="simple-table"><tbody><tr id="1d68d2bc-6ab2-4feb-b2b0-8e0544a7134c"><td id="WWI:" class=""><strong>Parameter</strong></td><td id="iRm]" class=""><strong>Description</strong></td></tr><tr id="fcbff509-b97c-4ff9-ac4e-0fd9c01f9229"><td id="WWI:" class="">localFilePath</td><td id="iRm]" class="">Path to local file</td></tr><tr id="1a0f5d2b-c26c-40bd-9bc8-537e5440f26a"><td id="WWI:" class="">dropboxPath</td><td id="iRm]" class="">Upload path on Dropbox</td></tr><tr id="99cf53f0-a9a8-4b29-b7fe-191f2378fe9d"><td id="WWI:" class="">progressCallback</td><td id="iRm]" class="">Progress callback with upload percentage and speed</td></tr><tr id="1ca600c5-29b8-4d56-9939-615cde160b93"><td id="WWI:" class="">successCallback</td><td id="iRm]" class="">Callback for receiving uploaded file Metadata</td></tr><tr id="d087afe9-6ebc-475e-939b-94b0f88fd858"><td id="WWI:" class="">errorCallback</td><td id="iRm]" class="">Callback that is triggered if any exception happened</td></tr><tr id="2da3a11f-709d-436a-b0f1-54718a938bee"><td id="WWI:" class="">cancellationToken</td><td id="iRm]" class="">Cancellation token that can be used to cancel the upload</td></tr></tbody></table><h3 id="8e824507-92eb-42f5-89d0-4bb8e5a44134" class="">Example usage</h3><pre id="63f0b8ea-8783-4ca9-a072-20d309afff0e" class="code code-wrap"><code>_cancellationTokenSource  = new CancellationTokenSource();
+
+DropboxSync.Main.UploadFile(LOCAL_FILE_PATH, DROPBOX_UPLOAD_PATH, 
+  new Progress&lt;TransferProgressReport&gt;((report) =&gt; {
+    print($&quot;Uploading file {report.progress}% {report.bytesPerSecondFormatted}&quot;);           
+  }), (metadata) =&gt; {
+    // success      
+    print($&quot;Upload completed:\n{metadata}&quot;);
+  }, (ex) =&gt; {
+    // exception
+    if(ex is OperationCanceledException){
+      print(&quot;Upload cancelled&quot;);
+    }else{
+      Debug.LogException(ex);
+    }
+  }, _cancellationTokenSource.Token);</code></pre><h3 id="1b9f81b1-0ad6-4e26-9a6a-4c69602b514f" class="">Example usage (async)</h3><pre id="d9711732-aae7-474a-9838-a3ac1492f968" class="code code-wrap"><code>_cancellationTokenSource  = new CancellationTokenSource();
+    
+try {
+  var metadata = await DropboxSync.Main.UploadFileAsync(
+    LOCAL_FILE_PATH, DROPBOX_UPLOAD_PATH, 
+    new Progress&lt;TransferProgressReport&gt;((report) =&gt; {    
+      print($&quot;Uploading file {report.progress}% {report.bytesPerSecondFormatted}&quot;);
+  }), _cancellationTokenSource.Token);
+
+  print($&quot;Upload completed:\n{metadata}&quot;);
+  
+}catch(Exception ex){
+  if(ex is OperationCanceledException){
+    print(&quot;Upload cancelled&quot;);
+  }else{
+    Debug.LogException(ex);
+  }
+}</code></pre><h2 id="fc28c09a-eea9-4efd-843d-b1b594c68c80" class="">UploadFile(byte[] bytes)</h2><pre id="2ac2b292-bf92-4c2c-bdc9-fa7cef11b58a" class="code code-wrap"><code>public async void UploadFile(byte[] bytes, string dropboxPath, Progress&lt;TransferProgressReport&gt; progressCallback, Action&lt;Metadata&gt; successCallback, Action&lt;Exception&gt; errorCallback, CancellationToken? cancellationToken)</code></pre><p id="46da614b-5e36-433f-b7b8-382898aa039a" class="">Uploads byte array to Dropbox</p><table id="edfa6388-8252-464b-85f4-2c78f321b5e4" class="simple-table"><tbody><tr id="8c5b50ac-5900-4acc-9f09-514de1b08a28"><td id="jjRK" class=""><strong>Parameter</strong></td><td id="\c]:" class=""><strong>Description</strong></td></tr><tr id="b66760ee-2510-47ca-a57e-f4ceddf6d706"><td id="jjRK" class="">bytes</td><td id="\c]:" class="">Bytes to upload</td></tr><tr id="aa2091ae-aaed-4626-b84d-c1f0947dc5b9"><td id="jjRK" class="">dropboxPath</td><td id="\c]:" class="">Upload path on Dropbox</td></tr><tr id="870b39c7-d8a9-463d-95bc-54d5725a26b8"><td id="jjRK" class="">progressCallback</td><td id="\c]:" class="">Progress callback with upload percentage and speed</td></tr><tr id="bbb866ff-31f8-467f-b8a9-768ca31651d8"><td id="jjRK" class="">successCallback</td><td id="\c]:" class="">Callback for receiving uploaded file Metadata</td></tr><tr id="d8246d8a-acb8-4574-bd0c-24fe2a5945aa"><td id="jjRK" class="">errorCallback</td><td id="\c]:" class="">Callback that is triggered if any exception happened</td></tr><tr id="bf8cef29-3657-4235-aa88-e12ee842e4a8"><td id="jjRK" class="">cancellationToken</td><td id="\c]:" class="">Cancellation token that can be used to cancel the upload</td></tr></tbody></table><h1 id="4ba8f202-2c0e-47a5-8406-52319946c966" class="">Keeping in Sync</h1><p id="f5f4aa71-5cc2-4c64-82e9-0b6633d588a3" class=""><mark class="highlight-yellow_background"><strong>NOTE:</strong></mark><mark class="highlight-yellow_background"> Synchronization is only one way: Dropbox to Local cache</mark></p><h2 id="57f04975-62b8-46df-ac08-516da5a3f9e4" class="">KeepSynced()</h2><pre id="9143ae8a-4dad-480f-9342-1ed3f6b08253" class="code code-wrap"><code>public void KeepSynced(string dropboxPath, Action&lt;EntryChange&gt; syncedCallback)</code></pre><p id="ad3fe1c3-4722-4d04-9ad2-2f4dbc80a2fc" class="">Keep Dropbox file or folder synced (one-way: from Dropbox to Local cache)</p><table id="8b8f6ea1-2c46-40a4-8f7c-f76498327520" class="simple-table"><tbody><tr id="d19ea292-8646-49cd-ab6b-a72e38fdb8e0"><td id="YLIs" class=""><strong>Parameter</strong></td><td id="dc?e" class=""><strong>Description</strong></td></tr><tr id="56b05339-2f73-455e-a4d0-ec589ff13351"><td id="YLIs" class="">dropboxPath</td><td id="dc?e" class="">File or folder path on Dropbox</td></tr><tr id="d4f54991-1f9c-4b31-a2a3-b3d6f9a77d77"><td id="YLIs" class="">syncedCallback</td><td id="dc?e" class="">Callback that is triggered after change is synced from Dropbox</td></tr></tbody></table><h3 id="8196720d-98c3-40eb-8692-e30b5a7807c0" class="">Example usage</h3><pre id="a76037ba-b623-4bf8-bb51-dd0db661348c" class="code code-wrap"><code>void Start() {
+  DropboxSync.Main.KeepSynced(DROPBOX_PATH, OnChangeSynced);   
+}
+
+void OnChangeSynced(DBXSync.EntryChange change){
+    print($&quot;Change synced: {change}&quot;);
+}</code></pre><h2 id="0aa6d29d-2858-46d2-bbf8-ae5018a50110" class="">UnsubscribeFromKeepSyncCallback()</h2><pre id="182967f1-94e8-4ef2-aca9-c46c6a968f7c" class="code code-wrap"><code>public void UnsubscribeFromKeepSyncCallback(string dropboxPath, Action&lt;EntryChange&gt; syncedCallback)</code></pre><p id="c463a229-cd6c-4188-9292-9e08397a8025" class="">Unsubscribe specified callback from getting synced changes (if there will be no callbacks listening then syncing will automatically stop as well)</p><table id="c5a0a38f-dac7-458e-9e6f-6244253d74fd" class="simple-table"><tbody><tr id="40c4c420-aaaf-4bb9-ba6c-a765d14e7820"><td id="VO~l" class=""><strong>Parameter</strong></td><td id="l=Lw" class=""><strong>Description</strong></td></tr><tr id="bdbca9ea-0beb-4df0-ae40-0e0de27bdaa1"><td id="VO~l" class="">dropboxPath</td><td id="l=Lw" class="">File or folder path on Dropbox</td></tr><tr id="6cd9f160-d403-4b83-b615-295862418db2"><td id="VO~l" class="">syncedCallback</td><td id="l=Lw" class="">Callback that you wish to unsubscribe</td></tr></tbody></table><h2 id="dc57cc7d-d857-4ec7-8cec-6c85e399ba10" class="">StopKeepingInSync()</h2><pre id="d254375f-11ed-45d8-a1ab-83acf79acd82" class="code code-wrap"><code>public void StopKeepingInSync(string dropboxPath)</code></pre><p id="d52d25ec-2bd7-47ad-9caf-a2701040474b" class="">Stop keeping in sync Dropbox file or folder</p><table id="ef9c5327-7d05-463f-a85a-6db59429c60d" class="simple-table"><tbody><tr id="679d64f1-e69d-4f0e-a233-1e08dfa8f14d"><td id="wsiz" class=""><strong>Parameter</strong></td><td id="ilYt" class=""><strong>Description</strong></td></tr><tr id="40cb337e-7d99-4759-b49f-a385124f7851"><td id="wsiz" class="">dropboxPath</td><td id="ilYt" class="">File or folder path on Dropbox</td></tr></tbody></table><h2 id="56138f6e-1390-4137-92f1-cf6c4d35999e" class="">IsKeepingInSync()</h2><pre id="0b7fc286-7e57-42ac-8a99-ec1a7039c0bd" class="code code-wrap"><code>public bool IsKeepingInSync(string dropboxPath)</code></pre><p id="f682c8ea-0c86-410f-9f3e-7f81724e6322" class="">Checks if currently keeping Dropbox file of folder in sync</p><table id="54642968-a99b-4a50-8b29-02de26fa3869" class="simple-table"><tbody><tr id="f52b0a73-9682-464e-a702-022297d4df49"><td id="a&lt;hL" class=""><strong>Parameter</strong></td><td id="B}fq" class=""><strong>Description</strong></td></tr><tr id="0ff0db51-b0a4-4b28-a359-0036d2cad2f5"><td id="a&lt;hL" class="">dropboxPath</td><td id="B}fq" class="">File or folder path on Dropbox</td></tr></tbody></table><h1 id="a851a4ac-3395-4db3-adb6-3a5e10ed5c52" class="">Operations</h1><h2 id="86293c1e-1e9e-4e94-8a10-e2034e061c9b" class="">CreateFolder()</h2><pre id="19fef0e2-4a5b-4bf9-9b5f-9ea715c59c7e" class="code code-wrap"><code>public async void CreateFolder(string dropboxFolderPath, Action&lt;Metadata&gt; successCallback, Action&lt;Exception&gt; errorCallback, bool autorename = false)</code></pre><p id="9db13b77-b562-4d25-9112-5c5773aa1e49" class="">Creates folder on Dropbox</p><table id="3690c027-89af-4349-a386-87bfca6bc21f" class="simple-table"><tbody><tr id="2b00460a-ffd7-464b-9971-80074e380c31"><td id="[;TI" class=""><strong>Parameter</strong></td><td id="EVo\" class=""><strong>Description</strong></td></tr><tr id="f9f48a84-3872-4173-9974-4ff8df45e15f"><td id="[;TI" class="">dropboxFolderPath</td><td id="EVo\" class="">Folder to create</td></tr><tr id="d2936e68-927b-4bc1-9e58-1e329ea3ac2e"><td id="[;TI" class="">successCallback</td><td id="EVo\" class="">Callback for receiving created folder Metadata</td></tr><tr id="12b2aa26-f32f-4065-b7c5-167629d1d998"><td id="[;TI" class="">errorCallback</td><td id="EVo\" class="">Callback for receiving exceptions</td></tr><tr id="11b60b46-aa2b-41b9-9a17-b2b30b986d00"><td id="[;TI" class="">autorename</td><td id="EVo\" class="">Should autorename if conflicting paths?</td></tr></tbody></table><h2 id="a56a5acf-a5b4-46ca-bb23-261f6d496def" class="">ListFolder()</h2><pre id="7c50b188-73b6-42b3-9a28-b3c24809617d" class="code code-wrap"><code>public async void ListFolder(string dropboxFolderPath, Action&lt;List&lt;Metadata&gt;&gt; successCallback, Action&lt;Exception&gt; errorCallback, bool recursive = false)</code></pre><p id="464003c9-7610-4e66-a6c2-eee0ae1265f7" class="">Get contents of the folder on Dropbox</p><table id="680d5ecf-0d35-46bf-915d-f49f74733a38" class="simple-table"><tbody><tr id="d6c35d92-8716-4ae7-92b7-05c0a5e4564f"><td id="b[dY" class=""><strong>Parameter</strong></td><td id="nsok" class=""><strong>Description</strong></td></tr><tr id="2c432a0e-e083-4b82-be71-fbd9d479180e"><td id="b[dY" class="">dropboxFolderPath</td><td id="nsok" class="">Path to folder on Dropbox</td></tr><tr id="0aaca490-592d-45da-b3b3-d4e1092614cd"><td id="b[dY" class="">successCallback</td><td id="nsok" class="">Callback for receiving a List of file&#x27;s and folder&#x27;s Metadata - contents on the folder</td></tr><tr id="ac8169f6-f879-4225-b8b1-15461c52fbd7"><td id="b[dY" class="">errorCallback</td><td id="nsok" class="">Callback for receiving exceptions</td></tr><tr id="28cac7dd-dc61-4754-8c11-0b7e06ae41ff"><td id="b[dY" class="">recursive</td><td id="nsok" class="">Include all subdirectories recursively?</td></tr></tbody></table><h2 id="f1ac4fe0-b4bc-4382-9375-ab6afd4a6a4d" class="">Move()</h2><pre id="202ef453-18b1-4218-bc0d-b4fa07ad1588" class="code code-wrap"><code>public async void Move(string fromDropboxPath, string toDropboxPath, Action&lt;Metadata&gt; successCallback, Action&lt;Exception&gt; errorCallback, bool autorename = false)</code></pre><p id="90bdc8fc-7579-468f-b28c-5db4dcabe9f3" class="">Move file or folder from one path to another</p><table id="62d9f26e-bc7f-4f5b-944f-77df67432765" class="simple-table"><tbody><tr id="bed77328-5087-4343-90df-2154ae6e8f22"><td id="_H_V" class=""><strong>Parameter</strong></td><td id="mFkH" class=""><strong>Description</strong></td></tr><tr id="f668ef9c-d5e9-48c9-b7d0-badc3ff5cbc1"><td id="_H_V" class="">fromDropboxPath</td><td id="mFkH" class="">From where to move</td></tr><tr id="65a91242-3de1-4415-9219-8801581d075c"><td id="_H_V" class="">toDropboxPath</td><td id="mFkH" class="">Where to move</td></tr><tr id="e9bc445c-ffd2-4cd5-9d19-d560609d3792"><td id="_H_V" class="">successCallback</td><td id="mFkH" class="">Callback for receiving moved object Metadata</td></tr><tr id="e2a1a692-348b-4053-aaff-631b9abe3bde"><td id="_H_V" class="">errorCallback</td><td id="mFkH" class="">Callback for receiving exceptions</td></tr><tr id="60ccb15a-5e62-4acb-a210-b82d911f9f81"><td id="_H_V" class="">autorename</td><td id="mFkH" class="">Should autorename if conflicting paths?</td></tr></tbody></table><h2 id="ae481fd0-cf61-458c-b6ec-5750ce720d93" class="">Delete()</h2><pre id="dec6f994-1e9d-4893-ab31-e536ead23e01" class="code code-wrap"><code>public async void Delete(string dropboxPath, Action&lt;Metadata&gt; successCallback, Action&lt;Exception&gt; errorCallback)</code></pre><p id="3b085c1d-b41d-49ca-ad5e-c22ea64c5101" class="">Delete file or folder on Dropbox</p><table id="de4926fb-c412-42e2-939b-3e39820f614d" class="simple-table"><tbody><tr id="0efe4e69-9971-4e97-b2d1-762653f5330c"><td id="K|zO" class=""><strong>Parameter</strong></td><td id="B&gt;Og" class=""><strong>Description</strong></td></tr><tr id="6c9a9a15-a58f-4fa6-a620-579e207b582d"><td id="K|zO" class="">dropboxPath</td><td id="B&gt;Og" class="">Path to delete</td></tr><tr id="a68636ef-9dfc-446e-8ad3-9533536a5fd7"><td id="K|zO" class="">successCallback</td><td id="B&gt;Og" class="">Callback for receiving deleted object Metadata</td></tr><tr id="157ab7ed-6157-4139-aa74-81c37032ae67"><td id="K|zO" class="">errorCallback</td><td id="B&gt;Og" class="">Callback for receiving exceptions</td></tr></tbody></table><h2 id="d6b9125c-b1aa-43fc-bf50-e5847dc22913" class="">PathExists()</h2><pre id="0c7af999-95a7-461a-89ec-d56b7a2f7488" class="code code-wrap"><code>public async void PathExists(string dropboxPath, Action&lt;bool&gt; successCallback, Action&lt;Exception&gt; errorCallback)</code></pre><p id="6b190c09-bcc6-42c9-9903-86879f99599a" class="">Checks if file or folder exists on Dropbox</p><table id="4e8387bc-367e-4571-968f-16d3349dd509" class="simple-table"><tbody><tr id="145f72c0-a5ba-45e3-8130-324956e9eeb0"><td id="j]YK" class=""><strong>Parameter</strong></td><td id="b}LQ" class=""><strong>Description</strong></td></tr><tr id="db556e88-a071-491b-b9e8-c9209c90cb18"><td id="j]YK" class="">dropboxPath</td><td id="b}LQ" class="">Path to file or folder</td></tr><tr id="221a7cd7-8f2d-461f-8485-77cc604aa4db"><td id="j]YK" class="">successCallback</td><td id="b}LQ" class="">Callback for receiving boolean result</td></tr><tr id="89224e06-ab85-4db6-bf85-161178522ad8"><td id="j]YK" class="">errorCallback</td><td id="b}LQ" class="">Callback for receiving exceptions</td></tr></tbody></table><h2 id="2d15c2e4-82d4-4f56-890a-c425a98fdb50" class="">GetMetadata()</h2><pre id="077d0d42-9daa-488b-b890-809f5a884e5c" class="code code-wrap"><code>public async void GetMetadata(string dropboxPath, Action&lt;Metadata&gt; successCallback, Action&lt;Exception&gt; errorCallback)</code></pre><p id="cd4e1561-19b0-4d4a-bdef-50028f3c64c4" class="">Get Metadata for file or folder on Dropbox</p><table id="329bf616-77b8-4c3e-8c41-ab93c7bb75a6" class="simple-table"><tbody><tr id="557b1b7a-ac3c-4666-959f-ebada5d22413"><td id="b\mQ" class=""><strong>Parameter</strong></td><td id="`QHk" class=""><strong>Description</strong></td></tr><tr id="a700a43a-17f5-43d0-82ee-ce2630b48886"><td id="b\mQ" class="">dropboxPath</td><td id="`QHk" class="">Path to file or folder</td></tr><tr id="522a28b9-2583-4d71-93be-067a5faddaef"><td id="b\mQ" class="">successCallback</td><td id="`QHk" class="">Callback for receiving file&#x27;s or folder&#x27;s Metadata</td></tr><tr id="061bfb09-b1e1-4eb4-903c-101969c0dc77"><td id="b\mQ" class="">errorCallback</td><td id="`QHk" class="">Callback for receiving exceptions</td></tr></tbody></table><h2 id="3401f55a-d83a-4017-bfeb-4290ef51acc1" class="">ShouldUpdateFileFromDropbox()</h2><pre id="0ce579f0-c66d-458a-88ed-e34253efa1c4" class="code code-wrap"><code>public async void ShouldUpdateFileFromDropbox(string dropboxFilePath, Action&lt;bool&gt; successCallback, Action&lt;Exception&gt; errorCallback)</code></pre><p id="197907f5-216f-462a-9cbd-a36a06cba577" class="">Checks if Dropbox has different version of the file (always returns true if file is not cached locally)</p><table id="74f5dbc2-707e-40a3-a64c-717ff736d910" class="simple-table"><tbody><tr id="d3ebdaab-e6de-408b-9c0f-7d4eb3fb6b38"><td id="{ybP" class=""><strong>Parameter</strong></td><td id="cgUd" class=""><strong>Description</strong></td></tr><tr id="5b8f7fce-6be1-4890-9fd7-145e8d687dd7"><td id="{ybP" class="">dropboxFilePath</td><td id="cgUd" class="">Path to file on Dropbox</td></tr><tr id="b96b798c-6d2b-47bb-aada-8780c003ea28"><td id="{ybP" class="">successCallback</td><td id="cgUd" class="">Callback for receiving boolean result</td></tr><tr id="4754e0da-0a12-4f2f-b148-3819fadf410c"><td id="{ybP" class="">errorCallback</td><td id="cgUd" class="">Callback for receiving exceptions</td></tr></tbody></table><p id="9101a744-df8e-4fdb-a3ae-93f9a58a1171" class="">
+</p></div></article></body></html>
