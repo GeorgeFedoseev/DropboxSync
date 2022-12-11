@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>DropboxSync4.0-Docs.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="a-href%22httpgeorgefedoseevcom%22-style%22text-decorationnone-color-black%22img-style%22vertical-alignmiddle%22-src%22httpgeorgefedoseevcomdropbox-syncassetsrounded-corners-122x128png%22-width50-george-fedoseeva"><a href="http://georgefedoseev.com/" style="text-decoration:none; color: black;"><img style="vertical-align:middle" src="http://georgefedoseev.com/dropbox-sync/assets/rounded-corners-122x128.png" width=50/>  George Fedoseev</a></h1>
+<h1 id="dropboxsync-v40-documentation">DropboxSync v4.0 Documentation</h1>
+<p><img src="http://georgefedoseev.com/dropbox-sync/assets/DropboxSync_Large.png?nocache=1" alt="Logo"></p>
+<!-- ### Contents
+* Downloading
+  * [GetFileAsLocalCachedPath()](#GetFileAsLocalCachedPath())
+  * [GetFileAsBytes()](#GetFileAsBytes())
+  * [GetFile\<T>()](#GetFile\<T>())
+* Uploading
+
+  * [UploadFile(string localFilePath)](#UploadFile(string localFilePath))
+
+  * [UploadFile(byte[] bytes)](#UploadFile(byte[] bytes))
+* KeepSynced
+  * [KeepSynced()](#KeepSynced())
+  * [UnsubscribeFromKeepSyncCallback()](#UnsubscribeFromKeepSyncCallback())
+  * [StopKeepingInSync()](#StopKeepingInSync())
+  * [IsKeepingInSync()](#IsKeepingInSync())
+* Operations
+  * [CreateFolder()](#CreateFolder())
+  * [ListFolder()](#ListFolder())
+  * [Move()](#Move())
+  * [Delete()](#Delete())
+  * [PathExists()](#PathExists())
+  * [GetMetadata()](#GetMetadata())
+  * [ShouldUpdateFileFromDropbox()](#ShouldUpdateFileFromDropbox()) -->
+<h1 id="downloading">Downloading</h1>
+<h2 id="getfileaslocalcachedpath">GetFileAsLocalCachedPath()</h2>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">async</span> <span class="hljs-keyword">void</span> <span class="hljs-title">GetFileAsLocalCachedPath</span>(<span class="hljs-params"><span class="hljs-keyword">string</span> dropboxPath, Progress&lt;TransferProgressReport&gt; progressCallback, Action&lt;<span class="hljs-keyword">string</span>&gt; successCallback, Action&lt;Exception&gt; errorCallback, <span class="hljs-keyword">bool</span> useCachedFirst = <span class="hljs-literal">false</span>, <span class="hljs-keyword">bool</span> useCachedIfOffline = <span class="hljs-literal">true</span>, <span class="hljs-keyword">bool</span> receiveUpdates = <span class="hljs-literal">false</span>, CancellationToken? cancellationToken = <span class="hljs-literal">null</span></span>)
+</span></div></code></pre>
+<p>Asynchronously retrieves file from Dropbox and returns path to local filesystem cached copy.</p>
+<h3 id="parameters">Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dropboxPath</td>
+<td>Path to file on Dropbox</td>
+</tr>
+<tr>
+<td>progressCallback</td>
+<td>Progress callback with download percentage and speed</td>
+</tr>
+<tr>
+<td>successCallback</td>
+<td>Callback for receiving downloaded file path</td>
+</tr>
+<tr>
+<td>errorCallback</td>
+<td>Callback that is triggered if any exception happened</td>
+</tr>
+<tr>
+<td>useCachedFirst</td>
+<td>Serve cached version (if it exists) before event checking Dropbox for newer version?</td>
+</tr>
+<tr>
+<td>useCachedIfOffline</td>
+<td>Use cached version if no Internet connection?</td>
+</tr>
+<tr>
+<td>receiveUpdates</td>
+<td>If <code>true</code>, then when there are remote updates on Dropbox, callback function <code>successCallback </code> will be triggered again with updated version of the file.</td>
+</tr>
+<tr>
+<td>cancellationToken</td>
+<td>Cancellation token that can be used to cancel download</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-usage">Example usage</h3>
+<pre class="hljs"><code><div>_cancellationTokenSource = <span class="hljs-keyword">new</span> CancellationTokenSource();
+
+DropboxSync.Main.GetFileAsLocalCachedPath(inputField.text, 
+  <span class="hljs-keyword">new</span> Progress&lt;TransferProgressReport&gt;((report) =&gt; {                        
+      statusText.text = <span class="hljs-string">$"Downloading: <span class="hljs-subst">{report.progress}</span>% <span class="hljs-subst">{report.bytesPerSecondFormatted}</span>"</span>;
+  }),
+  (localPath) =&gt; {
+      <span class="hljs-comment">// success</span>
+      print(<span class="hljs-string">$"Completed"</span>);
+  		statusText.text = <span class="hljs-string">$"&lt;color=green&gt;Local path: <span class="hljs-subst">{localPath}</span>&lt;/color&gt;"</span>;
+  }, (ex) =&gt; {
+      <span class="hljs-comment">// exception</span>
+      <span class="hljs-keyword">if</span>(ex <span class="hljs-keyword">is</span> OperationCanceledException){
+          Debug.Log(<span class="hljs-string">"Download cancelled"</span>);
+          statusText.text = <span class="hljs-string">$"&lt;color=orange&gt;Download canceled.&lt;/color&gt;"</span>;
+      }<span class="hljs-keyword">else</span>{
+          Debug.LogException(ex);
+          statusText.text = <span class="hljs-string">$"&lt;color=red&gt;Download failed.&lt;/color&gt;"</span>;
+      }
+  },
+  cancellationToken: _cancellationTokenSource.Token);
+</div></code></pre>
+<p>###Example usage (async)</p>
+<pre class="hljs"><code><div>_cancellationTokenSource = <span class="hljs-keyword">new</span> CancellationTokenSource();
+
+<span class="hljs-keyword">try</span> {
+  <span class="hljs-keyword">var</span> localPath = <span class="hljs-keyword">await</span> DropboxSync.Main.GetFileAsLocalCachedPathAsync(inputField.text, 
+  <span class="hljs-keyword">new</span> Progress&lt;TransferProgressReport&gt;((report) =&gt; {                        
+      print(<span class="hljs-string">$"Downloading: <span class="hljs-subst">{report.progress}</span>% <span class="hljs-subst">{report.bytesPerSecondFormatted}</span>"</span>);
+  }), _cancellationTokenSource.Token);
+
+  print(<span class="hljs-string">$"Completed"</span>);
+}<span class="hljs-keyword">catch</span>(Exception ex){
+  <span class="hljs-keyword">if</span>(ex <span class="hljs-keyword">is</span> OperationCanceledException){
+    print(<span class="hljs-string">"Download cancelled"</span>);
+  }<span class="hljs-keyword">else</span>{
+    Debug.LogException(ex);
+  }
+}
+</div></code></pre>
+<h2 id="getfileasbytes">GetFileAsBytes()</h2>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">GetFileAsBytes</span>(<span class="hljs-params"><span class="hljs-keyword">string</span> dropboxPath, Progress&lt;TransferProgressReport&gt; progressCallback, Action&lt;<span class="hljs-keyword">byte</span>[]&gt; successCallback, Action&lt;Exception&gt; errorCallback, <span class="hljs-keyword">bool</span> useCachedFirst = <span class="hljs-literal">false</span>, <span class="hljs-keyword">bool</span> useCachedIfOffline = <span class="hljs-literal">true</span>, <span class="hljs-keyword">bool</span> receiveUpdates = <span class="hljs-literal">false</span>, CancellationToken? cancellationToken = <span class="hljs-literal">null</span></span>)
+</span></div></code></pre>
+<p>Asynchronously retrieves file from Dropbox and returns it as byte array</p>
+<h3 id="parameters">Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dropboxPath</td>
+<td>Path to file on Dropbox</td>
+</tr>
+<tr>
+<td>progressCallback</td>
+<td>Progress callback with download percentage and speed</td>
+</tr>
+<tr>
+<td>successCallback</td>
+<td>Callback for receiving downloaded file bytes</td>
+</tr>
+<tr>
+<td>errorCallback</td>
+<td>Callback that is triggered if any exception happened</td>
+</tr>
+<tr>
+<td>useCachedFirst</td>
+<td>Serve cached version (if it exists) before event checking Dropbox for newer version?</td>
+</tr>
+<tr>
+<td>useCachedIfOffline</td>
+<td>Use cached version if no Internet connection?</td>
+</tr>
+<tr>
+<td>receiveUpdates</td>
+<td>If <code>true</code>, then when there are remote updates on Dropbox, callback function <code>successCallback </code> will be triggered again with updated version of the file.</td>
+</tr>
+<tr>
+<td>cancellationToken</td>
+<td>Cancellation token that can be used to cancel download</td>
+</tr>
+</tbody>
+</table>
+<h2 id="getfilet">GetFile&lt;T&gt;()</h2>
+<pre class="hljs"><code><div><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> GetFile&lt;T&gt;(<span class="hljs-keyword">string</span> dropboxPath, Progress&lt;TransferProgressReport&gt; progressCallback, Action&lt;T&gt; successCallback, Action&lt;Exception&gt; errorCallback, <span class="hljs-keyword">bool</span> useCachedFirst = <span class="hljs-literal">false</span>, <span class="hljs-keyword">bool</span> useCachedIfOffline = <span class="hljs-literal">true</span>, <span class="hljs-keyword">bool</span> receiveUpdates = <span class="hljs-literal">false</span>, CancellationToken? cancellationToken = <span class="hljs-literal">null</span>)
+</div></code></pre>
+<p>Retrieves file from Dropbox and returns it as T (T can be string, Texture2D or any type that can be deserialized from text using JsonUtility)</p>
+<h3 id="parameters">Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dropboxPath</td>
+<td>Path to file on Dropbox</td>
+</tr>
+<tr>
+<td>progressCallback</td>
+<td>Progress callback with download percentage and speed</td>
+</tr>
+<tr>
+<td>successCallback</td>
+<td>Callback for receiving downloaded object T (T can be string, Texture2D or any type that can be deserialized from text using JsonUtility)</td>
+</tr>
+<tr>
+<td>errorCallback</td>
+<td>Callback that is triggered if any exception happened</td>
+</tr>
+<tr>
+<td>useCachedFirst</td>
+<td>Serve cached version (if it exists) before event checking Dropbox for newer version?</td>
+</tr>
+<tr>
+<td>useCachedIfOffline</td>
+<td>Use cached version if no Internet connection?</td>
+</tr>
+<tr>
+<td>receiveUpdates</td>
+<td>If <code>true</code>, then when there are remote updates on Dropbox, callback function <code>successCallback </code> will be triggered again with updated version of the file.</td>
+</tr>
+<tr>
+<td>cancellationToken</td>
+<td>Cancellation token that can be used to cancel download</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-usage">Example usage</h3>
+<pre class="hljs"><code><div>DropboxSync.Main.GetFile&lt;Texture2D&gt;(EXAMPLE_IMAGE_PATH, 
+  <span class="hljs-keyword">new</span> Progress&lt;TransferProgressReport&gt;((progress) =&gt; {}), 
+  (texture) =&gt; {			
+    UpdatePicture(texture);			
+  }, (ex) =&gt; {
+    Debug.LogError(<span class="hljs-string">$"Error getting picture from Dropbox: <span class="hljs-subst">{ex}</span>"</span>);
+  }, receiveUpdates: <span class="hljs-literal">true</span>, useCachedFirst:<span class="hljs-literal">true</span>);
+</div></code></pre>
+<h1 id="uploading">Uploading</h1>
+<h2 id="uploadfilestring-localfilepath">UploadFile(string localFilePath)</h2>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">async</span> <span class="hljs-keyword">void</span> <span class="hljs-title">UploadFile</span>(<span class="hljs-params"><span class="hljs-keyword">string</span> localFilePath, <span class="hljs-keyword">string</span> dropboxPath, Progress&lt;TransferProgressReport&gt; progressCallback, Action&lt;Metadata&gt; successCallback, Action&lt;Exception&gt; errorCallback, CancellationToken? cancellationToken</span>)
+</span></div></code></pre>
+<p>Uploads file from specified filepath in local filesystem to Dropbox</p>
+<h3 id="parameters">Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>localFilePath</td>
+<td>Path to local file</td>
+</tr>
+<tr>
+<td>dropboxPath</td>
+<td>Upload path on Dropbox</td>
+</tr>
+<tr>
+<td>progressCallback</td>
+<td>Progress callback with upload percentage and speed</td>
+</tr>
+<tr>
+<td>successCallback</td>
+<td>Callback for receiving uploaded file Metadata</td>
+</tr>
+<tr>
+<td>errorCallback</td>
+<td>Callback that is triggered if any exception happened</td>
+</tr>
+<tr>
+<td>cancellationToken</td>
+<td>Cancellation token that can be used to cancel the upload</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-usage">Example usage</h3>
+<pre class="hljs"><code><div>_cancellationTokenSource  = <span class="hljs-keyword">new</span> CancellationTokenSource();
+
+DropboxSync.Main.UploadFile(LOCAL_FILE_PATH, DROPBOX_UPLOAD_PATH, 
+  <span class="hljs-keyword">new</span> Progress&lt;TransferProgressReport&gt;((report) =&gt; {
+    print(<span class="hljs-string">$"Uploading file <span class="hljs-subst">{report.progress}</span>% <span class="hljs-subst">{report.bytesPerSecondFormatted}</span>"</span>);    				
+  }), (metadata) =&gt; {
+    <span class="hljs-comment">// success			</span>
+    print(<span class="hljs-string">$"Upload completed:\n<span class="hljs-subst">{metadata}</span>"</span>);
+  }, (ex) =&gt; {
+    <span class="hljs-comment">// exception</span>
+    <span class="hljs-keyword">if</span>(ex <span class="hljs-keyword">is</span> OperationCanceledException){
+      print(<span class="hljs-string">"Upload cancelled"</span>);
+    }<span class="hljs-keyword">else</span>{
+      Debug.LogException(ex);
+    }
+  }, _cancellationTokenSource.Token);
+</div></code></pre>
+<h3 id="example-usage-async">Example usage (async)</h3>
+<pre class="hljs"><code><div>_cancellationTokenSource  = <span class="hljs-keyword">new</span> CancellationTokenSource();
+		
+<span class="hljs-keyword">try</span> {
+  <span class="hljs-keyword">var</span> metadata = <span class="hljs-keyword">await</span> DropboxSync.Main.UploadFileAsync(
+    LOCAL_FILE_PATH, DROPBOX_UPLOAD_PATH, 
+    <span class="hljs-keyword">new</span> Progress&lt;TransferProgressReport&gt;((report) =&gt; {    
+      print(<span class="hljs-string">$"Uploading file <span class="hljs-subst">{report.progress}</span>% <span class="hljs-subst">{report.bytesPerSecondFormatted}</span>"</span>);
+  }), _cancellationTokenSource.Token);
+
+  print(<span class="hljs-string">$"Upload completed:\n<span class="hljs-subst">{metadata}</span>"</span>);
+  
+}<span class="hljs-keyword">catch</span>(Exception ex){
+  <span class="hljs-keyword">if</span>(ex <span class="hljs-keyword">is</span> OperationCanceledException){
+    print(<span class="hljs-string">"Upload cancelled"</span>);
+  }<span class="hljs-keyword">else</span>{
+    Debug.LogException(ex);
+  }
+}
+</div></code></pre>
+<h2 id="uploadfilebyte-bytes">UploadFile(byte[] bytes)</h2>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">async</span> <span class="hljs-keyword">void</span> <span class="hljs-title">UploadFile</span>(<span class="hljs-params"><span class="hljs-keyword">byte</span>[] bytes, <span class="hljs-keyword">string</span> dropboxPath, Progress&lt;TransferProgressReport&gt; progressCallback, Action&lt;Metadata&gt; successCallback, Action&lt;Exception&gt; errorCallback, CancellationToken? cancellationToken</span>)
+</span></div></code></pre>
+<p>Uploads byte array to Dropbox</p>
+<h3 id="parameters">Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>bytes</td>
+<td>Bytes to upload</td>
+</tr>
+<tr>
+<td>dropboxPath</td>
+<td>Upload path on Dropbox</td>
+</tr>
+<tr>
+<td>progressCallback</td>
+<td>Progress callback with upload percentage and speed</td>
+</tr>
+<tr>
+<td>successCallback</td>
+<td>Callback for receiving uploaded file Metadata</td>
+</tr>
+<tr>
+<td>errorCallback</td>
+<td>Callback that is triggered if any exception happened</td>
+</tr>
+<tr>
+<td>cancellationToken</td>
+<td>Cancellation token that can be used to cancel the upload</td>
+</tr>
+</tbody>
+</table>
+<h1 id="keeping-in-sync">Keeping in Sync</h1>
+<p><span style="background:yellow;"><strong>NOTE:</strong> Synchronization is only one way: Dropbox to Local cache</span></p>
+<h2 id="keepsynced">KeepSynced()</h2>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">KeepSynced</span>(<span class="hljs-params"><span class="hljs-keyword">string</span> dropboxPath, Action&lt;EntryChange&gt; syncedCallback</span>)
+</span></div></code></pre>
+<p>Keep Dropbox file or folder synced (one-way: from Dropbox to Local cache)</p>
+<h3 id="parameters">Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dropboxPath</td>
+<td>File or folder path on Dropbox</td>
+</tr>
+<tr>
+<td>syncedCallback</td>
+<td>Callback that is triggered after change is synced from Dropbox</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-usage">Example usage</h3>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">Start</span>(<span class="hljs-params"></span>)</span> {
+  DropboxSync.Main.KeepSynced(DROPBOX_PATH, OnChangeSynced);   
+}
+
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">OnChangeSynced</span>(<span class="hljs-params">DBXSync.EntryChange change</span>)</span>{
+    print(<span class="hljs-string">$"Change synced: <span class="hljs-subst">{change}</span>"</span>);
+} 
+</div></code></pre>
+<h2 id="unsubscribefromkeepsynccallback">UnsubscribeFromKeepSyncCallback()</h2>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">UnsubscribeFromKeepSyncCallback</span>(<span class="hljs-params"><span class="hljs-keyword">string</span> dropboxPath, Action&lt;EntryChange&gt; syncedCallback</span>)
+</span></div></code></pre>
+<p>Unsubscribe specified callback from getting synced changes (if there will be no callbacks listening then syncing will automatically stop as well)</p>
+<h3 id="parameters">Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dropboxPath</td>
+<td>File or folder path on Dropbox</td>
+</tr>
+<tr>
+<td>syncedCallback</td>
+<td>Callback that you wish to unsubscribe</td>
+</tr>
+</tbody>
+</table>
+<h2 id="stopkeepinginsync">StopKeepingInSync()</h2>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">StopKeepingInSync</span>(<span class="hljs-params"><span class="hljs-keyword">string</span> dropboxPath</span>)
+</span></div></code></pre>
+<p>Stop keeping in sync Dropbox file or folder</p>
+<h3 id="parameters">Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dropboxPath</td>
+<td>File or folder path on Dropbox</td>
+</tr>
+</tbody>
+</table>
+<h2 id="iskeepinginsync">IsKeepingInSync()</h2>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">IsKeepingInSync</span>(<span class="hljs-params"><span class="hljs-keyword">string</span> dropboxPath</span>)
+</span></div></code></pre>
+<p>Checks if currently keeping Dropbox file of folder in sync</p>
+<h3 id="parameters">Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dropboxPath</td>
+<td>File or folder path on Dropbox</td>
+</tr>
+</tbody>
+</table>
+<h1 id="operations">Operations</h1>
+<h2 id="createfolder">CreateFolder()</h2>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">async</span> <span class="hljs-keyword">void</span> <span class="hljs-title">CreateFolder</span>(<span class="hljs-params"><span class="hljs-keyword">string</span> dropboxFolderPath, Action&lt;Metadata&gt; successCallback, Action&lt;Exception&gt; errorCallback, <span class="hljs-keyword">bool</span> autorename = <span class="hljs-literal">false</span></span>)
+</span></div></code></pre>
+<p>Creates folder on Dropbox</p>
+<h3 id="parameters">Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dropboxFolderPath</td>
+<td>Folder to create</td>
+</tr>
+<tr>
+<td>successCallback</td>
+<td>Callback for receiving created folder Metadata</td>
+</tr>
+<tr>
+<td>errorCallback</td>
+<td>Callback for receiving exceptions</td>
+</tr>
+<tr>
+<td>autorename</td>
+<td>Should autorename if conflicting paths?</td>
+</tr>
+</tbody>
+</table>
+<h2 id="listfolder">ListFolder()</h2>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">async</span> <span class="hljs-keyword">void</span> <span class="hljs-title">ListFolder</span>(<span class="hljs-params"><span class="hljs-keyword">string</span> dropboxFolderPath, Action&lt;List&lt;Metadata&gt;&gt; successCallback, Action&lt;Exception&gt; errorCallback, <span class="hljs-keyword">bool</span> recursive = <span class="hljs-literal">false</span></span>) 
+</span></div></code></pre>
+<p>Get contents of the folder on Dropbox</p>
+<h3 id="parameters">Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dropboxFolderPath</td>
+<td>Path to folder on Dropbox</td>
+</tr>
+<tr>
+<td>successCallback</td>
+<td>Callback for receiving a List of file's and folder's Metadata - contents on the folder</td>
+</tr>
+<tr>
+<td>errorCallback</td>
+<td>Callback for receiving exceptions</td>
+</tr>
+<tr>
+<td>recursive</td>
+<td>Include all subdirectories recursively?</td>
+</tr>
+</tbody>
+</table>
+<h2 id="move">Move()</h2>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">async</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Move</span>(<span class="hljs-params"><span class="hljs-keyword">string</span> fromDropboxPath, <span class="hljs-keyword">string</span> toDropboxPath, Action&lt;Metadata&gt; successCallback, Action&lt;Exception&gt; errorCallback, <span class="hljs-keyword">bool</span> autorename = <span class="hljs-literal">false</span></span>) 
+</span></div></code></pre>
+<p>Move file or folder from one path to another</p>
+<h3 id="parameters">Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fromDropboxPath</td>
+<td>From where to move</td>
+</tr>
+<tr>
+<td>toDropboxPath</td>
+<td>Where to move</td>
+</tr>
+<tr>
+<td>successCallback</td>
+<td>Callback for receiving moved object Metadata</td>
+</tr>
+<tr>
+<td>errorCallback</td>
+<td>Callback for receiving exceptions</td>
+</tr>
+<tr>
+<td>autorename</td>
+<td>Should autorename if conflicting paths?</td>
+</tr>
+</tbody>
+</table>
+<h2 id="delete">Delete()</h2>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">async</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Delete</span>(<span class="hljs-params"><span class="hljs-keyword">string</span> dropboxPath, Action&lt;Metadata&gt; successCallback, Action&lt;Exception&gt; errorCallback</span>)
+</span></div></code></pre>
+<p>Delete file or folder on Dropbox</p>
+<h3 id="parameters">Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dropboxPath</td>
+<td>Path to delete</td>
+</tr>
+<tr>
+<td>successCallback</td>
+<td>Callback for receiving deleted object Metadata</td>
+</tr>
+<tr>
+<td>errorCallback</td>
+<td>Callback for receiving exceptions</td>
+</tr>
+</tbody>
+</table>
+<h2 id="pathexists">PathExists()</h2>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">async</span> <span class="hljs-keyword">void</span> <span class="hljs-title">PathExists</span>(<span class="hljs-params"><span class="hljs-keyword">string</span> dropboxPath, Action&lt;<span class="hljs-keyword">bool</span>&gt; successCallback, Action&lt;Exception&gt; errorCallback</span>)
+</span></div></code></pre>
+<p>Checks if file or folder exists on Dropbox</p>
+<h3 id="parameters">Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dropboxPath</td>
+<td>Path to file or folder</td>
+</tr>
+<tr>
+<td>successCallback</td>
+<td>Callback for receiving boolean result</td>
+</tr>
+<tr>
+<td>errorCallback</td>
+<td>Callback for receiving exceptions</td>
+</tr>
+</tbody>
+</table>
+<h2 id="getmetadata">GetMetadata()</h2>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">async</span> <span class="hljs-keyword">void</span> <span class="hljs-title">GetMetadata</span>(<span class="hljs-params"><span class="hljs-keyword">string</span> dropboxPath, Action&lt;Metadata&gt; successCallback, Action&lt;Exception&gt; errorCallback</span>)
+</span></div></code></pre>
+<p>Get Metadata for file or folder on Dropbox</p>
+<h3 id="parameters">Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dropboxPath</td>
+<td>Path to file or folder</td>
+</tr>
+<tr>
+<td>successCallback</td>
+<td>Callback for receiving file's or folder's Metadata</td>
+</tr>
+<tr>
+<td>errorCallback</td>
+<td>Callback for receiving exceptions</td>
+</tr>
+</tbody>
+</table>
+<h2 id="shouldupdatefilefromdropbox">ShouldUpdateFileFromDropbox()</h2>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">async</span> <span class="hljs-keyword">void</span> <span class="hljs-title">ShouldUpdateFileFromDropbox</span>(<span class="hljs-params"><span class="hljs-keyword">string</span> dropboxFilePath, Action&lt;<span class="hljs-keyword">bool</span>&gt; successCallback, Action&lt;Exception&gt; errorCallback</span>)
+</span></div></code></pre>
+<p>Checks if Dropbox has different version of the file (always returns true if file is not cached locally)</p>
+<h3 id="parameters">Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dropboxFilePath</td>
+<td>Path to file on Dropbox</td>
+</tr>
+<tr>
+<td>successCallback</td>
+<td>Callback for receiving boolean result</td>
+</tr>
+<tr>
+<td>errorCallback</td>
+<td>Callback for receiving exceptions</td>
+</tr>
+</tbody>
+</table>
+
+</body>
+</html>
